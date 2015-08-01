@@ -1,3 +1,8 @@
+*.iml
+.idea
+target
+neo4j
+
 *.class
 
 # Mobile Tools for Java (J2ME)
