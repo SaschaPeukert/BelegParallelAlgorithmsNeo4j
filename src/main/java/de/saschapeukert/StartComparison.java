@@ -22,7 +22,7 @@ public class StartComparison {
     private  static final String DB_PATH = "E:\\Users\\Sascha\\Documents\\GIT\\" +
             "_Belegarbeit\\neo4j-enterprise-2.3.0-M02\\data\\graph.db";
 
-    private static final int OPERATIONS=10000;
+    private static final int OPERATIONS=100000;
     private static final int NUMBER_OF_THREADS =4;
 
     public static void main(String[] args)  {
@@ -46,17 +46,19 @@ public class StartComparison {
 
             tx.success();
         }
-        /*
+
         String diagramm="";
-        for(int c=500;c<=OPERATIONS;c=c+500){
+        for(int c=100;c<=OPERATIONS;c=c*2){
             long[] results = doRandomWalkerRun(graphDb,nodes, c);
             diagramm += "\n" +c + ", " + results[0] + ", " + results[1];
+
+            System.gc(); // suggestion for garbage collector. Now would be perfect!
         }
 
         System.out.println(diagramm);
-        */
 
-        doRandomWalkerRun(graphDb,nodes,OPERATIONS);
+
+        //doRandomWalkerRun(graphDb,nodes,OPERATIONS);
     }
 
 
@@ -76,6 +78,8 @@ public class StartComparison {
         System.out.println("RandomWalk (SingleThread " + noOfSteps + " steps) done in " + rwst.timer.elapsed(TimeUnit.MICROSECONDS) +
                 "\u00B5s (" + rwst.timer.elapsed(TimeUnit.MILLISECONDS) + "ms)");
         runtimes[0] = rwst.timer.elapsed(TimeUnit.MICROSECONDS);
+
+        thr = null; // suggestion for garbage collector
 
 
         // 	comparison with NUMBER_OF_THREADS Threads
@@ -97,10 +101,15 @@ public class StartComparison {
             try {
                 t.join();
                 elapsedTime +=map.get(t).timer.elapsed(TimeUnit.MICROSECONDS);
+                t = null; // suggestion for garbage collector
+
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
+
+        map = null; // suggestion for garbage collector
+
 
         System.out.println("RandomWalk (MultiThread "+ noOfSteps + " steps) done in " + elapsedTime + "\u00B5s (" +elapsedTime/1000 +"ms)");
         runtimes[1] =elapsedTime;
