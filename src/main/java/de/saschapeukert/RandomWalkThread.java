@@ -49,7 +49,8 @@ public class RandomWalkThread implements Runnable{
                         currentNode = getSomeRandomNode();
                     } else {
                         // Traverse one of the outgoing Relationships
-                        ArrayList<Relationship> relationships = (ArrayList<Relationship>) getListOfOutgoingRelationships(currentNode);
+                        ArrayList<Relationship> relationships =
+                                (ArrayList<Relationship>) getListOfOutgoingRelationships(currentNode);
                         w = random.nextInt(relationships.size());
                         currentNode = relationships.get(w).getEndNode();
                     }

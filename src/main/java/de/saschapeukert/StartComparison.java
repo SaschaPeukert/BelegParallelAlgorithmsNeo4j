@@ -18,13 +18,17 @@ import java.util.concurrent.TimeUnit;
  */
 public class StartComparison {
 
-    private  static final String DB_PATH = "E:\\Users\\Sascha\\Documents\\GIT\\_Belegarbeit\\neo4j-enterprise-2.3.0-M02\\data\\graph.db";
+    private  static final String DB_PATH = "E:\\Users\\Sascha\\Documents\\GIT\\" +
+            "_Belegarbeit\\neo4j-enterprise-2.3.0-M02\\data\\graph.db";
 
     private static final int OPERATIONS=10000;
     private static final int NUMBER_OF_THREADS =4;
 
     public static void main(String[] args)  {
-        GraphDatabaseService graphDb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(new File(DB_PATH)).newGraphDatabase();
+
+        // Open connection to DB
+        GraphDatabaseService graphDb = new GraphDatabaseFactory()
+                .newEmbeddedDatabaseBuilder(new File(DB_PATH)).newGraphDatabase();
         registerShutdownHook(graphDb);
 
         // Initialise allNodes
@@ -52,7 +56,8 @@ public class StartComparison {
             e.printStackTrace();
         }
 
-        System.out.println("RandomWalker (SingleThread) done in " + rwst.timer.elapsed(TimeUnit.MICROSECONDS) + "\u00B5s (" + rwst.timer.elapsed(TimeUnit.MILLISECONDS) + "ms)");
+        System.out.println("RandomWalk (SingleThread) done in " + rwst.timer.elapsed(TimeUnit.MICROSECONDS) +
+                "\u00B5s (" + rwst.timer.elapsed(TimeUnit.MILLISECONDS) + "ms)");
 
 
 
@@ -80,17 +85,10 @@ public class StartComparison {
             }
         }
 
-        System.out.println("RandomWalker (MultiThread) done in " + elapsedTime + "\u00B5s (" +elapsedTime/1000 +"ms)");
-
-
-
-                //System.out.println("Protocol:");
-        //System.out.println(r.Protocol);
+        System.out.println("RandomWalk (MultiThread) done in " + elapsedTime + "\u00B5s (" +elapsedTime/1000 +"ms)");
     }
 
 
-
-    // START SNIPPET: shutdownHook
     private static void registerShutdownHook( final GraphDatabaseService graphDb )
     {
         // Registers a shutdown hook for the Neo4j instance so that it
