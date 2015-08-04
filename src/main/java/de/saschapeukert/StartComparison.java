@@ -10,6 +10,7 @@ import org.neo4j.tooling.GlobalGraphOperations;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -45,9 +46,25 @@ public class StartComparison {
 
             tx.success();
         }
+        /*
+        String diagramm="";
+        for(int c=500;c<=OPERATIONS;c=c+500){
+            long[] results = doRandomWalkerRun(graphDb,nodes, c);
+            diagramm += "\n" +c + ", " + results[0] + ", " + results[1];
+        }
+
+        System.out.println(diagramm);
+        */
+
+        doRandomWalkerRun(graphDb,nodes,OPERATIONS);
+    }
+
+
+    private static long[] doRandomWalkerRun(GraphDatabaseService graphDb, List<Node> nodes, int noOfSteps){
+        long[] runtimes = new long[2];
 
         // Start single RandomWalker
-        RandomWalkThread rwst = new RandomWalkThread(20,nodes, graphDb,OPERATIONS);
+        RandomWalkThread rwst = new RandomWalkThread(20,nodes, graphDb,noOfSteps);
         Thread thr = new Thread(rwst);
         thr.start();
         try {
@@ -56,9 +73,9 @@ public class StartComparison {
             e.printStackTrace();
         }
 
-        System.out.println("RandomWalk (SingleThread) done in " + rwst.timer.elapsed(TimeUnit.MICROSECONDS) +
+        System.out.println("RandomWalk (SingleThread " + noOfSteps + " steps) done in " + rwst.timer.elapsed(TimeUnit.MICROSECONDS) +
                 "\u00B5s (" + rwst.timer.elapsed(TimeUnit.MILLISECONDS) + "ms)");
-
+        runtimes[0] = rwst.timer.elapsed(TimeUnit.MICROSECONDS);
 
 
         // 	comparison with NUMBER_OF_THREADS Threads
@@ -67,7 +84,7 @@ public class StartComparison {
         // Initialization of the Threads
         Map<Thread,RandomWalkThread> map = new HashMap<>();
         for(int i=0;i<NUMBER_OF_THREADS;i++){
-            RandomWalkThread rw = new RandomWalkThread(20,nodes, graphDb,OPERATIONS/NUMBER_OF_THREADS);
+            RandomWalkThread rw = new RandomWalkThread(20,nodes, graphDb,noOfSteps/NUMBER_OF_THREADS);
             Thread t = new Thread(rw);
             map.put(t,rw);
         }
@@ -85,9 +102,12 @@ public class StartComparison {
             }
         }
 
-        System.out.println("RandomWalk (MultiThread) done in " + elapsedTime + "\u00B5s (" +elapsedTime/1000 +"ms)");
-    }
+        System.out.println("RandomWalk (MultiThread "+ noOfSteps + " steps) done in " + elapsedTime + "\u00B5s (" +elapsedTime/1000 +"ms)");
+        runtimes[1] =elapsedTime;
 
+        return runtimes;
+
+    }
 
     private static void registerShutdownHook( final GraphDatabaseService graphDb )
     {
