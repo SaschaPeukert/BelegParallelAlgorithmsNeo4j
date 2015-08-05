@@ -9,7 +9,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by SaschaPeukert on 03.08.2015.
+ * Created by Sascha Peukert on 03.08.2015.
  */
 public class RandomWalkThread implements Runnable{
 
@@ -53,7 +53,7 @@ public class RandomWalkThread implements Runnable{
                                 (ArrayList<Relationship>) getListOfOutgoingRelationships(currentNode);
                         w = random.nextInt(relationships.size());
                         currentNode = relationships.get(w).getEndNode();
-                        
+
                     }
 
                 }

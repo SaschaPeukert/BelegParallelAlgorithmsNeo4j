@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * Created by Sascha Peukert on 04.08.2015.
@@ -24,6 +25,7 @@ public class StartComparison {
 
     private static final int OPERATIONS=100000;
     private static final int NUMBER_OF_THREADS =4;
+    private static final int NUMBER_OF_RUNS_TO_AVERAGE_RESULTS = 10; //Minimum: 1
 
     public static void main(String[] args)  {
 
@@ -47,18 +49,46 @@ public class StartComparison {
             tx.success();
         }
 
-        String diagramm="";
-        for(int c=100;c<=OPERATIONS;c=c*2){
-            long[] results = doRandomWalkerRun(graphDb,nodes, c);
-            diagramm += "\n" +c + ", " + results[0] + ", " + results[1];
-
-            System.gc(); // suggestion for garbage collector. Now would be perfect!
-        }
-
-        System.out.println(diagramm);
-
+        System.out.println(
+                calculateResults(graphDb,nodes,NUMBER_OF_RUNS_TO_AVERAGE_RESULTS)
+        );
 
         //doRandomWalkerRun(graphDb,nodes,OPERATIONS);
+    }
+
+    private static String calculateResults(GraphDatabaseService graphDb, List<Node> nodes, int NumberOfRunsPerStep){
+        String result="";
+
+        long[] resultsOfStep;
+        long[] resultsOfRun;
+
+        for(int c=100;c<=OPERATIONS;c=c*2){
+            // Step
+            resultsOfStep = new long[2];
+
+            for(int i=0;i<NumberOfRunsPerStep;i++){
+                // Run
+                resultsOfRun = doRandomWalkerRun(graphDb,nodes, c);
+
+                resultsOfStep[0] += resultsOfRun[0];
+                resultsOfStep[1] += resultsOfRun[1];
+
+                resultsOfRun = null; // suggestion for garbage collector
+
+            }
+            // calculating average of Runs
+            resultsOfStep[0] = resultsOfStep[0]/NumberOfRunsPerStep;
+            resultsOfStep[1] = resultsOfStep[1]/NumberOfRunsPerStep;
+
+            result += "\n" +c + ", " + resultsOfStep[0] + ", " + resultsOfStep[1];
+
+            resultsOfStep = null; // suggestion for garbage collector
+
+            System.gc(); // suggestion for garbage collector. Now would be perfect!
+
+        }
+
+        return result;
     }
 
 
