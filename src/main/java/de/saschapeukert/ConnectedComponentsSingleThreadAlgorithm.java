@@ -1,5 +1,6 @@
 package de.saschapeukert;
 
+import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
 import java.util.List;
@@ -14,9 +15,20 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
 
     private Map<Integer,List<Node>> components;
 
+    public ConnectedComponentsSingleThreadAlgorithm(GraphDatabaseService gdb){
+        super(gdb);
+    }
+
+
     @Override
     public void compute() {
+
+        timer.start();
+
         // TODO: implement BFS or DFS
+
+        timer.stop();
+
     }
 
     public String printResults(){

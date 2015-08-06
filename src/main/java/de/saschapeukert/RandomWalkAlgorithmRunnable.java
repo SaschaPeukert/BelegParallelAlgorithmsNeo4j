@@ -17,18 +17,17 @@ public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
     public int _RandomNodeParameter;
     private Node currentNode;
     private List<Node> allNodes;
-    private GraphDatabaseService graphDb;
     private int NUMBER_OF_STEPS;
     private Random random;
 
     public RandomWalkAlgorithmRunnable(int randomChanceParameter, List<Node> allNodes,
                                        GraphDatabaseService gdb, int NumberOfSteps){
+        super(gdb);
+
         this.Protocol = "";
         this._RandomNodeParameter = randomChanceParameter;
         this.currentNode = null;
         this.allNodes = allNodes;
-        this.graphDb = gdb;
-        super.timer = Stopwatch.createUnstarted();
         this.NUMBER_OF_STEPS = NumberOfSteps;
         this.random = new Random();
     }
