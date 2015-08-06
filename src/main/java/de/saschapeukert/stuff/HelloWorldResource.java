@@ -1,4 +1,4 @@
-package de.saschapeukert;
+package de.saschapeukert.stuff;
 
 import java.nio.charset.Charset;
 import javax.ws.rs.GET;
@@ -11,6 +11,12 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.neo4j.graphdb.GraphDatabaseService;
+
+/*
+    REMEMBER: THE PACKAGE HAS TO BE CORRECTLY NAMED IN THE SERVER.CONF
+
+ */
+
 
 //START SNIPPET: HelloWorldResource
 @Path( "/helloworld" )
