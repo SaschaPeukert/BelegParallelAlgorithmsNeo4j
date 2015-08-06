@@ -95,8 +95,8 @@ public class StartComparison {
         long[] runtimes = new long[2];
 
         // Start single RandomWalker
-        RandomWalkRunnable rwst = new RandomWalkRunnable(20,nodes, graphDb,noOfSteps);
-        Thread thr = new Thread(rwst);
+        RandomWalkAlgorithmRunnable rwst = new RandomWalkAlgorithmRunnable(20,nodes, graphDb,noOfSteps);
+        Thread thr = rwst.getNewThread();
         thr.start();
         try {
             thr.join();
@@ -115,10 +115,10 @@ public class StartComparison {
         //
 
         // Initialization of the Threads
-        Map<Thread,RandomWalkRunnable> map = new HashMap<>();
+        Map<Thread,RandomWalkAlgorithmRunnable> map = new HashMap<>();
         for(int i=0;i<NUMBER_OF_THREADS;i++){
-            RandomWalkRunnable rw = new RandomWalkRunnable(20,nodes, graphDb,noOfSteps/NUMBER_OF_THREADS);
-            map.put(rw.getThread(),rw);
+            RandomWalkAlgorithmRunnable rw = new RandomWalkAlgorithmRunnable(20,nodes, graphDb,noOfSteps/NUMBER_OF_THREADS);
+            map.put(rw.getNewThread(),rw);
         }
 
         // Thread start

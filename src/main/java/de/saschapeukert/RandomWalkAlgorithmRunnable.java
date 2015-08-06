@@ -11,9 +11,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by Sascha Peukert on 03.08.2015.
  */
-public class RandomWalkRunnable extends Algorithm {
+public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
 
-    public Stopwatch timer;
     public String Protocol;
     public int _RandomNodeParameter;
     private Node currentNode;
@@ -22,13 +21,13 @@ public class RandomWalkRunnable extends Algorithm {
     private int NUMBER_OF_STEPS;
     private Random random;
 
-    public RandomWalkRunnable(int randomChanceParameter, List<Node> allNodes, GraphDatabaseService gdb, int NumberOfSteps){
+    public RandomWalkAlgorithmRunnable(int randomChanceParameter, List<Node> allNodes, GraphDatabaseService gdb, int NumberOfSteps){
         this.Protocol = "";
         this._RandomNodeParameter = randomChanceParameter;
         this.currentNode = null;
         this.allNodes = allNodes;
         this.graphDb = gdb;
-        this.timer = Stopwatch.createUnstarted();
+        super.timer = Stopwatch.createUnstarted();
         this.NUMBER_OF_STEPS = NumberOfSteps;
         this.random = new Random();
     }

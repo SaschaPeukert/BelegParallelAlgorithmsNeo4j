@@ -1,9 +1,13 @@
 package de.saschapeukert;
 
+import com.google.common.base.Stopwatch;
+
 /**
  * Created by Sascha Peukert on 06.08.2015.
  */
-public abstract class Algorithm implements Runnable {
+public abstract class AlgorithmRunnable implements Runnable {
+
+    public Stopwatch timer;
 
     public abstract void compute();
 
@@ -12,7 +16,7 @@ public abstract class Algorithm implements Runnable {
         compute();
     }
 
-    public Thread getThread(){
+    public Thread getNewThread(){
         return new Thread(this);
     }
 }
