@@ -1,5 +1,6 @@
 package de.saschapeukert;
 
+import com.google.common.base.Stopwatch;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.ResourceIterable;
@@ -28,6 +29,11 @@ public class StartComparison {
 
     public static void main(String[] args)  {
 
+        Stopwatch timeOfComparision = Stopwatch.createStarted();
+
+        System.out.println("I will start the RandomWalk Comparison: Single Thread vs. " + NUMBER_OF_THREADS +
+                " Threads.\nEvery RandomWalk-Step (Count of Operations) is run "+ NUMBER_OF_RUNS_TO_AVERAGE_RESULTS +" times.");
+
         // Open connection to DB
         GraphDatabaseService graphDb = new GraphDatabaseFactory()
                 .newEmbeddedDatabaseBuilder(new File(DB_PATH)).newGraphDatabase();
@@ -52,7 +58,8 @@ public class StartComparison {
                 calculateResults(graphDb,nodes,NUMBER_OF_RUNS_TO_AVERAGE_RESULTS)
         );
 
-        //doRandomWalkerRun(graphDb,nodes,OPERATIONS);
+        System.out.println("\nWhole Comparison done in: "+ timeOfComparision.elapsed(TimeUnit.SECONDS)+"s");
+
     }
 
     private static String calculateResults(GraphDatabaseService graphDb, List<Node> nodes,
@@ -105,9 +112,9 @@ public class StartComparison {
             e.printStackTrace();
         }
 
-        System.out.println("RandomWalk (SingleThread " + noOfSteps + " steps) done in " +
+        /*System.out.println("RandomWalk (SingleThread " + noOfSteps + " steps) done in " +
                 rwst.timer.elapsed(TimeUnit.MICROSECONDS) +
-                "\u00B5s (" + rwst.timer.elapsed(TimeUnit.MILLISECONDS) + "ms)");
+                "\u00B5s (" + rwst.timer.elapsed(TimeUnit.MILLISECONDS) + "ms)"); */
         runtimes[0] = rwst.timer.elapsed(TimeUnit.MICROSECONDS);
 
         thr = null; // suggestion for garbage collector
@@ -142,8 +149,8 @@ public class StartComparison {
         map = null; // suggestion for garbage collector
 
 
-        System.out.println("RandomWalk (MultiThread "+ noOfSteps + " steps) done in " + elapsedTime +
-                "\u00B5s (" +elapsedTime/1000 +"ms)");
+        /*System.out.println("RandomWalk (MultiThread "+ noOfSteps + " steps) done in " + elapsedTime +
+                "\u00B5s (" +elapsedTime/1000 +"ms)");  */
         runtimes[1] =elapsedTime;
 
         return runtimes;
