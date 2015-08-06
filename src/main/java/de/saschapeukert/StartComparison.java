@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 /**
  * Created by Sascha Peukert on 04.08.2015.
@@ -23,9 +22,9 @@ public class StartComparison {
     private  static final String DB_PATH = "E:\\Users\\Sascha\\Documents\\GIT\\" +
             "_Belegarbeit\\neo4j-enterprise-2.3.0-M02\\data\\graph.db";
 
-    private static final int OPERATIONS=100000;
+    private static final int OPERATIONS=10000;
     private static final int NUMBER_OF_THREADS =4;
-    private static final int NUMBER_OF_RUNS_TO_AVERAGE_RESULTS = 10; //Minimum: 1
+    private static final int NUMBER_OF_RUNS_TO_AVERAGE_RESULTS = 1; //Minimum: 1
 
     public static void main(String[] args)  {
 
@@ -96,7 +95,7 @@ public class StartComparison {
         long[] runtimes = new long[2];
 
         // Start single RandomWalker
-        RandomWalkThread rwst = new RandomWalkThread(20,nodes, graphDb,noOfSteps);
+        RandomWalkRunnable rwst = new RandomWalkRunnable(20,nodes, graphDb,noOfSteps);
         Thread thr = new Thread(rwst);
         thr.start();
         try {
@@ -116,11 +115,10 @@ public class StartComparison {
         //
 
         // Initialization of the Threads
-        Map<Thread,RandomWalkThread> map = new HashMap<>();
+        Map<Thread,RandomWalkRunnable> map = new HashMap<>();
         for(int i=0;i<NUMBER_OF_THREADS;i++){
-            RandomWalkThread rw = new RandomWalkThread(20,nodes, graphDb,noOfSteps/NUMBER_OF_THREADS);
-            Thread t = new Thread(rw);
-            map.put(t,rw);
+            RandomWalkRunnable rw = new RandomWalkRunnable(20,nodes, graphDb,noOfSteps/NUMBER_OF_THREADS);
+            map.put(rw.getThread(),rw);
         }
 
         // Thread start

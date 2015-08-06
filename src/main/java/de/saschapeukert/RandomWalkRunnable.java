@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by Sascha Peukert on 03.08.2015.
  */
-public class RandomWalkThread implements Runnable{
+public class RandomWalkRunnable extends Algorithm {
 
     public Stopwatch timer;
     public String Protocol;
@@ -22,7 +22,7 @@ public class RandomWalkThread implements Runnable{
     private int NUMBER_OF_STEPS;
     private Random random;
 
-    public RandomWalkThread(int randomChanceParameter, List<Node> allNodes, GraphDatabaseService gdb, int NumberOfSteps){
+    public RandomWalkRunnable(int randomChanceParameter, List<Node> allNodes, GraphDatabaseService gdb, int NumberOfSteps){
         this.Protocol = "";
         this._RandomNodeParameter = randomChanceParameter;
         this.currentNode = null;
@@ -32,7 +32,7 @@ public class RandomWalkThread implements Runnable{
         this.NUMBER_OF_STEPS = NumberOfSteps;
         this.random = new Random();
     }
-
+    @Override
     public void compute() {
 
         timer.start();
@@ -89,10 +89,6 @@ public class RandomWalkThread implements Runnable{
         return graphDb.getNodeById(r);
     }
 
-    @Override
-    public void run() {
-        compute();
-    }
 }
 
 
