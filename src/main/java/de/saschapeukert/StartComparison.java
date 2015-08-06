@@ -55,7 +55,8 @@ public class StartComparison {
         //doRandomWalkerRun(graphDb,nodes,OPERATIONS);
     }
 
-    private static String calculateResults(GraphDatabaseService graphDb, List<Node> nodes, int NumberOfRunsPerStep){
+    private static String calculateResults(GraphDatabaseService graphDb, List<Node> nodes,
+                                           int NumberOfRunsPerStep){
         String result="";
 
         long[] resultsOfStep;
@@ -79,7 +80,7 @@ public class StartComparison {
             resultsOfStep[0] = resultsOfStep[0]/NumberOfRunsPerStep;
             resultsOfStep[1] = resultsOfStep[1]/NumberOfRunsPerStep;
 
-            result += "\n" +c + ", " + resultsOfStep[0] + ", " + resultsOfStep[1];
+            result += "\n" +c + " " + resultsOfStep[0] + " " + resultsOfStep[1];
 
             resultsOfStep = null; // suggestion for garbage collector
 
@@ -95,7 +96,7 @@ public class StartComparison {
         long[] runtimes = new long[2];
 
         // Start single RandomWalker
-        RandomWalkAlgorithmRunnable rwst = new RandomWalkAlgorithmRunnable(20,nodes, graphDb,noOfSteps);
+        AlgorithmRunnable rwst = new RandomWalkAlgorithmRunnable(20,nodes, graphDb,noOfSteps);
         Thread thr = rwst.getNewThread();
         thr.start();
         try {
@@ -104,7 +105,8 @@ public class StartComparison {
             e.printStackTrace();
         }
 
-        System.out.println("RandomWalk (SingleThread " + noOfSteps + " steps) done in " + rwst.timer.elapsed(TimeUnit.MICROSECONDS) +
+        System.out.println("RandomWalk (SingleThread " + noOfSteps + " steps) done in " +
+                rwst.timer.elapsed(TimeUnit.MICROSECONDS) +
                 "\u00B5s (" + rwst.timer.elapsed(TimeUnit.MILLISECONDS) + "ms)");
         runtimes[0] = rwst.timer.elapsed(TimeUnit.MICROSECONDS);
 
@@ -115,9 +117,10 @@ public class StartComparison {
         //
 
         // Initialization of the Threads
-        Map<Thread,RandomWalkAlgorithmRunnable> map = new HashMap<>();
+        Map<Thread,AlgorithmRunnable> map = new HashMap<>();
         for(int i=0;i<NUMBER_OF_THREADS;i++){
-            RandomWalkAlgorithmRunnable rw = new RandomWalkAlgorithmRunnable(20,nodes, graphDb,noOfSteps/NUMBER_OF_THREADS);
+            RandomWalkAlgorithmRunnable rw = new RandomWalkAlgorithmRunnable(20,nodes,
+                    graphDb,noOfSteps/NUMBER_OF_THREADS);
             map.put(rw.getNewThread(),rw);
         }
 
@@ -139,7 +142,8 @@ public class StartComparison {
         map = null; // suggestion for garbage collector
 
 
-        System.out.println("RandomWalk (MultiThread "+ noOfSteps + " steps) done in " + elapsedTime + "\u00B5s (" +elapsedTime/1000 +"ms)");
+        System.out.println("RandomWalk (MultiThread "+ noOfSteps + " steps) done in " + elapsedTime +
+                "\u00B5s (" +elapsedTime/1000 +"ms)");
         runtimes[1] =elapsedTime;
 
         return runtimes;

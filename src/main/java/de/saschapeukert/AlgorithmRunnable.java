@@ -16,6 +16,10 @@ public abstract class AlgorithmRunnable implements Runnable {
         compute();
     }
 
+
+    /*
+    This is just purely convinience
+     */
     public Thread getNewThread(){
         return new Thread(this);
     }

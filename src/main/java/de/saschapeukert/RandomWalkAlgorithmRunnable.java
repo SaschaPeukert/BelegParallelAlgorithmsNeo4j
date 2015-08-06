@@ -21,7 +21,8 @@ public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
     private int NUMBER_OF_STEPS;
     private Random random;
 
-    public RandomWalkAlgorithmRunnable(int randomChanceParameter, List<Node> allNodes, GraphDatabaseService gdb, int NumberOfSteps){
+    public RandomWalkAlgorithmRunnable(int randomChanceParameter, List<Node> allNodes,
+                                       GraphDatabaseService gdb, int NumberOfSteps){
         this.Protocol = "";
         this._RandomNodeParameter = randomChanceParameter;
         this.currentNode = null;
