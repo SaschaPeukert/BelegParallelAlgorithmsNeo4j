@@ -1,6 +1,5 @@
 package de.saschapeukert;
 
-import com.google.common.base.Stopwatch;
 import org.neo4j.graphdb.*;
 
 import java.util.ArrayList;

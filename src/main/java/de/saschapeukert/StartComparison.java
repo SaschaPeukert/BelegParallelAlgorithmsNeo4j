@@ -29,36 +29,41 @@ public class StartComparison {
 
     public static void main(String[] args)  {
 
+        /*
+        System.out.println("I will start the RandomWalk Comparison: Single Thread vs. " + NUMBER_OF_THREADS +
+                " Threads.\nEvery RandomWalk-Step (Count of Operations) is run " + NUMBER_OF_RUNS_TO_AVERAGE_RESULTS + " times.");
+        */
+
         Stopwatch timeOfComparision = Stopwatch.createStarted();
 
-        System.out.println("I will start the RandomWalk Comparison: Single Thread vs. " + NUMBER_OF_THREADS +
-                " Threads.\nEvery RandomWalk-Step (Count of Operations) is run "+ NUMBER_OF_RUNS_TO_AVERAGE_RESULTS +" times.");
 
         // Open connection to DB
         GraphDatabaseService graphDb = new GraphDatabaseFactory()
                 .newEmbeddedDatabaseBuilder(new File(DB_PATH)).newGraphDatabase();
         registerShutdownHook(graphDb);
 
-        // Initialise allNodes
-        ArrayList<Node> nodes = new ArrayList<>();
-
-        try (Transaction tx = graphDb.beginTx()) {
-            GlobalGraphOperations operations = GlobalGraphOperations.at(graphDb);
-            ResourceIterable<Node> it = operations.getAllNodes();
-
-            for (Node n : it) {
-                nodes.add(n);
-
-            }
-
-            tx.success();
-        }
+        /*
+        List<Node> nodes = getAllNodes(graphDb);
 
         System.out.println(
                 calculateResults(graphDb,nodes,NUMBER_OF_RUNS_TO_AVERAGE_RESULTS)
         );
+        timeOfComparision.stop();
 
         System.out.println("\nWhole Comparison done in: "+ timeOfComparision.elapsed(TimeUnit.SECONDS)+"s");
+        */
+
+        ConnectedComponentsSingleThreadAlgorithm ConnectedSingle = new ConnectedComponentsSingleThreadAlgorithm(graphDb);
+        Thread t = new Thread(ConnectedSingle);
+
+        t.start();
+        try {
+            t.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println(ConnectedSingle.getResults());
 
     }
 
@@ -168,5 +173,24 @@ public class StartComparison {
                 graphDb.shutdown();
             }
         });
+    }
+
+
+    public static List<Node> getAllNodes(GraphDatabaseService graphDb ){
+        // Initialise allNodes
+        ArrayList<Node> nodes = new ArrayList<>();
+
+        try (Transaction tx = graphDb.beginTx()) {
+            GlobalGraphOperations operations = GlobalGraphOperations.at(graphDb);
+            ResourceIterable<Node> it = operations.getAllNodes();
+
+            for (Node n : it) {
+                nodes.add(n);
+
+            }
+
+            tx.success();
+        }
+        return nodes;
     }
 }
