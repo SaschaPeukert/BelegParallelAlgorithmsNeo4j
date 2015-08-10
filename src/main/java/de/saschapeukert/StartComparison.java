@@ -6,6 +6,9 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.ResourceIterable;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+import org.neo4j.kernel.GraphDatabaseAPI;
+import org.neo4j.kernel.api.ReadOperations;
+import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
 import org.neo4j.tooling.GlobalGraphOperations;
 
 import java.io.File;
@@ -42,6 +45,15 @@ public class StartComparison {
                 .newEmbeddedDatabaseBuilder(new File(DB_PATH)).newGraphDatabase();
         registerShutdownHook(graphDb);
 
+        /*      ??? depricated + non-existent docs
+        GraphDatabaseAPI api = ((GraphDatabaseAPI) graphDb);
+        ThreadToStatementContextBridge ctx = api.getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
+        ReadOperations ops =  ctx.instance().readOperations();
+
+        */
+
+
+
         /*
         List<Node> nodes = getAllNodes(graphDb);
 
@@ -53,7 +65,8 @@ public class StartComparison {
         System.out.println("\nWhole Comparison done in: "+ timeOfComparision.elapsed(TimeUnit.SECONDS)+"s");
         */
 
-        ConnectedComponentsSingleThreadAlgorithm ConnectedSingle = new ConnectedComponentsSingleThreadAlgorithm(graphDb);
+        ConnectedComponentsSingleThreadAlgorithm ConnectedSingle = new ConnectedComponentsSingleThreadAlgorithm(
+                graphDb, ConnectedComponentsSingleThreadAlgorithm.AlgorithmType.STRONG);
         Thread t = new Thread(ConnectedSingle);
 
         t.start();
