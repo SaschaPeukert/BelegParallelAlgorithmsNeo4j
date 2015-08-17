@@ -30,10 +30,9 @@ public class StartComparison {
 
     private static final int OPERATIONS=10000;
     private static final int NUMBER_OF_THREADS =4;
-    private static final int NUMBER_OF_RUNS_TO_AVERAGE_RESULTS = 1; //Minimum: 1
+    private static final int NUMBER_OF_RUNS_TO_AVERAGE_RESULTS = 3; //Minimum: 1
 
     public static void main(String[] args)  {
-
 
         System.out.println("I will start the RandomWalk Comparison: Single Thread vs. " + NUMBER_OF_THREADS +
                 " Threads.\nEvery RandomWalk-Step (Count of Operations) is run " + NUMBER_OF_RUNS_TO_AVERAGE_RESULTS + " times.");
@@ -50,19 +49,45 @@ public class StartComparison {
 
 
         Set<Node> nodes = getAllNodes(graphDb);
-        System.out.println(nodes.size() +" Knoten");
+        System.out.println(nodes.size() +" Nodes");
 
         //System.out.println(
-        //        calculateResults(graphDb,nodes,NUMBER_OF_RUNS_TO_AVERAGE_RESULTS)
+        //        calculateRandomWalkComparison(graphDb,nodes,NUMBER_OF_RUNS_TO_AVERAGE_RESULTS)
         //);
         //timeOfComparision.stop();
 
         //System.out.println("\nWhole Comparison done in: "+ timeOfComparision.elapsed(TimeUnit.SECONDS)+"s");
 
+        System.out.println(calculateConnectedComponentsComparison(graphDb,
+                nodes,NUMBER_OF_RUNS_TO_AVERAGE_RESULTS,
+                ConnectedComponentsSingleThreadAlgorithm.AlgorithmType.STRONG));
 
+
+    }
+
+    private static String calculateConnectedComponentsComparison
+            (GraphDatabaseService graphDb, Set<Node> nodes, int runs,
+             ConnectedComponentsSingleThreadAlgorithm.AlgorithmType type){
+
+        long resultsOfRun =0;
+        String result = "";
+        for(int i=0;i<runs;i++){
+            long temp = doConnectedComponentsRun(graphDb,new HashSet<Node>(nodes),type);
+            resultsOfRun = resultsOfRun + temp;
+            result += "("+i+") " + temp + "ms\n";
+
+            System.gc();
+        }
+
+        resultsOfRun = resultsOfRun/runs;
+
+        return "Result: " + resultsOfRun + "ms\n" + result;
+    }
+
+    private static long doConnectedComponentsRun(GraphDatabaseService graphDb, Set<Node> nodes, ConnectedComponentsSingleThreadAlgorithm.AlgorithmType type){
 
         ConnectedComponentsSingleThreadAlgorithm ConnectedSingle = new ConnectedComponentsSingleThreadAlgorithm(
-                graphDb, nodes, ConnectedComponentsSingleThreadAlgorithm.AlgorithmType.STRONG);
+                graphDb, nodes, type);
         Thread t = new Thread(ConnectedSingle);
 
         t.start();
@@ -72,15 +97,12 @@ public class StartComparison {
             e.printStackTrace();
         }
 
-        System.out.println(ConnectedSingle.getResults());
-
-
-
+        return ConnectedSingle.timer.elapsed(TimeUnit.MILLISECONDS);
 
     }
 
-    private static String calculateResults(GraphDatabaseService graphDb, Set<Node> nodes,
-                                           int NumberOfRunsPerStep){
+    private static String calculateRandomWalkComparison(GraphDatabaseService graphDb, Set<Node> nodes,
+                                                        int numberOfRunsPerStep){
         String result="";
 
         long[] resultsOfStep;
@@ -90,7 +112,7 @@ public class StartComparison {
             // Step
             resultsOfStep = new long[2];
 
-            for(int i=0;i<NumberOfRunsPerStep;i++){
+            for(int i=0;i<numberOfRunsPerStep;i++){
                 // Run
                 resultsOfRun = doRandomWalkerRun(graphDb,nodes, c);
 
@@ -101,8 +123,8 @@ public class StartComparison {
 
             }
             // calculating average of Runs
-            resultsOfStep[0] = resultsOfStep[0]/NumberOfRunsPerStep;
-            resultsOfStep[1] = resultsOfStep[1]/NumberOfRunsPerStep;
+            resultsOfStep[0] = resultsOfStep[0]/numberOfRunsPerStep;
+            resultsOfStep[1] = resultsOfStep[1]/numberOfRunsPerStep;
 
             result += "\n" +c + " " + resultsOfStep[0] + " " + resultsOfStep[1];
 

@@ -17,28 +17,26 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
     }
 
 
-    private Map<Node,String> components_weak;
+    private Map<Node,String> componentsMap;
+    private int componentID;
+    private AlgorithmType myType;
 
     private Map<Node,TarjanNode> nodeDictionary;
-
     private Stack<Node> stack;
     private int maxdfs=0;
-    private int componentID;
-
-    private AlgorithmType myType;
 
 
     public ConnectedComponentsSingleThreadAlgorithm(GraphDatabaseService gdb, Set<Node> nodes, AlgorithmType type){
         super(gdb, nodes);
-        components_weak = new HashMap<Node, String>();
+        componentsMap = new HashMap<Node, String>();
         this.myType = type;
 
         if(myType==AlgorithmType.STRONG){
+
             this.stack = new Stack<Node>();
             this.nodeDictionary = new HashMap<Node,TarjanNode>();
 
-            // initialize nodeDictionary
-
+            // initialize nodeDictionary for tarjans algo
             Iterator<Node> it = nodes.iterator();
             while(it.hasNext()){
                 Node n = it.next();
@@ -56,27 +54,20 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
 
         componentID = 0;
 
-
         try (Transaction tx = graphDb.beginTx()) {
-//            GlobalGraphOperations operations = GlobalGraphOperations.at(graphDb);
-//            ResourceIterable<Node> it = operations.getAllNodes();
+            // GlobalGraphOperations operations = GlobalGraphOperations.at(graphDb);
+            // ResourceIterable<Node> it = operations.getAllNodes();
 
-            //for (Node n : it) {
             while(allNodes.size()!=0){
                 // Every node has to be marked as (part of) a component
                 Node n = (Node) allNodes.toArray()[0]; // TODO: Better Way?
-                // x.toArray (new Foo[x.size ()])
 
-                //if(components_weak.get(n) == null){  // useless?!
-                    if(myType==AlgorithmType.WEAK){
-                        DFS(n, "C" + componentID);
-                        componentID++;
-                    } else{
-                        tarjan(n);
-                    }
-
-
-                //}
+                if(myType==AlgorithmType.WEAK){
+                    DFS(n, "C" + componentID);
+                    componentID++;
+                } else{
+                    tarjan(n);
+                }
 
             }
 
@@ -105,10 +96,6 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
             Node n_new = r.getOtherNode(currentNode);
             TarjanNode v_new = nodeDictionary.get(n_new);
 
-            if(currentNode.getId()==345){
-                System.out.println("Hallo!");
-            }
-
             if(allNodes.contains(n_new)){
                 tarjan(n_new);
 
@@ -123,15 +110,13 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
 
         if(v.lowlink == v.dfs){
             // Root of a SCC
-            //System.out.print("\nSZK: ");
+
             while(true){
-                Node node_v = stack.pop();
-                TarjanNode v_new = nodeDictionary.get(node_v);
-                v_new.onStack= false;
+                Node node_v = stack.pop();                      // This should be atomic
+                TarjanNode v_new = nodeDictionary.get(node_v);  // !
+                v_new.onStack= false;                           // !
 
-                //System.out.print(node_v.getId() + " ");
-
-                components_weak.put(node_v,"C"+componentID);
+                componentsMap.put(node_v, "C" + componentID);
                 if(node_v.getId()== currentNode.getId()){
                     componentID++;
                     break;
@@ -140,25 +125,17 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
             }
         }
 
-        //
-
-
     }
 
 
     private void DFS(Node n, String compName){
-        //String rString = "";
 
-        if(components_weak.get(n)==compName){
-            return;// rString; // Already visited
+        if(componentsMap.get(n)==compName){
+            return;// Already visited
         }
-        /*
-        if(components_weak.get(n)!=null){
-            return;// components_weak.get(n);  // THIS WILL NEVER HAPPEN
-        }
-        */
+
         // NOW IT HAS TO BE NULL
-        components_weak.put(n, compName);
+        componentsMap.put(n, compName);
         allNodes.remove(n); // correct?
 
         for(Relationship r :n.getRelationships()){
@@ -166,24 +143,6 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
 
         }
 
-        /*
-        // USELESS EXPERIMENTAL STUFF
-        String s = "Lets go";
-        while(s!=""){
-            s="";
-            for(Relationship r :n.getRelationships()){
-                s = DFS(r.getOtherNode(n),compName);
-
-                if(s!=""){
-                    components_weak.put(n,s);
-                    break;
-                }
-            }
-        }
-
-
-        return rString;
-        */
     }
 
 
@@ -191,17 +150,17 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
 
         Map<String, List<Node>> myResults = new TreeMap<String,List<Node>>();
 
-        // to adapt to the "old" structure of components_weak
+        // to adapt to the "old" structure of componentsMap
 
-        for(Node n: components_weak.keySet()){
-            if(!myResults.containsKey(components_weak.get(n))){
+        for(Node n: componentsMap.keySet()){
+            if(!myResults.containsKey(componentsMap.get(n))){
                 ArrayList<Node> newList = new ArrayList<>();
                 newList.add(n);
-                myResults.put(components_weak.get(n),newList);
+                myResults.put(componentsMap.get(n),newList);
             } else{
-                List<Node> oldList = myResults.get(components_weak.get(n));
+                List<Node> oldList = myResults.get(componentsMap.get(n));
                 oldList.add(n);
-                myResults.put(components_weak.get(n),oldList);
+                myResults.put(componentsMap.get(n),oldList);
             }
         }
 
