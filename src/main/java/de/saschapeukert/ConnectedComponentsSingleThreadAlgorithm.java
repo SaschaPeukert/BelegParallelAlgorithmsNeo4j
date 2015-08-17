@@ -1,7 +1,6 @@
 package de.saschapeukert;
 
 import org.neo4j.graphdb.*;
-import org.neo4j.tooling.GlobalGraphOperations;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -19,18 +18,33 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
 
 
     private Map<Node,String> components_weak;
-    private Map<String, List<Node>> components_strong;
-    private List<Node> doneNodes;
+
+    private Map<Node,TarjanNode> nodeDictionary;
+
+    private Stack<Node> stack;
+    private int maxdfs=0;
+    private int componentID;
 
     private AlgorithmType myType;
 
 
-    public ConnectedComponentsSingleThreadAlgorithm(GraphDatabaseService gdb, AlgorithmType type){
-        super(gdb);
+    public ConnectedComponentsSingleThreadAlgorithm(GraphDatabaseService gdb, Set<Node> nodes, AlgorithmType type){
+        super(gdb, nodes);
         components_weak = new HashMap<Node, String>();
-        components_strong = new TreeMap<String,List<Node>>();
         this.myType = type;
-        this.doneNodes = new ArrayList<Node>();
+
+        if(myType==AlgorithmType.STRONG){
+            this.stack = new Stack<Node>();
+            this.nodeDictionary = new HashMap<Node,TarjanNode>();
+
+            // initialize nodeDictionary
+
+            Iterator<Node> it = nodes.iterator();
+            while(it.hasNext()){
+                Node n = it.next();
+                nodeDictionary.put(n,new TarjanNode(n));
+            }
+        }
 
     }
 
@@ -40,27 +54,29 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
 
         timer.start();
 
-        int componentID = 0;
+        componentID = 0;
 
 
         try (Transaction tx = graphDb.beginTx()) {
-            GlobalGraphOperations operations = GlobalGraphOperations.at(graphDb);
-            ResourceIterable<Node> it = operations.getAllNodes();
+//            GlobalGraphOperations operations = GlobalGraphOperations.at(graphDb);
+//            ResourceIterable<Node> it = operations.getAllNodes();
 
-            for (Node n : it) {
-
+            //for (Node n : it) {
+            while(allNodes.size()!=0){
                 // Every node has to be marked as (part of) a component
-                if(components_weak.get(n) == null){
+                Node n = (Node) allNodes.toArray()[0]; // TODO: Better Way?
+                // x.toArray (new Foo[x.size ()])
+
+                //if(components_weak.get(n) == null){  // useless?!
                     if(myType==AlgorithmType.WEAK){
-                        DFS_weak(n, "C" + componentID);
+                        DFS(n, "C" + componentID);
+                        componentID++;
                     } else{
-                        ArrayList<Node> newList = new ArrayList<>(); // initialize every list
-                        components_strong.put("C"+componentID,newList);
-                        DFS_strong(n, "C" + componentID, true);
+                        tarjan(n);
                     }
 
-                    componentID++;
-                }
+
+                //}
 
             }
 
@@ -72,53 +88,65 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
 
     }
 
-    private void DFS_strong(Node n, String compName, boolean both){
+    private void tarjan(Node currentNode){
 
-        List<Node> list = components_strong.get(compName);
+        TarjanNode v = nodeDictionary.get(currentNode);
+        v.dfs = maxdfs;
+        v.lowlink = maxdfs;
+        maxdfs++;
 
+        v.onStack = true;           // This should be atomic
+        stack.push(currentNode);        // !
 
-        if(doneNodes.contains(n)){
-            return;
-        }
-        /*
-        boolean contains = false;
+        allNodes.remove(currentNode);
 
-        for(Node q: list){
-            if(n.equals(q)){
-                contains = true;
+        Iterable<Relationship> it = currentNode.getRelationships(Direction.OUTGOING);
+        for(Relationship r: it){
+            Node n_new = r.getOtherNode(currentNode);
+            TarjanNode v_new = nodeDictionary.get(n_new);
+
+            if(currentNode.getId()==345){
+                System.out.println("Hallo!");
             }
+
+            if(allNodes.contains(n_new)){
+                tarjan(n_new);
+
+                v.lowlink = Math.min(v.lowlink,v_new.lowlink);
+
+            } else if(v_new.onStack){       // O(1)
+
+                v.lowlink = Math.min(v.lowlink,v_new.dfs);
+            }
+
         }
 
-        if(contains){
-            return; // Already visited
-        }*/
+        if(v.lowlink == v.dfs){
+            // Root of a SCC
+            //System.out.print("\nSZK: ");
+            while(true){
+                Node node_v = stack.pop();
+                TarjanNode v_new = nodeDictionary.get(node_v);
+                v_new.onStack= false;
 
-        // NOW IT HAS TO BE NULL
-        list.add(n);
-        components_strong.put(compName, list);
+                //System.out.print(node_v.getId() + " ");
 
-        doneNodes.add(n);
-        if(both){
-            for(Relationship r :n.getRelationships(Direction.OUTGOING)) {
-                boolean newNode = true;
-                for(String s: components_strong.keySet()) {
-                    if((components_strong.get(s).contains(r.getOtherNode(n)) && (components_strong.get(s).contains(n)))){
-                        newNode = false;
-                    }
+                components_weak.put(node_v,"C"+componentID);
+                if(node_v.getId()== currentNode.getId()){
+                    componentID++;
+                    break;
                 }
-                if(newNode)
-                    DFS_strong(r.getOtherNode(n), compName, true);
+
             }
         }
-        for(Relationship r :n.getRelationships(Direction.INCOMING)) {
-            DFS_strong(r.getOtherNode(n), compName,false);
-        }
+
+        //
+
 
     }
 
 
-
-    private void DFS_weak(Node n, String compName){
+    private void DFS(Node n, String compName){
         //String rString = "";
 
         if(components_weak.get(n)==compName){
@@ -131,11 +159,13 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
         */
         // NOW IT HAS TO BE NULL
         components_weak.put(n, compName);
+        allNodes.remove(n); // correct?
 
         for(Relationship r :n.getRelationships()){
-            DFS_weak(r.getOtherNode(n), compName);
+            DFS(r.getOtherNode(n), compName);
 
         }
+
         /*
         // USELESS EXPERIMENTAL STUFF
         String s = "Lets go";
@@ -161,40 +191,17 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
 
         Map<String, List<Node>> myResults = new TreeMap<String,List<Node>>();
 
+        // to adapt to the "old" structure of components_weak
 
-        if(myType==AlgorithmType.STRONG){
-            /*for(String s:components_strong.keySet()){
-
-                if(components_strong.get(s).size()==0){
-                    continue;
-                }
-
-                ArrayList<Node> list = new ArrayList<>();
-                Node[] obj_nodes = (Node[]) components_strong.get(s).toArray();
-
-                for(Node n:obj_nodes){
-                    list.add(n);
-                }
-
-                myResults.put(s,list);
-            }*/
-
-            myResults = components_strong;
-
-        } else{
-
-            // to adapt to the "old" structure of components_weak
-
-            for(Node n: components_weak.keySet()){
-                if(!myResults.containsKey(components_weak.get(n))){
-                    ArrayList<Node> newList = new ArrayList<>();
-                    newList.add(n);
-                    myResults.put(components_weak.get(n),newList);
-                } else{
-                    List<Node> oldList = myResults.get(components_weak.get(n));
-                    oldList.add(n);
-                    myResults.put(components_weak.get(n),oldList);
-                }
+        for(Node n: components_weak.keySet()){
+            if(!myResults.containsKey(components_weak.get(n))){
+                ArrayList<Node> newList = new ArrayList<>();
+                newList.add(n);
+                myResults.put(components_weak.get(n),newList);
+            } else{
+                List<Node> oldList = myResults.get(components_weak.get(n));
+                oldList.add(n);
+                myResults.put(components_weak.get(n),oldList);
             }
         }
 
@@ -202,8 +209,13 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
 
         StringBuilder returnString = new StringBuilder();
         returnString.append("Component count: " + myResults.keySet().size() + "\n");
+        returnString.append("Components with Size >1\n");
         returnString.append("- - - - - - - -\n");
         for(String s:myResults.keySet()){
+            if(myResults.get(s).size()<=1){
+                continue;
+            }
+
             boolean first = true;
             returnString.append("Component " + s + ": ");
             for(Node n:myResults.get(s)){

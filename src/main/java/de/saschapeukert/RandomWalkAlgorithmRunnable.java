@@ -5,6 +5,7 @@ import org.neo4j.graphdb.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -15,18 +16,16 @@ public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
     public String Protocol;
     public int _RandomNodeParameter;
     private Node currentNode;
-    private List<Node> allNodes;
     private int NUMBER_OF_STEPS;
     private Random random;
 
-    public RandomWalkAlgorithmRunnable(int randomChanceParameter, List<Node> allNodes,
+    public RandomWalkAlgorithmRunnable(int randomChanceParameter, Set<Node> allNodes,
                                        GraphDatabaseService gdb, int NumberOfSteps){
-        super(gdb);
+        super(gdb,allNodes);
 
         this.Protocol = "";
         this._RandomNodeParameter = randomChanceParameter;
         this.currentNode = null;
-        this.allNodes = allNodes;
         this.NUMBER_OF_STEPS = NumberOfSteps;
         this.random = new Random();
     }
@@ -83,8 +82,8 @@ public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
     }
 
     private Node getSomeRandomNode(){
-        long r = (long)random.nextInt(allNodes.size());
-        return graphDb.getNodeById(r);
+        int r = random.nextInt(allNodes.size());
+        return (Node) allNodes.toArray()[r];        // TODO: Better Way?
     }
 
 }
