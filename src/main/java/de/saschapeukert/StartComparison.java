@@ -1,23 +1,18 @@
 package de.saschapeukert;
 
 import com.google.common.base.Stopwatch;
-import org.neo4j.collection.primitive.Primitive;
-import org.neo4j.collection.primitive.PrimitiveIntIterator;
-import org.neo4j.collection.primitive.PrimitiveLongIterator;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.ResourceIterable;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
-import org.neo4j.kernel.GraphDatabaseAPI;
-import org.neo4j.kernel.api.ReadOperations;
-import org.neo4j.kernel.api.exceptions.EntityNotFoundException;
-import org.neo4j.kernel.api.properties.DefinedProperty;
-import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
 import org.neo4j.tooling.GlobalGraphOperations;
 
 import java.io.File;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -26,11 +21,12 @@ import java.util.concurrent.TimeUnit;
 public class StartComparison {
 
     private  static final String DB_PATH = "E:\\Users\\Sascha\\Documents\\GIT\\" +
-            "_Belegarbeit\\neo4j-enterprise-2.3.0-M02\\data\\graph.db";
+            "_Belegarbeit\\neo4j-enterprise-2.3.0-M02";
 
-    private static final int OPERATIONS=10000;
+    private static final int OPERATIONS=80000;
     private static final int NUMBER_OF_THREADS =4;
-    private static final int NUMBER_OF_RUNS_TO_AVERAGE_RESULTS = 3; //Minimum: 1
+    private static final int NUMBER_OF_RUNS_TO_AVERAGE_RESULTS = 1; //Minimum: 1
+    private static final int RANDOMWALKRANDOM = 100;  // Minimum: 1
 
     public static void main(String[] args)  {
 
@@ -43,7 +39,19 @@ public class StartComparison {
 
         // Open connection to DB
         GraphDatabaseService graphDb = new GraphDatabaseFactory()
-                .newEmbeddedDatabaseBuilder(new File(DB_PATH)).newGraphDatabase();
+                .newEmbeddedDatabase(new File(DB_PATH));
+
+        /*GraphDatabaseBuilder builder = new HighlyAvailableGraphDatabaseFactory()
+                .newHighlyAvailableDatabaseBuilder(DB_PATH);
+
+        builder.setConfig(ClusterSettings.server_id, "1");
+        builder.setConfig(HaSettings.ha_server, "localhost:6001");
+        builder.setConfig(HaSettings.slave_only, Settings.FALSE);
+        builder.setConfig(ClusterSettings.cluster_server, "localhost:5001");
+        builder.setConfig(ClusterSettings.initial_hosts, "localhost:5001,localhost:5002");
+
+        GraphDatabaseService graphDb = builder.newGraphDatabase();
+        */
         registerShutdownHook(graphDb);
 
 
@@ -51,16 +59,25 @@ public class StartComparison {
         Set<Node> nodes = getAllNodes(graphDb);
         System.out.println(nodes.size() +" Nodes");
 
-        //System.out.println(
-        //        calculateRandomWalkComparison(graphDb,nodes,NUMBER_OF_RUNS_TO_AVERAGE_RESULTS)
-        //);
-        //timeOfComparision.stop();
 
-        //System.out.println("\nWhole Comparison done in: "+ timeOfComparision.elapsed(TimeUnit.SECONDS)+"s");
+        //    System.out.println(
+        //            calculateRandomWalkComparison(graphDb,nodes,NUMBER_OF_RUNS_TO_AVERAGE_RESULTS)
+        //    );
 
-        System.out.println(calculateConnectedComponentsComparison(graphDb,
-                nodes,NUMBER_OF_RUNS_TO_AVERAGE_RESULTS,
-                ConnectedComponentsSingleThreadAlgorithm.AlgorithmType.STRONG));
+
+        AlgorithmRunnable rwSPI = new RandomWalkAlgorithmRunnableNewSPI(RANDOMWALKRANDOM,nodes,
+                graphDb,NUMBER_OF_RUNS_TO_AVERAGE_RESULTS);
+        Thread thread = new Thread(rwSPI);
+
+
+
+        timeOfComparision.stop();
+
+        System.out.println("\nWhole Comparison done in: "+ timeOfComparision.elapsed(TimeUnit.SECONDS)+"s");
+
+        //System.out.println(calculateConnectedComponentsComparison(graphDb,
+        //        nodes,NUMBER_OF_RUNS_TO_AVERAGE_RESULTS,
+        //        ConnectedComponentsSingleThreadAlgorithm.AlgorithmType.STRONG));
 
 
     }
@@ -108,8 +125,9 @@ public class StartComparison {
         long[] resultsOfStep;
         long[] resultsOfRun;
 
-        for(int c=100;c<=OPERATIONS;c=c*2){
+        for(int c=1000;c<=OPERATIONS;c=c+5000){
             // Step
+            System.out.println("Now doing step " +c + "/" + OPERATIONS);
             resultsOfStep = new long[2];
 
             for(int i=0;i<numberOfRunsPerStep;i++){
@@ -142,7 +160,7 @@ public class StartComparison {
         long[] runtimes = new long[2];
 
         // Start single RandomWalker
-        AlgorithmRunnable rwst = new RandomWalkAlgorithmRunnable(20,nodes, graphDb,noOfSteps);
+        AlgorithmRunnable rwst = new RandomWalkAlgorithmRunnable(RANDOMWALKRANDOM,nodes, graphDb,noOfSteps);
         Thread thr = rwst.getNewThread();
         thr.start();
         try {
@@ -165,7 +183,7 @@ public class StartComparison {
         // Initialization of the Threads
         Map<Thread,AlgorithmRunnable> map = new HashMap<>();
         for(int i=0;i<NUMBER_OF_THREADS;i++){
-            RandomWalkAlgorithmRunnable rw = new RandomWalkAlgorithmRunnable(20,nodes,
+            RandomWalkAlgorithmRunnable rw = new RandomWalkAlgorithmRunnable(RANDOMWALKRANDOM,nodes,
                     graphDb,noOfSteps/NUMBER_OF_THREADS);
             map.put(rw.getNewThread(),rw);
         }

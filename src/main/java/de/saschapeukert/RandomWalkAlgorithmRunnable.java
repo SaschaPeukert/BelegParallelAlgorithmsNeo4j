@@ -65,6 +65,7 @@ public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
             tx.success();  // Important!
         }
 
+
         timer.stop();
 
     }

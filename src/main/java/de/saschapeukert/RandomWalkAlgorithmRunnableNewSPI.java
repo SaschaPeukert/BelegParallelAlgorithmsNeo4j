@@ -1,46 +1,52 @@
 package de.saschapeukert;
 
 import org.neo4j.collection.primitive.PrimitiveLongIterator;
-import org.neo4j.graphdb.*;
+import org.neo4j.cursor.Cursor;
+import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.GraphDatabaseAPI;
+import org.neo4j.kernel.api.ReadOperations;
 import org.neo4j.kernel.api.exceptions.EntityNotFoundException;
-import org.neo4j.kernel.api.properties.DefinedProperty;
 import org.neo4j.kernel.impl.api.store.RelationshipIterator;
 import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
+import org.neo4j.kernel.api.Cursor.RelationshipItem;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
+import java.util.Set;
 
 /**
  * Created by Sascha Peukert on 03.08.2015.
  */
-public class RandomWalkAlgorithmRunnableSPI {//extends AlgorithmRunnable {
-/*
+
+
+public class RandomWalkAlgorithmRunnableNewSPI extends AlgorithmRunnable {
+
+
     public String Protocol;
     public int _RandomNodeParameter;
-    private long currentNode;
-    private List<Long> allNodes;
+    private Node currentNode;
     private int NUMBER_OF_STEPS;
     private Random random;
     private ThreadToStatementContextBridge ctx;
 
-
-    public RandomWalkAlgorithmRunnableSPI(int randomChanceParameter, List<Long> allNodes,
-                                          GraphDatabaseService gdb, int NumberOfSteps){
-       super(gdb);
+    public RandomWalkAlgorithmRunnableNewSPI(int randomChanceParameter, Set<Node> allNodes,
+                                             GraphDatabaseService gdb, int NumberOfSteps){
+        super(gdb,allNodes);
 
         this.Protocol = "";
         this._RandomNodeParameter = randomChanceParameter;
-        this.currentNode = -100;
-        this.allNodes = allNodes;
+        this.currentNode = null;
         this.NUMBER_OF_STEPS = NumberOfSteps;
         this.random = new Random();
 
+
         GraphDatabaseAPI api = ((GraphDatabaseAPI) graphDb);
-       this.ctx = api.getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
+        this.ctx = api.getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
+        //api.getDependencyResolver().resolveDependency(SchemaIndexProvider.class);
 
 
         PrimitiveLongIterator p =  ctx.get().readOperations().nodesGetAll();
@@ -51,25 +57,31 @@ public class RandomWalkAlgorithmRunnableSPI {//extends AlgorithmRunnable {
             p.next();
         }
 
-        try {
-            Iterator<DefinedProperty> intIt = ctx.get().readOperations().nodeGetAllProperties(5);
+        /*try {
+            Iterator<DefinedProperty> intIt = ctx.get().readOperations().node
 
             while(intIt.hasNext()){
                 System.out.println((intIt.next().valueAsString()));
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }*/
+        try (Transaction tx = graphDb.beginTx()){
+            getListOfReachableNodeIDs(50);
+            tx.success();
         }
 
+
+
     }
-     @Override
+    @Override
     public void compute() {
 
         timer.start();
-
+        /*
         try (Transaction tx = graphDb.beginTx()) {
             while (this.NUMBER_OF_STEPS > 0) {
-                if (currentNode == -100 || getListOfOutgoingRelationships(currentNode).size() == 0) {
+                if (currentNode == null || getListOfReachableNodeIDs(currentNode).size() == 0) {
                     // "Start" or current node has no outgoing relationships
                     currentNode = getSomeRandomNode();
                 } else {
@@ -80,7 +92,7 @@ public class RandomWalkAlgorithmRunnableSPI {//extends AlgorithmRunnable {
                     } else {
                         // Traverse one of the outgoing Relationships
                         ArrayList<Relationship> relationships =
-                                (ArrayList<Relationship>) getListOfOutgoingRelationships(currentNode);
+                                (ArrayList<Relationship>) getListOfReachableNodeIDs(currentNode);
                         w = random.nextInt(relationships.size());
                         currentNode = relationships.get(w).getEndNode();
 
@@ -97,45 +109,43 @@ public class RandomWalkAlgorithmRunnableSPI {//extends AlgorithmRunnable {
 
             tx.success();  // Important!
         }
-
+        */
         timer.stop();
 
     }
 
-    private List<Long> getListOfOutgoingRelationships(long n){
+    private List<Long> getListOfReachableNodeIDs(long n){
         ArrayList<Long> arr = new ArrayList<>();
         if (n != -100) {
             try {
-                RelationshipIterator it = ctx.get().readOperations().nodeGetRelationships(n,Direction.OUTGOING);
-                ctx.get().readOperations().re
+                ReadOperations ops = ctx.get().readOperations();
+
+                RelationshipIterator it = ops.nodeGetRelationships(n, Direction.OUTGOING);
+
                 while(it.hasNext()) {
                     long relID = it.next();
-                    Iterator<DefinedProperty> itDef = ctx.get().readOperations().relationshipGetAllProperties(relID);
-                    while(itDef.hasNext()){
-                        DefinedProperty d = itDef.next();
 
 
+                    Cursor<RelationshipItem> relCursor = ops.relationshipCursor(relID);//id);
+                    RelationshipItem item = relCursor.get();
+                    if (relCursor.next()) {
+                        arr.add(item.otherNode(n));
                     }
-                    arr.add(1L);
+                    System.gc();
                 }
             } catch (EntityNotFoundException e) {
                 e.printStackTrace();
             }
-
-            //Iterable<Relationship> it = n.getRelationships(Direction.OUTGOING);
-
-            for(Relationship r:it) {
-                arr.add(r);
-            }
         }
         return arr;
+
     }
 
-    private long getSomeRandomNodeID(){
+    private Node getSomeRandomNode(){
         int r = random.nextInt(allNodes.size());
-        return allNodes.get(r);
+        return (Node) allNodes.toArray()[r];        // TODO: Better Way?
     }
-*/
+
 }
 
 

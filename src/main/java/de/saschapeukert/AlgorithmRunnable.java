@@ -4,8 +4,6 @@ import com.google.common.base.Stopwatch;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
-import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 /**
