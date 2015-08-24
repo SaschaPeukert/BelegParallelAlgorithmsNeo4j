@@ -4,33 +4,64 @@ import org.neo4j.graphdb.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Created by Sascha Peukert on 03.08.2015.
  */
 public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
 
-    public String Protocol;
+//    public String Protocol;
     public int _RandomNodeParameter;
     private Node currentNode;
     private int NUMBER_OF_STEPS;
-    private Random random;
+    private ThreadLocalRandom random;
 
     public RandomWalkAlgorithmRunnable(int randomChanceParameter, Set<Node> allNodes,
                                        GraphDatabaseService gdb, int NumberOfSteps){
         super(gdb,allNodes);
 
-        this.Protocol = "";
+//        this.Protocol = "";
         this._RandomNodeParameter = randomChanceParameter;
         this.currentNode = null;
         this.NUMBER_OF_STEPS = NumberOfSteps;
-        this.random = new Random();
+        this.random = ThreadLocalRandom.current();
     }
     @Override
     public void compute() {
+
+
+/*
+        TraversalDescription traversalDescription = graphDb.traversalDescription().depthFirst().expand(new PathExpander<AtomicInteger>() {
+            @Override
+            public Iterable<Relationship> expand(Path path, BranchState branchState) {
+                Relationship rel = path.endNode().getRelationships();
+                return Collections.singleton(rel);
+            }
+
+            @Override
+            public PathExpander<AtomicInteger> reverse() {
+                return null;
+            }
+        }).evaluator(new PathEvaluator() {
+            @Override
+            public Evaluation evaluate(Path path, BranchState<> branchState) {
+                return path.length() < NUMBER_OF_STEPS ? Evaluation.INCLUDE_AND_CONTINUE : Evaluation.INCLUDE_AND_PRUNE;
+            }
+
+            @Override
+            public Evaluation evaluate(Path path) {
+                return null;
+            }
+        });
+
+        org.neo4j.graphdb.traversal.Traverser traverse = traversalDescription.traverse(startNode);
+
+        for (Path path : traverse) {
+
+        }
+*/
 
         timer.start();
 
@@ -46,8 +77,8 @@ public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
                         currentNode = getSomeRandomNode();
                     } else {
                         // Traverse one of the outgoing Relationships
-                        ArrayList<Relationship> relationships =
-                                (ArrayList<Relationship>) getListOfOutgoingRelationships(currentNode);
+                        List<Relationship> relationships =
+                                getListOfOutgoingRelationships(currentNode);
                         w = random.nextInt(relationships.size());
                         currentNode = relationships.get(w).getEndNode();
 
@@ -57,7 +88,7 @@ public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
 
                 // Protocol the newly reached node
                 graphDb.getNodeById(currentNode.getId()); // just a lookup to generate "work" for the transaction
-                this.Protocol += "\n" + timer.elapsed(TimeUnit.MICROSECONDS) + " \u00B5s: ID:" + currentNode.getId();
+//                this.Protocol += "\n" + timer.elapsed(TimeUnit.MICROSECONDS) + " \u00B5s: ID:" + currentNode.getId();
 
                 NUMBER_OF_STEPS--;
             }
@@ -71,7 +102,7 @@ public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
     }
 
     private List<Relationship> getListOfOutgoingRelationships(Node n){
-        ArrayList<Relationship> arr = new ArrayList<>();
+        List<Relationship> arr = new ArrayList<>(100);
         if (n != null) {
             Iterable<Relationship> it = n.getRelationships(Direction.OUTGOING);
 
@@ -84,7 +115,7 @@ public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
 
     private Node getSomeRandomNode(){
         int r = random.nextInt(allNodes.size());
-        return (Node) allNodes.toArray()[r];        // TODO: Better Way?
+        return (Node) allNodes.get(r);        // TODO: Better Way?
     }
 
 }

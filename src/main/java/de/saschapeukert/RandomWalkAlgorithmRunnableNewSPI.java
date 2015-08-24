@@ -8,15 +8,17 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.GraphDatabaseAPI;
 import org.neo4j.kernel.api.ReadOperations;
+import org.neo4j.kernel.api.cursor.NodeItem;
 import org.neo4j.kernel.api.exceptions.EntityNotFoundException;
 import org.neo4j.kernel.impl.api.store.RelationshipIterator;
 import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
-import org.neo4j.kernel.api.Cursor.RelationshipItem;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+
+//import org.neo4j.kernel.api.Cursor.RelationshipItem;
 
 /**
  * Created by Sascha Peukert on 03.08.2015.
@@ -49,8 +51,14 @@ public class RandomWalkAlgorithmRunnableNewSPI extends AlgorithmRunnable {
         //api.getDependencyResolver().resolveDependency(SchemaIndexProvider.class);
 
 
-        PrimitiveLongIterator p =  ctx.get().readOperations().nodesGetAll();
 
+        PrimitiveLongIterator p =  ctx.get().readOperations().nodesGetAll();
+        Cursor<NodeItem> allNodesCursor = ctx.get().readOperations().nodeCursorGetAll();
+
+        while (allNodesCursor.next()) {
+            NodeItem nodeItem = allNodesCursor.get();
+            nodeItem.getRelationships(Direction.BOTH);
+        }
         int i=0;
         while(p.hasNext()){
             i++;
@@ -126,11 +134,11 @@ public class RandomWalkAlgorithmRunnableNewSPI extends AlgorithmRunnable {
                     long relID = it.next();
 
 
-                    Cursor<RelationshipItem> relCursor = ops.relationshipCursor(relID);//id);
+                    /*Cursor<RelationshipItem> relCursor = ops.relationshipCursor(relID);//id);
                     RelationshipItem item = relCursor.get();
                     if (relCursor.next()) {
                         arr.add(item.otherNode(n));
-                    }
+                    }*/
                     System.gc();
                 }
             } catch (EntityNotFoundException e) {

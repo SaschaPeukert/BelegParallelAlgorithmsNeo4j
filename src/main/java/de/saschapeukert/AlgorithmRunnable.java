@@ -4,6 +4,8 @@ import com.google.common.base.Stopwatch;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -13,7 +15,7 @@ public abstract class AlgorithmRunnable implements Runnable {
 
     public Stopwatch timer;
     protected GraphDatabaseService graphDb;
-    protected Set<Node> allNodes;
+    protected List<Node> allNodes;
 
     public abstract void compute();
 
@@ -28,7 +30,7 @@ public abstract class AlgorithmRunnable implements Runnable {
     public AlgorithmRunnable(GraphDatabaseService gdb, Set<Node> nodes){
         this.timer = Stopwatch.createUnstarted();
         this.graphDb = gdb;
-        this.allNodes = nodes;
+        this.allNodes = new ArrayList<>(nodes);
     }
 
 

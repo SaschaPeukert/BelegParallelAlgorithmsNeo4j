@@ -6,6 +6,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.ResourceIterable;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.tooling.GlobalGraphOperations;
 
 import java.io.File;
@@ -21,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 public class StartComparison {
 
     private  static final String DB_PATH = "E:\\Users\\Sascha\\Documents\\GIT\\" +
-            "_Belegarbeit\\neo4j-enterprise-2.3.0-M02";
+            "_Belegarbeit\\neo4j-enterprise-2.3.0-M02\\data\\graph.db";
 
     private static final int OPERATIONS=80000;
     private static final int NUMBER_OF_THREADS =4;
@@ -39,7 +40,10 @@ public class StartComparison {
 
         // Open connection to DB
         GraphDatabaseService graphDb = new GraphDatabaseFactory()
-                .newEmbeddedDatabase(new File(DB_PATH));
+                .newEmbeddedDatabaseBuilder(new File(DB_PATH))
+                .setConfig(GraphDatabaseSettings.pagecache_memory,"4G")
+             //   .setConfig(GraphDatabaseSettings.allow_store_upgrade,"true")
+                .newGraphDatabase();
 
         /*GraphDatabaseBuilder builder = new HighlyAvailableGraphDatabaseFactory()
                 .newHighlyAvailableDatabaseBuilder(DB_PATH);
@@ -60,14 +64,14 @@ public class StartComparison {
         System.out.println(nodes.size() +" Nodes");
 
 
-        //    System.out.println(
-        //            calculateRandomWalkComparison(graphDb,nodes,NUMBER_OF_RUNS_TO_AVERAGE_RESULTS)
-        //    );
+            System.out.println(
+                    calculateRandomWalkComparison(graphDb,nodes,NUMBER_OF_RUNS_TO_AVERAGE_RESULTS)
+            );
 
 
-        AlgorithmRunnable rwSPI = new RandomWalkAlgorithmRunnableNewSPI(RANDOMWALKRANDOM,nodes,
+        /*AlgorithmRunnable rwSPI = new RandomWalkAlgorithmRunnableNewSPI(RANDOMWALKRANDOM,nodes,
                 graphDb,NUMBER_OF_RUNS_TO_AVERAGE_RESULTS);
-        Thread thread = new Thread(rwSPI);
+        Thread thread = new Thread(rwSPI);*/
 
 
 
@@ -195,7 +199,10 @@ public class StartComparison {
         for(Thread t:map.keySet()){
             try {
                 t.join();
-                elapsedTime +=map.get(t).timer.elapsed(TimeUnit.MICROSECONDS);
+
+                if(elapsedTime<map.get(t).timer.elapsed(TimeUnit.MICROSECONDS)){
+                    elapsedTime =map.get(t).timer.elapsed(TimeUnit.MICROSECONDS);
+                }
                 t = null; // suggestion for garbage collector
 
             } catch (InterruptedException e) {
