@@ -55,9 +55,9 @@ public class StartComparison {
 
         int nodeIDhigh = getHighestNodeID(graphDb);
 
-        System.out.println("~" +nodeIDhigh + " Nodes");
+        System.out.println("~ " +nodeIDhigh + " Nodes");
 
-        WarmUp(graphDb, nodeIDhigh, 60, true);
+        WarmUp(graphDb, nodeIDhigh, WARMUPTIME, true);
 
         System.out.println("");
 
@@ -185,7 +185,7 @@ public class StartComparison {
 
         runtimes[0] = doSingleThreadRandomWalk(graphDb, highestNodeId, noOfSteps);
 
-        WarmUp(graphDb,highestNodeId,5,false);
+        //WarmUp(graphDb,highestNodeId,5,false);
 
         // 	comparison with NUMBER_OF_THREADS Threads
         //
