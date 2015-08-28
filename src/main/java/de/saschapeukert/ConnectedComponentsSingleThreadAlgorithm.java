@@ -1,22 +1,30 @@
 package de.saschapeukert;
 
-import org.neo4j.graphdb.*;
-
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import org.neo4j.graphdb.GraphDatabaseService;
 
 /**
  * Created by Sascha Peukert on 06.08.2015.
  */
+
+
 public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable {
 
+
+    public ConnectedComponentsSingleThreadAlgorithm(GraphDatabaseService gdb, int highestNodeId, AlgorithmType type) {
+        super(gdb, highestNodeId);
+    }
+
+    @Override
+    public void compute() {
+
+    }
 
     public enum AlgorithmType{
         WEAK,
         STRONG
     }
 
-
+/*
     private Map<Node,String> componentsMap;
     private int componentID;
     private AlgorithmType myType;
@@ -26,8 +34,8 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
     private int maxdfs=0;
 
 
-    public ConnectedComponentsSingleThreadAlgorithm(GraphDatabaseService gdb, Set<Node> nodes, AlgorithmType type){
-        super(gdb, nodes);
+    public ConnectedComponentsSingleThreadAlgorithm(GraphDatabaseService gdb, int highestNodeId, AlgorithmType type){
+        super(gdb, highestNodeId);
         componentsMap = new HashMap<Node, String>();
         this.myType = type;
 
@@ -193,5 +201,6 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
 
         return returnString.toString();
     }
-
+*/
 }
+

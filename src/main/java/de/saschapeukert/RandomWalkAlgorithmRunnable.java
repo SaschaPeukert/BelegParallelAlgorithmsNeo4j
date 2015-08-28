@@ -4,7 +4,6 @@ import org.neo4j.graphdb.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -18,9 +17,9 @@ public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
     private int NUMBER_OF_STEPS;
     private ThreadLocalRandom random;
 
-    public RandomWalkAlgorithmRunnable(int randomChanceParameter, Set<Node> allNodes,
-                                       GraphDatabaseService gdb, int NumberOfSteps){
-        super(gdb,allNodes);
+    public RandomWalkAlgorithmRunnable(int randomChanceParameter,
+                                       GraphDatabaseService gdb,int highestNodeId, int NumberOfSteps){
+        super(gdb, highestNodeId);
 
 //        this.Protocol = "";
         this._RandomNodeParameter = randomChanceParameter;
@@ -114,8 +113,20 @@ public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
     }
 
     private Node getSomeRandomNode(){
-        int r = random.nextInt(allNodes.size());
-        return (Node) allNodes.get(r);        // TODO: Better Way?
+        long r;
+        while(true) {
+
+            try {
+                r = (long) random.nextInt(highestNodeId);
+                Node n = graphDb.getNodeById(r);
+                return n;
+            } catch (NotFoundException e){
+                // NEXT!
+            }
+
+
+        }
+
     }
 
 }

@@ -2,10 +2,7 @@ package de.saschapeukert;
 
 import org.neo4j.collection.primitive.PrimitiveLongIterator;
 import org.neo4j.cursor.Cursor;
-import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Transaction;
+import org.neo4j.graphdb.*;
 import org.neo4j.kernel.GraphDatabaseAPI;
 import org.neo4j.kernel.api.ReadOperations;
 import org.neo4j.kernel.api.cursor.NodeItem;
@@ -16,7 +13,6 @@ import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 
 //import org.neo4j.kernel.api.Cursor.RelationshipItem;
 
@@ -35,9 +31,9 @@ public class RandomWalkAlgorithmRunnableNewSPI extends AlgorithmRunnable {
     private Random random;
     private ThreadToStatementContextBridge ctx;
 
-    public RandomWalkAlgorithmRunnableNewSPI(int randomChanceParameter, Set<Node> allNodes,
-                                             GraphDatabaseService gdb, int NumberOfSteps){
-        super(gdb,allNodes);
+    public RandomWalkAlgorithmRunnableNewSPI(int randomChanceParameter,
+                                             GraphDatabaseService gdb,int highestNodeId, int NumberOfSteps){
+        super(gdb, highestNodeId);
 
         this.Protocol = "";
         this._RandomNodeParameter = randomChanceParameter;
@@ -150,8 +146,20 @@ public class RandomWalkAlgorithmRunnableNewSPI extends AlgorithmRunnable {
     }
 
     private Node getSomeRandomNode(){
-        int r = random.nextInt(allNodes.size());
-        return (Node) allNodes.toArray()[r];        // TODO: Better Way?
+        long r;
+        while(true) {
+
+            try {
+                r = (long) random.nextInt(highestNodeId);
+                Node n = graphDb.getNodeById(r);
+                return n;
+            } catch (NotFoundException e){
+                // NEXT!
+            }
+
+
+        }
+
     }
 
 }
