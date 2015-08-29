@@ -10,7 +10,6 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
 
-//    public String Protocol;
     public int _RandomNodeParameter;
     private Node currentNode;
     private int NUMBER_OF_STEPS;
@@ -20,7 +19,6 @@ public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
                                        GraphDatabaseService gdb,int highestNodeId, int NumberOfSteps){
         super(gdb, highestNodeId);
 
-//        this.Protocol = "";
         this._RandomNodeParameter = randomChanceParameter;
         this.currentNode = null;
         this.NUMBER_OF_STEPS = NumberOfSteps;
