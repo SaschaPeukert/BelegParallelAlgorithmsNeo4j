@@ -2,8 +2,7 @@ package de.saschapeukert;
 
 import org.neo4j.graphdb.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Iterator;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -66,28 +65,13 @@ public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
 
         try (Transaction tx = graphDb.beginTx()) {
             while (this.NUMBER_OF_STEPS > 0) {
-                if (currentNode == null || getListOfOutgoingRelationships(currentNode).size() == 0) {
-                    // "Start" or current node has no outgoing relationships
+
+                int w = random.nextInt(100) + 1;
+                if (w <= _RandomNodeParameter) {
                     currentNode = getSomeRandomNode();
-                } else {
-                    int w = random.nextInt(100) + 1;
-                    if (w <= _RandomNodeParameter) {
-                        //this.Protocol += "\nI want to go somewhere completely else now!";
-                        currentNode = getSomeRandomNode();
-                    } else {
-                        // Traverse one of the outgoing Relationships
-                        List<Relationship> relationships =
-                                getListOfOutgoingRelationships(currentNode);
-                        w = random.nextInt(relationships.size());
-                        currentNode = relationships.get(w).getEndNode();
-
-                    }
-
+                } else{
+                    currentNode = getNextNode(currentNode);
                 }
-
-                // Protocol the newly reached node
-                graphDb.getNodeById(currentNode.getId()); // just a lookup to generate "work" for the transaction
-//                this.Protocol += "\n" + timer.elapsed(TimeUnit.MICROSECONDS) + " \u00B5s: ID:" + currentNode.getId();
 
                 NUMBER_OF_STEPS--;
             }
@@ -100,16 +84,36 @@ public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
 
     }
 
-    private List<Relationship> getListOfOutgoingRelationships(Node n){
-        List<Relationship> arr = new ArrayList<>(100);
+    private Node getNextNode(Node n){
         if (n != null) {
-            Iterable<Relationship> it = n.getRelationships(Direction.OUTGOING);
+            int relationshipsOfNode = n.getDegree(Direction.OUTGOING);
 
-            for(Relationship r:it) {
-                arr.add(r);
+            if(relationshipsOfNode>0){
+                // Choose one of the relationships to follow
+                Iterator<Relationship> itR = n.getRelationships(Direction.OUTGOING).iterator();
+
+                int new_relationshipIndex = random.nextInt(relationshipsOfNode);
+
+                for(int i=0;i<=new_relationshipIndex;i++)
+                {
+                    if(i==new_relationshipIndex){
+
+                        Relationship r = itR.next();
+                        return r.getOtherNode(n);
+
+                    } else{
+                        itR.next();
+                    }
+                }
+
+
+            } else{
+                // Node has no outgoing relationships
+                return getSomeRandomNode();
             }
+
         }
-        return arr;
+        return null;  // Error!
     }
 
     private Node getSomeRandomNode(){

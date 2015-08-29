@@ -20,11 +20,11 @@ public class StartComparison {
     private  static final String DB_PATH = "E:\\Users\\Sascha\\Documents\\GIT\\" +
             "_Belegarbeit\\neo4j-enterprise-2.3.0-M02\\data\\graph.db";
 
-    private static final int OPERATIONS=200000;
-    private static final int NUMBER_OF_THREADS =4;
+    private static final int OPERATIONS=100000;
+    private static final int NUMBER_OF_THREADS =8;
     private static final int NUMBER_OF_RUNS_TO_AVERAGE_RESULTS = 1; //Minimum: 1
     private static final int RANDOMWALKRANDOM = 20;  // Minimum: 1
-    private static final int WARMUPTIME = 60; // in seconds
+    private static final int WARMUPTIME = 120; // in seconds
 
     public static void main(String[] args)  {
 
@@ -77,7 +77,9 @@ public class StartComparison {
 
         timeOfComparision.stop();
 
-        System.out.println("\nWhole Comparison done in: "+ timeOfComparision.elapsed(TimeUnit.SECONDS)+"s (+ WarmUp)");
+        System.out.println("\nWhole Comparison done in: "+ timeOfComparision.elapsed(TimeUnit.SECONDS)+"s (+ WarmUp " + WARMUPTIME + "s)");
+
+        java.awt.Toolkit.getDefaultToolkit().beep();
 
         //System.out.println(calculateConnectedComponentsComparison(graphDb,
         //        nodes,NUMBER_OF_RUNS_TO_AVERAGE_RESULTS,
@@ -144,7 +146,7 @@ public class StartComparison {
 
     private static String calculateRandomWalkComparison(GraphDatabaseService graphDb, int highestNodeId,
                                                         int numberOfRunsPerStep){
-        String result="";
+        String result="\n\nSteps SingleThread[\u00B5s] MultiThread[\u00B5s] SpeedUp[%]";
 
         long[] resultsOfStep;
         long[] resultsOfRun;
@@ -168,7 +170,8 @@ public class StartComparison {
             resultsOfStep[0] = resultsOfStep[0]/numberOfRunsPerStep;
             resultsOfStep[1] = resultsOfStep[1]/numberOfRunsPerStep;
 
-            result += "\n" +c + " " + resultsOfStep[0] + " " + resultsOfStep[1];
+            result += "\n" +c + " " + resultsOfStep[0] + " " + resultsOfStep[1] + " " +
+                    (100-(((float)100/resultsOfStep[0])*resultsOfStep[1]));
 
             resultsOfStep = null; // suggestion for garbage collector
 

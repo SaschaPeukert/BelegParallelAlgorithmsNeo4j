@@ -29,8 +29,8 @@ public abstract class AlgorithmRunnable implements Runnable {
     }
 
 
-    /*
-    This is just purely convinience
+    /**
+     * This is just purely convinience
      */
     public Thread getNewThread(){
         return new Thread(this);
