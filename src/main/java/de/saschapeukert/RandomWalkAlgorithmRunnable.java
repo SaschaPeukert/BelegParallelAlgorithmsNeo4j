@@ -27,7 +27,6 @@ public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
     @Override
     public void compute() {
 
-
 /*
         TraversalDescription traversalDescription = graphDb.traversalDescription().depthFirst().expand(new PathExpander<AtomicInteger>() {
             @Override
@@ -105,13 +104,10 @@ public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
                 }
 
 
-            } else{
-                // Node has no outgoing relationships
-                return getSomeRandomNode();
             }
 
         }
-        return null;  // Error!
+        return getSomeRandomNode();  // Node has no outgoing relationships or is start "node"
     }
 
     private Node getSomeRandomNode(){

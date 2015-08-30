@@ -1,17 +1,16 @@
 package de.saschapeukert;
 
-import org.neo4j.collection.primitive.PrimitiveLongIterator;
 import org.neo4j.cursor.Cursor;
-import org.neo4j.graphdb.*;
+import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.GraphDatabaseAPI;
 import org.neo4j.kernel.api.ReadOperations;
-import org.neo4j.kernel.api.cursor.NodeItem;
+import org.neo4j.kernel.api.cursor.RelationshipItem;
 import org.neo4j.kernel.api.exceptions.EntityNotFoundException;
 import org.neo4j.kernel.impl.api.store.RelationshipIterator;
 import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 //import org.neo4j.kernel.api.Cursor.RelationshipItem;
@@ -26,10 +25,12 @@ public class RandomWalkAlgorithmRunnableNewSPI extends AlgorithmRunnable {
 
     public String Protocol;
     public int _RandomNodeParameter;
-    private Node currentNode;
+    private long currentNodeId;
     private int NUMBER_OF_STEPS;
     private Random random;
     private ThreadToStatementContextBridge ctx;
+    private ReadOperations ops;
+    private GraphDatabaseAPI api;
 
     public RandomWalkAlgorithmRunnableNewSPI(int randomChanceParameter,
                                              GraphDatabaseService gdb,int highestNodeId, int NumberOfSteps){
@@ -37,17 +38,17 @@ public class RandomWalkAlgorithmRunnableNewSPI extends AlgorithmRunnable {
 
         this.Protocol = "";
         this._RandomNodeParameter = randomChanceParameter;
-        this.currentNode = null;
+        this.currentNodeId = -1;
         this.NUMBER_OF_STEPS = NumberOfSteps;
         this.random = new Random();
+        this.api = (GraphDatabaseAPI) gdb;
 
-
-        GraphDatabaseAPI api = ((GraphDatabaseAPI) graphDb);
+        //GraphDatabaseAPI api = ((GraphDatabaseAPI) graphDb);
         this.ctx = api.getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
         //api.getDependencyResolver().resolveDependency(SchemaIndexProvider.class);
 
 
-
+        /*
         PrimitiveLongIterator p =  ctx.get().readOperations().nodesGetAll();
         Cursor<NodeItem> allNodesCursor = ctx.get().readOperations().nodeCursorGetAll();
 
@@ -60,7 +61,7 @@ public class RandomWalkAlgorithmRunnableNewSPI extends AlgorithmRunnable {
             i++;
             p.next();
         }
-
+        */
         /*try {
             Iterator<DefinedProperty> intIt = ctx.get().readOperations().node
 
@@ -70,10 +71,7 @@ public class RandomWalkAlgorithmRunnableNewSPI extends AlgorithmRunnable {
         } catch (Exception e) {
             e.printStackTrace();
         }*/
-        try (Transaction tx = graphDb.beginTx()){
-            getListOfReachableNodeIDs(50);
-            tx.success();
-        }
+
 
 
 
@@ -82,81 +80,78 @@ public class RandomWalkAlgorithmRunnableNewSPI extends AlgorithmRunnable {
     public void compute() {
 
         timer.start();
-        /*
+
         try (Transaction tx = graphDb.beginTx()) {
+            this.ops = ctx.get().readOperations();
+
             while (this.NUMBER_OF_STEPS > 0) {
-                if (currentNode == null || getListOfReachableNodeIDs(currentNode).size() == 0) {
-                    // "Start" or current node has no outgoing relationships
-                    currentNode = getSomeRandomNode();
-                } else {
-                    int w = random.nextInt(100) + 1;
-                    if (w <= _RandomNodeParameter) {
-                        //this.Protocol += "\nI want to go somewhere completely else now!";
-                        currentNode = getSomeRandomNode();
-                    } else {
-                        // Traverse one of the outgoing Relationships
-                        ArrayList<Relationship> relationships =
-                                (ArrayList<Relationship>) getListOfReachableNodeIDs(currentNode);
-                        w = random.nextInt(relationships.size());
-                        currentNode = relationships.get(w).getEndNode();
 
-                    }
-
+                int w = random.nextInt(100) + 1;
+                if (w <= _RandomNodeParameter) {
+                    currentNodeId = getSomeRandomNodeId();
+                } else{
+                    currentNodeId = getNextNode(currentNodeId);
                 }
-
-                // Protocol the newly reached node
-                graphDb.getNodeById(currentNode.getId()); // just a lookup to generate "work" for the transaction
-                this.Protocol += "\n" + timer.elapsed(TimeUnit.MICROSECONDS) + " \u00B5s: ID:" + currentNode.getId();
 
                 NUMBER_OF_STEPS--;
             }
 
             tx.success();  // Important!
         }
-        */
+
         timer.stop();
 
     }
 
-    private List<Long> getListOfReachableNodeIDs(long n){
-        ArrayList<Long> arr = new ArrayList<>();
-        if (n != -100) {
+
+    private long getNextNode(long n){
+        if (n != -1) {
+            int relationshipsOfNode = 0;
+
             try {
-                ReadOperations ops = ctx.get().readOperations();
+                relationshipsOfNode = ops.nodeGetDegree(n, Direction.OUTGOING);
 
-                RelationshipIterator it = ops.nodeGetRelationships(n, Direction.OUTGOING);
+                if (relationshipsOfNode > 0) {
+                    // Choose one of the relationships to follow
+                    RelationshipIterator itR = ops.nodeGetRelationships(n, Direction.OUTGOING);
 
-                while(it.hasNext()) {
-                    long relID = it.next();
+                    int new_relationshipIndex = random.nextInt(relationshipsOfNode);
+
+                    for (int i = 0; i <= new_relationshipIndex; i++) {
+                        if (i == new_relationshipIndex) {
+
+                            long r = itR.next();
+
+                            Cursor<RelationshipItem> relCursor = ops.relationshipCursor(r);//id);
+                            RelationshipItem item = relCursor.get();
+                            if (relCursor.next()) {
+                                return item.otherNode(n);
+                            }
+
+                        } else {
+                            itR.next();
+                        }
+                    }
 
 
-                    /*Cursor<RelationshipItem> relCursor = ops.relationshipCursor(relID);//id);
-                    RelationshipItem item = relCursor.get();
-                    if (relCursor.next()) {
-                        arr.add(item.otherNode(n));
-                    }*/
-                    System.gc();
                 }
+
             } catch (EntityNotFoundException e) {
                 e.printStackTrace();
+                return -1; // ERROR!
             }
-        }
-        return arr;
 
+        }
+        return getSomeRandomNodeId();  // Node has no outgoing relationships or is start "node"
     }
 
-    private Node getSomeRandomNode(){
+    private long getSomeRandomNodeId(){
         long r;
         while(true) {
 
-            try {
-                r = (long) random.nextInt(highestNodeId);
-                Node n = graphDb.getNodeById(r);
-                return n;
-            } catch (NotFoundException e){
-                // NEXT!
-            }
-
+            r = (long) random.nextInt(highestNodeId);
+            if(ops.nodeExists(r))
+                return r;
 
         }
 

@@ -20,11 +20,12 @@ public class StartComparison {
     private  static final String DB_PATH = "E:\\Users\\Sascha\\Documents\\GIT\\" +
             "_Belegarbeit\\neo4j-enterprise-2.3.0-M02\\data\\graph.db";
 
-    private static final int OPERATIONS=100000;
-    private static final int NUMBER_OF_THREADS =8;
+    private static final int OPERATIONS=300000;
+    private static final int NUMBER_OF_THREADS =4;
     private static final int NUMBER_OF_RUNS_TO_AVERAGE_RESULTS = 1; //Minimum: 1
     private static final int RANDOMWALKRANDOM = 20;  // Minimum: 1
     private static final int WARMUPTIME = 120; // in seconds
+    private static final boolean NEWSPI = true;
 
     public static void main(String[] args)  {
 
@@ -35,7 +36,7 @@ public class StartComparison {
         // Open connection to DB
         GraphDatabaseService graphDb = new GraphDatabaseFactory()
                 .newEmbeddedDatabaseBuilder(new File(DB_PATH))
-                .setConfig(GraphDatabaseSettings.pagecache_memory,"4G")
+                .setConfig(GraphDatabaseSettings.pagecache_memory,"6G")
              //   .setConfig(GraphDatabaseSettings.allow_store_upgrade,"true")
                 .newGraphDatabase();
 
@@ -63,17 +64,23 @@ public class StartComparison {
 
         Stopwatch timeOfComparision = Stopwatch.createStarted();
 
+
         System.out.println(
                 calculateRandomWalkComparison(graphDb, nodeIDhigh, NUMBER_OF_RUNS_TO_AVERAGE_RESULTS)
         );
 
 
-
-        /*AlgorithmRunnable rwSPI = new RandomWalkAlgorithmRunnableNewSPI(RANDOMWALKRANDOM,nodeIDhigh,
-                graphDb,NUMBER_OF_RUNS_TO_AVERAGE_RESULTS);
-        Thread thread = new Thread(rwSPI);*/
-
-
+        /*
+        AlgorithmRunnable rwSPI = new RandomWalkAlgorithmRunnableNewSPI(RANDOMWALKRANDOM,
+                graphDb,nodeIDhigh,OPERATIONS);
+        Thread thread = new Thread(rwSPI);
+        thread.start();
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        */
 
         timeOfComparision.stop();
 
@@ -99,7 +106,7 @@ public class StartComparison {
 
         Stopwatch timer = Stopwatch.createStarted();
         while(timer.elapsed(TimeUnit.SECONDS)<secs){
-            doMultiThreadRandomWalk(graphDb,highestNodeId,10000);
+            doMultiThreadRandomWalk(graphDb,highestNodeId,100);
         }
         timer.stop();
 
@@ -119,7 +126,7 @@ public class StartComparison {
             resultsOfRun = resultsOfRun + temp;
             result += "("+i+") " + temp + "ms\n";
 
-            System.gc();
+            //System.gc();
         }
 
         resultsOfRun = resultsOfRun/runs;
@@ -175,7 +182,7 @@ public class StartComparison {
 
             resultsOfStep = null; // suggestion for garbage collector
 
-            System.gc(); // suggestion for garbage collector. Now would be perfect!
+           //System.gc(); // suggestion for garbage collector. Now would be perfect!
 
         }
 
@@ -204,8 +211,16 @@ public class StartComparison {
         // INIT
         Map<Thread,AlgorithmRunnable> map = new HashMap<>();
         for(int i=0;i<NUMBER_OF_THREADS;i++){
-            RandomWalkAlgorithmRunnable rw = new RandomWalkAlgorithmRunnable(RANDOMWALKRANDOM,
-                    graphDb,highestNodeId, noOfSteps/NUMBER_OF_THREADS);
+
+            AlgorithmRunnable rw;
+            if(NEWSPI){
+                rw = new RandomWalkAlgorithmRunnableNewSPI(RANDOMWALKRANDOM,
+                        graphDb,highestNodeId, noOfSteps/NUMBER_OF_THREADS);
+            } else{
+                rw = new RandomWalkAlgorithmRunnable(RANDOMWALKRANDOM,
+                        graphDb,highestNodeId, noOfSteps/NUMBER_OF_THREADS);
+            }
+
             map.put(rw.getNewThread(),rw);
         }
 
@@ -237,7 +252,14 @@ public class StartComparison {
     }
 
     private static long doSingleThreadRandomWalk(GraphDatabaseService graphDb, int highestNodeId, int noOfSteps){
-        AlgorithmRunnable rwst = new RandomWalkAlgorithmRunnable(RANDOMWALKRANDOM, graphDb,highestNodeId,noOfSteps);
+
+        AlgorithmRunnable rwst;
+        if(NEWSPI){
+            rwst = new RandomWalkAlgorithmRunnableNewSPI(RANDOMWALKRANDOM, graphDb,highestNodeId,noOfSteps);
+        } else{
+            rwst = new RandomWalkAlgorithmRunnable(RANDOMWALKRANDOM, graphDb,highestNodeId,noOfSteps);
+
+        }
         Thread thr = rwst.getNewThread();
         thr.start();
         try {
