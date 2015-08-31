@@ -10,6 +10,7 @@ import org.neo4j.kernel.impl.store.NeoStore;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -17,10 +18,12 @@ import java.util.concurrent.TimeUnit;
  */
 public class StartComparison {
 
-    private  static final String DB_PATH = "E:\\Users\\Sascha\\Documents\\GIT\\" +
-            "_Belegarbeit\\neo4j-enterprise-2.3.0-M02\\data\\graph.db";
 
-    private static final int OPERATIONS=300000;
+    private  static final String DB_PATH = "C:\\BelegDB\\neo4j-enterprise-2.3.0-M02\\data\\graph.db";
+    /*private  static final String DB_PATH = "E:\\Users\\Sascha\\Documents\\GIT\\" +
+           "_Belegarbeit\\neo4j-enterprise-2.3.0-M02\\data\\graph.db";*/
+
+    private static final int OPERATIONS=501000;
     private static final int NUMBER_OF_THREADS =4;
     private static final int NUMBER_OF_RUNS_TO_AVERAGE_RESULTS = 1; //Minimum: 1
     private static final int RANDOMWALKRANDOM = 20;  // Minimum: 1
@@ -37,7 +40,7 @@ public class StartComparison {
         GraphDatabaseService graphDb = new GraphDatabaseFactory()
                 .newEmbeddedDatabaseBuilder(new File(DB_PATH))
                 .setConfig(GraphDatabaseSettings.pagecache_memory,"6G")
-             //   .setConfig(GraphDatabaseSettings.allow_store_upgrade,"true")
+                .setConfig(GraphDatabaseSettings.allow_store_upgrade,"true")
                 .newGraphDatabase();
 
         /*GraphDatabaseBuilder builder = new HighlyAvailableGraphDatabaseFactory()
@@ -105,9 +108,21 @@ public class StartComparison {
         if(output) System.out.println("Starting WarmUp.");
 
         Stopwatch timer = Stopwatch.createStarted();
-        while(timer.elapsed(TimeUnit.SECONDS)<secs){
-            doMultiThreadRandomWalk(graphDb,highestNodeId,100);
-        }
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        //try (Transaction tx = graphDb.beginTx()) {
+
+        while (timer.elapsed(TimeUnit.SECONDS) < secs) {
+                doMultiThreadRandomWalk(graphDb,highestNodeId,100);
+                //if (random.nextBoolean()) {
+                    //DBUtils.getSomeRandomNode(graphDb, random, highestNodeId);
+                    //        } else {
+                    //                  DBUtils.getSomeRandomRelationship(graphDb, random, highestNodeId);
+//                }
+
+            }
+
+//            tx.success();
+  //      }
         timer.stop();
 
         if(output)System.out.println("WarmUp finished after " + timer.elapsed(TimeUnit.SECONDS) + "s.");

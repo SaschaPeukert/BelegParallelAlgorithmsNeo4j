@@ -65,7 +65,7 @@ public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
 
                 int w = random.nextInt(100) + 1;
                 if (w <= _RandomNodeParameter) {
-                    currentNode = getSomeRandomNode();
+                    currentNode = DBUtils.getSomeRandomNode(graphDb, random, highestNodeId);
                 } else{
                     currentNode = getNextNode(currentNode);
                 }
@@ -107,24 +107,7 @@ public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
             }
 
         }
-        return getSomeRandomNode();  // Node has no outgoing relationships or is start "node"
-    }
-
-    private Node getSomeRandomNode(){
-        long r;
-        while(true) {
-
-            try {
-                r = (long) random.nextInt(highestNodeId);
-                Node n = graphDb.getNodeById(r);
-                return n;
-            } catch (NotFoundException e){
-                // NEXT!
-            }
-
-
-        }
-
+        return DBUtils.getSomeRandomNode(graphDb, random, highestNodeId);  // Node has no outgoing relationships or is start "node"
     }
 
 }

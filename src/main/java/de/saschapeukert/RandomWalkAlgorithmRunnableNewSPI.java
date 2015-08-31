@@ -11,7 +11,7 @@ import org.neo4j.kernel.api.exceptions.EntityNotFoundException;
 import org.neo4j.kernel.impl.api.store.RelationshipIterator;
 import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
 
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 //import org.neo4j.kernel.api.Cursor.RelationshipItem;
 
@@ -27,7 +27,7 @@ public class RandomWalkAlgorithmRunnableNewSPI extends AlgorithmRunnable {
     public int _RandomNodeParameter;
     private long currentNodeId;
     private int NUMBER_OF_STEPS;
-    private Random random;
+    private ThreadLocalRandom random;
     private ThreadToStatementContextBridge ctx;
     private ReadOperations ops;
     private GraphDatabaseAPI api;
@@ -40,7 +40,7 @@ public class RandomWalkAlgorithmRunnableNewSPI extends AlgorithmRunnable {
         this._RandomNodeParameter = randomChanceParameter;
         this.currentNodeId = -1;
         this.NUMBER_OF_STEPS = NumberOfSteps;
-        this.random = new Random();
+        this.random = ThreadLocalRandom.current();
         this.api = (GraphDatabaseAPI) gdb;
 
         //GraphDatabaseAPI api = ((GraphDatabaseAPI) graphDb);
@@ -88,7 +88,7 @@ public class RandomWalkAlgorithmRunnableNewSPI extends AlgorithmRunnable {
 
                 int w = random.nextInt(100) + 1;
                 if (w <= _RandomNodeParameter) {
-                    currentNodeId = getSomeRandomNodeId();
+                    currentNodeId = DBUtils.getSomeRandomNodeId(ops, random, highestNodeId);
                 } else{
                     currentNodeId = getNextNode(currentNodeId);
                 }
@@ -142,20 +142,9 @@ public class RandomWalkAlgorithmRunnableNewSPI extends AlgorithmRunnable {
             }
 
         }
-        return getSomeRandomNodeId();  // Node has no outgoing relationships or is start "node"
+        return DBUtils.getSomeRandomNodeId(ops, random, highestNodeId);  // Node has no outgoing relationships or is start "node"
     }
 
-    private long getSomeRandomNodeId(){
-        long r;
-        while(true) {
-
-            r = (long) random.nextInt(highestNodeId);
-            if(ops.nodeExists(r))
-                return r;
-
-        }
-
-    }
 
 }
 
