@@ -68,11 +68,18 @@ public class StartComparison {
         Stopwatch timeOfComparision = Stopwatch.createStarted();
 
 
+        System.out.println(calculateConnectedComponentsComparison(graphDb,
+                nodeIDhigh,NUMBER_OF_RUNS_TO_AVERAGE_RESULTS,
+                ConnectedComponentsSingleThreadAlgorithm.AlgorithmType.STRONG));
+
+        /*
+
+
         System.out.println(
                 calculateRandomWalkComparison(graphDb, nodeIDhigh, NUMBER_OF_RUNS_TO_AVERAGE_RESULTS)
         );
 
-
+        */
         /*
         AlgorithmRunnable rwSPI = new RandomWalkAlgorithmRunnableNewSPI(RANDOMWALKRANDOM,
                 graphDb,nodeIDhigh,OPERATIONS);
@@ -162,6 +169,8 @@ public class StartComparison {
             e.printStackTrace();
         }
 
+        System.out.println(ConnectedSingle.getResults());
+
         return ConnectedSingle.timer.elapsed(TimeUnit.MILLISECONDS);
 
     }
@@ -209,8 +218,6 @@ public class StartComparison {
         long[] runtimes = new long[2];
 
         runtimes[0] = doSingleThreadRandomWalk(graphDb, highestNodeId, noOfSteps);
-
-        //WarmUp(graphDb,highestNodeId,5,false);
 
         // 	comparison with NUMBER_OF_THREADS Threads
         //

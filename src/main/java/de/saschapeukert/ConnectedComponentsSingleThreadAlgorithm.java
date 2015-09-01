@@ -1,6 +1,10 @@
 package de.saschapeukert;
 
-import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.*;
+import org.neo4j.tooling.GlobalGraphOperations;
+
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Sascha Peukert on 06.08.2015.
@@ -9,7 +13,7 @@ import org.neo4j.graphdb.GraphDatabaseService;
 
 public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable {
 
-
+/*
     public ConnectedComponentsSingleThreadAlgorithm(GraphDatabaseService gdb, int highestNodeId, AlgorithmType type) {
         super(gdb, highestNodeId);
     }
@@ -18,13 +22,13 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
     public void compute() {
 
     }
-
+*/
     public enum AlgorithmType{
         WEAK,
         STRONG
     }
 
-/*
+
     private Map<Node,String> componentsMap;
     private int componentID;
     private AlgorithmType myType;
@@ -33,11 +37,15 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
     private Stack<Node> stack;
     private int maxdfs=0;
 
+    private Set<Node> allNodes;
+
 
     public ConnectedComponentsSingleThreadAlgorithm(GraphDatabaseService gdb, int highestNodeId, AlgorithmType type){
         super(gdb, highestNodeId);
         componentsMap = new HashMap<Node, String>();
         this.myType = type;
+
+        allNodes = new HashSet<Node>(highestNodeId);
 
         if(myType==AlgorithmType.STRONG){
 
@@ -45,11 +53,33 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
             this.nodeDictionary = new HashMap<Node,TarjanNode>();
 
             // initialize nodeDictionary for tarjans algo
-            Iterator<Node> it = nodes.iterator();
-            while(it.hasNext()){
-                Node n = it.next();
-                nodeDictionary.put(n,new TarjanNode(n));
+            try (Transaction tx = graphDb.beginTx()) {
+                GlobalGraphOperations ggop = GlobalGraphOperations.at(gdb);
+                ggop.getAllNodes().iterator();
+
+                ResourceIterator<Node> it = ggop.getAllNodes().iterator();
+                while(it.hasNext()){
+                    Node n = it.next();
+                    allNodes.add(n);
+                    nodeDictionary.put(n,new TarjanNode(n));
+                }
+                tx.success();
             }
+
+        } else{
+            // TODO Refactor this!
+            try (Transaction tx = graphDb.beginTx()) {
+                GlobalGraphOperations ggop = GlobalGraphOperations.at(gdb);
+                ggop.getAllNodes().iterator();
+
+                ResourceIterator<Node> it = ggop.getAllNodes().iterator();
+                while(it.hasNext()) {
+                    Node n = it.next();
+                    allNodes.add(n);
+                }
+                tx.success();
+            }
+
         }
 
     }
@@ -65,16 +95,24 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
         try (Transaction tx = graphDb.beginTx()) {
             // GlobalGraphOperations operations = GlobalGraphOperations.at(graphDb);
             // ResourceIterable<Node> it = operations.getAllNodes();
-
-            while(allNodes.size()!=0){
+            Iterator<Node> it = allNodes.iterator();
+            while(it.hasNext()){
                 // Every node has to be marked as (part of) a component
-                Node n = (Node) allNodes.toArray()[0]; // TODO: Better Way?
+                it = allNodes.iterator();
 
-                if(myType==AlgorithmType.WEAK){
-                    DFS(n, "C" + componentID);
-                    componentID++;
-                } else{
-                    tarjan(n);
+                try {
+                    Node n = it.next();
+
+                    if(myType==AlgorithmType.WEAK){
+                        DFS(n, "C" + componentID);
+                        componentID++;
+                    } else{
+                        // System.out.println(allNodes.size());  // just for me TODO Remove!
+                        tarjan(n);
+                    }
+
+                }catch (NoSuchElementException e){
+                    break;
                 }
 
             }
@@ -97,6 +135,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
         v.onStack = true;           // This should be atomic
         stack.push(currentNode);        // !
 
+        //itN.remove();
         allNodes.remove(currentNode);
 
         Iterable<Relationship> it = currentNode.getRelationships(Direction.OUTGOING);
@@ -144,7 +183,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
 
         // NOW IT HAS TO BE NULL
         componentsMap.put(n, compName);
-        allNodes.remove(n); // correct?
+        allNodes.remove(n); // correct?   notwendig?!
 
         for(Relationship r :n.getRelationships()){
             DFS(r.getOtherNode(n), compName);
@@ -201,6 +240,6 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
 
         return returnString.toString();
     }
-*/
+
 }
 
