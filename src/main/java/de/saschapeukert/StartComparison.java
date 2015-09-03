@@ -18,19 +18,20 @@ import java.util.concurrent.TimeUnit;
  */
 public class StartComparison {
 
-
-    private  static final String DB_PATH = "C:\\BelegDB\\neo4j-enterprise-2.3.0-M02\\data\\graph.db";
+    private static final String DB_PATH = "neo4j-enterprise-2.3.0-M02/data/graph.db";
+    //private  static final String DB_PATH = "C:\\BelegDB\\neo4j-enterprise-2.3.0-M02\\data\\graph.db";
     /*private  static final String DB_PATH = "E:\\Users\\Sascha\\Documents\\GIT\\" +
            "_Belegarbeit\\neo4j-enterprise-2.3.0-M02\\data\\graph.db";*/
 
     private static final int OPERATIONS=501000;
-    private static final int NUMBER_OF_THREADS =4;
+    private static final int NUMBER_OF_THREADS =6;
     private static final int NUMBER_OF_RUNS_TO_AVERAGE_RESULTS = 1; //Minimum: 1
     private static final int RANDOMWALKRANDOM = 20;  // Minimum: 1
     private static final int WARMUPTIME = 120; // in seconds
     private static final boolean NEWSPI = true;
 
     public static void main(String[] args)  {
+
 
         System.out.println("I will start the RandomWalk Comparison: Single Thread vs. " + NUMBER_OF_THREADS +
                 " Threads.\nEvery RandomWalk-Step (Count of Operations) is run " + NUMBER_OF_RUNS_TO_AVERAGE_RESULTS + " times.");
@@ -67,19 +68,20 @@ public class StartComparison {
 
         Stopwatch timeOfComparision = Stopwatch.createStarted();
 
-
+        /*
         System.out.println(calculateConnectedComponentsComparison(graphDb,
                 nodeIDhigh,NUMBER_OF_RUNS_TO_AVERAGE_RESULTS,
                 ConnectedComponentsSingleThreadAlgorithm.AlgorithmType.STRONG));
 
-        /*
+        */
+
 
 
         System.out.println(
                 calculateRandomWalkComparison(graphDb, nodeIDhigh, NUMBER_OF_RUNS_TO_AVERAGE_RESULTS)
         );
 
-        */
+
         /*
         AlgorithmRunnable rwSPI = new RandomWalkAlgorithmRunnableNewSPI(RANDOMWALKRANDOM,
                 graphDb,nodeIDhigh,OPERATIONS);
@@ -247,7 +249,12 @@ public class StartComparison {
         }
 
         // Thread start
-        map.keySet().forEach(java.lang.Thread::start);
+        //map.keySet().forEach(java.lang.Thread::start);
+
+        for(Thread t:map.keySet()){
+            t.start();
+        }
+
 
         // Thread join
         long elapsedTime=0;
