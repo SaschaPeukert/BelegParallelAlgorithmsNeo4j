@@ -63,6 +63,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
                     allNodes.add(n);
                     nodeDictionary.put(n,new TarjanNode(n));
                 }
+                it.close();
                 tx.success();
             }
 
@@ -77,6 +78,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
                     Node n = it.next();
                     allNodes.add(n);
                 }
+                it.close();
                 tx.success();
             }
 

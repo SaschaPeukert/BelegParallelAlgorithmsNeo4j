@@ -2,12 +2,18 @@ package de.saschapeukert;
 
 import com.google.common.base.Stopwatch;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.kernel.GraphDatabaseAPI;
+import org.neo4j.kernel.api.DataWriteOperations;
+import org.neo4j.kernel.api.exceptions.InvalidTransactionTypeKernelException;
+import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
 import org.neo4j.kernel.impl.store.NeoStore;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
@@ -18,8 +24,8 @@ import java.util.concurrent.TimeUnit;
  */
 public class StartComparison {
 
-    private static final String DB_PATH = "neo4j-enterprise-2.3.0-M02/data/graph.db";
-    //private  static final String DB_PATH = "C:\\BelegDB\\neo4j-enterprise-2.3.0-M02\\data\\graph.db";
+    //private static final String DB_PATH = "neo4j-enterprise-2.3.0-M02/data/graph.db";
+    private  static final String DB_PATH = "C:\\BelegDB\\neo4j-enterprise-2.3.0-M02\\data\\graph.db";
     /*private  static final String DB_PATH = "E:\\Users\\Sascha\\Documents\\GIT\\" +
            "_Belegarbeit\\neo4j-enterprise-2.3.0-M02\\data\\graph.db";*/
 
@@ -29,9 +35,12 @@ public class StartComparison {
     private static final int RANDOMWALKRANDOM = 20;  // Minimum: 1
     private static final int WARMUPTIME = 120; // in seconds
     private static final boolean NEWSPI = true;
+    private static final String PROP_NAME = "TEST";
+    private static int PROP_ID;
 
     public static void main(String[] args)  {
 
+        System.out.println("Start: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()));
 
         System.out.println("I will start the RandomWalk Comparison: Single Thread vs. " + NUMBER_OF_THREADS +
                 " Threads.\nEvery RandomWalk-Step (Count of Operations) is run " + NUMBER_OF_RUNS_TO_AVERAGE_RESULTS + " times.");
@@ -55,14 +64,18 @@ public class StartComparison {
 
         GraphDatabaseService graphDb = builder.newGraphDatabase();
         */
+
         registerShutdownHook(graphDb);
 
 
         int nodeIDhigh = getHighestNodeID(graphDb);
+        int highestPropertyKey = DBUtils.getHighestPropertyID(graphDb);
 
-        System.out.println("~ " +nodeIDhigh + " Nodes");
+        System.out.println("~ " + nodeIDhigh + " Nodes");
 
-        WarmUp(graphDb, nodeIDhigh, WARMUPTIME, true);
+        PROP_ID = ClearUp_AND_GetPropertyID(PROP_NAME,highestPropertyKey,graphDb);
+
+        //WarmUp(graphDb, nodeIDhigh, WARMUPTIME, true);
 
         System.out.println("");
 
@@ -77,10 +90,27 @@ public class StartComparison {
 
 
 
+        try(Transaction tx = graphDb.beginTx()){
+
+            ThreadToStatementContextBridge ctx =((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
+
+            DataWriteOperations ops = ctx.get().dataWriteOperations();
+
+
+            DBUtils.createStringPropertysAtNode(12, "Ja", PROP_ID, ops);
+            DBUtils.createStringPropertysAtNode(13, "Nein", PROP_ID, ops);
+
+            tx.success();
+        } catch (InvalidTransactionTypeKernelException e) {
+            e.printStackTrace();
+        }
+
+
+        /*
         System.out.println(
                 calculateRandomWalkComparison(graphDb, nodeIDhigh, NUMBER_OF_RUNS_TO_AVERAGE_RESULTS)
         );
-
+        */
 
         /*
         AlgorithmRunnable rwSPI = new RandomWalkAlgorithmRunnableNewSPI(RANDOMWALKRANDOM,
@@ -136,6 +166,37 @@ public class StartComparison {
 
         if(output)System.out.println("WarmUp finished after " + timer.elapsed(TimeUnit.SECONDS) + "s.");
         timer = null;
+    }
+
+    private static int ClearUp_AND_GetPropertyID(String propertyName, int highestPropertyKey, GraphDatabaseService graphDb){
+        // TODO: Move?
+        try(Transaction tx = graphDb.beginTx()) {
+
+            ThreadToStatementContextBridge ctx = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
+            DataWriteOperations ops = ctx.get().dataWriteOperations();
+
+            int lookup = ops.propertyKeyGetForName(propertyName);
+            if(lookup>0){
+                System.out.println("Using old ID");
+                DBUtils.removePropertyFromAllNodes(lookup,ops,graphDb);
+                return lookup;
+            } else{
+                System.out.println("Creating new ID");
+                highestPropertyKey++;
+                DBUtils.createNewPropertyKey(propertyName,highestPropertyKey,ops);
+            }
+
+            tx.success();
+
+            return highestPropertyKey;  // can be used now, referencing now the correct PropertyKey.
+            // No Node has a Property with this key jet
+
+        } catch (InvalidTransactionTypeKernelException e) {
+            e.printStackTrace();  // TODO REMOVE
+        }
+
+        return -1; // ERROR happend
+
     }
 
 
@@ -324,6 +385,7 @@ public class StartComparison {
 
         NeoStore neoStore = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(NeoStore.class);
         return (int) neoStore.getNodeStore().getHighId();
+
 
     }
 }
