@@ -13,9 +13,7 @@ import org.neo4j.kernel.impl.store.NeoStore;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
@@ -33,7 +31,7 @@ public class StartComparison {
     private static final int NUMBER_OF_THREADS =8;
     private static final int NUMBER_OF_RUNS_TO_AVERAGE_RESULTS = 1; //Minimum: 1
     private static final int RANDOMWALKRANDOM = 20;  // Minimum: 1
-    private static final int WARMUPTIME = 120; // in seconds
+    private static final int WARMUPTIME = 20; // in seconds
     private static final boolean NEWSPI = false;
     private static final String PROP_NAME = "RandomWalkCounter";
     private static int PROP_ID;
@@ -414,20 +412,50 @@ public class StartComparison {
 
     public static boolean writeResultsOut(GraphDatabaseService graphDb){
 
-        try(Transaction tx = graphDb.beginTx()) {
-
-            ThreadToStatementContextBridge ctx =((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
-            DataWriteOperations ops = ctx.get().dataWriteOperations();
-
-            for (Long l : results.keySet()) {
-                DBUtils.createIntPropertyAtNode(l, results.get(l), PROP_ID, ops);
+        int sizeKeySet = results.keySet().size();
+        int partOfData = sizeKeySet/NUMBER_OF_THREADS;  // LAST ONE TAKES MORE!
+        Iterator<Long> it = results.keySet().iterator();
+        Map<Long,Integer> newMap = new HashMap<>(partOfData*2);
+        List<Map<Long,Integer>> listOfNewMaps = new ArrayList<>();
+        int itemCounter=0;
+        while(it.hasNext()){
+            if((itemCounter>=partOfData) && (listOfNewMaps.size() != NUMBER_OF_THREADS)){
+                // add oldMap
+                listOfNewMaps.add(newMap);
+                // generate new Map
+                newMap = new HashMap<>(partOfData*2);
+                itemCounter=0;
             }
+            Long l = it.next();
+            newMap.put(l,results.get(l));
+            itemCounter++;
 
-            tx.success();
+        }
 
-        } catch (InvalidTransactionTypeKernelException e) {
-            e.printStackTrace(); // TODO remove
-            return false;
+        List<NeoWriter> listOfWriters = new ArrayList<>();
+        List<Thread> listOfThreads = new ArrayList<>();
+
+        for(int i=0;i<NUMBER_OF_THREADS;i++){
+            NeoWriter neoWriter = new NeoWriter(listOfNewMaps.get(i),PROP_ID,graphDb);
+            listOfWriters.add(neoWriter);
+            Thread t = new Thread(neoWriter);
+            listOfThreads.add(t);
+        }
+
+        for(Thread t:listOfThreads){
+            t.start();
+        }
+
+        for(Thread t:listOfThreads){
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        for(NeoWriter n:listOfWriters){
+            n.commitTransaction();
         }
 
         return true;
