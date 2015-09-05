@@ -29,30 +29,52 @@ public class StartComparison {
     /*private  static final String DB_PATH = "E:\\Users\\Sascha\\Documents\\GIT\\" +
            "_Belegarbeit\\neo4j-enterprise-2.3.0-M02\\data\\graph.db";*/
 
-    private static final int OPERATIONS=501000;
-    private static final int NUMBER_OF_THREADS =6;
+    private static final int OPERATIONS=201000;
+    private static final int NUMBER_OF_THREADS =8;
     private static final int NUMBER_OF_RUNS_TO_AVERAGE_RESULTS = 1; //Minimum: 1
     private static final int RANDOMWALKRANDOM = 20;  // Minimum: 1
     private static final int WARMUPTIME = 120; // in seconds
-    private static final boolean NEWSPI = true;
-    private static final String PROP_NAME = "TEST";
+    private static final boolean NEWSPI = false;
+    private static final String PROP_NAME = "RandomWalkCounter";
     private static int PROP_ID;
+
+    private static Map<Long,Integer> results;
 
     public static void main(String[] args)  {
 
         System.out.println("Start: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()));
 
         System.out.println("I will start the RandomWalk Comparison: Single Thread vs. " + NUMBER_OF_THREADS +
-                " Threads.\nEvery RandomWalk-Step (Count of Operations) is run " + NUMBER_OF_RUNS_TO_AVERAGE_RESULTS + " times.");
-
+               " Threads.\nEvery RandomWalk-Step (Count of Operations) is run " + NUMBER_OF_RUNS_TO_AVERAGE_RESULTS + " times.");
 
         // Open connection to DB
         GraphDatabaseService graphDb = new GraphDatabaseFactory()
                 .newEmbeddedDatabaseBuilder(new File(DB_PATH))
-                .setConfig(GraphDatabaseSettings.pagecache_memory,"6G")
+                .setConfig(GraphDatabaseSettings.pagecache_memory,"7G")
                 .setConfig(GraphDatabaseSettings.allow_store_upgrade,"true")
                 .newGraphDatabase();
 
+        /*
+        try(Transaction tx = graphDb.beginTx()){
+            Result result = graphDb.execute("MATCH (n) WHERE n.RandomWalkCounter>0 RETURN id(n),n.RandomWalkCounter ORDER BY n.RandomWalkCounter DESC LIMIT 20");
+            String rows="";
+            while ( result.hasNext() )
+            {
+                Map<String,Object> row = result.next();
+                for ( Map.Entry<String,Object> column : row.entrySet() )
+                {
+                    rows += column.getKey() + ": " + column.getValue() + "; ";
+                }
+                rows += "\n";
+            }
+
+            System.out.println(rows);
+        }
+
+        graphDb.shutdown();
+        */
+
+        /*
         /*GraphDatabaseBuilder builder = new HighlyAvailableGraphDatabaseFactory()
                 .newHighlyAvailableDatabaseBuilder(DB_PATH);
 
@@ -65,17 +87,21 @@ public class StartComparison {
         GraphDatabaseService graphDb = builder.newGraphDatabase();
         */
 
+
         registerShutdownHook(graphDb);
 
 
         int nodeIDhigh = getHighestNodeID(graphDb);
         int highestPropertyKey = DBUtils.getHighestPropertyID(graphDb);
 
+
+        results = new HashMap<>(nodeIDhigh);
+
         System.out.println("~ " + nodeIDhigh + " Nodes");
 
-        PROP_ID = ClearUp_AND_GetPropertyID(PROP_NAME,highestPropertyKey,graphDb);
+        PROP_ID = ClearUp_AND_GetPropertyID(PROP_NAME, highestPropertyKey, graphDb);
 
-        //WarmUp(graphDb, nodeIDhigh, WARMUPTIME, true);
+        WarmUp(graphDb, nodeIDhigh, WARMUPTIME, true);
 
         System.out.println("");
 
@@ -89,50 +115,25 @@ public class StartComparison {
         */
 
 
-
-        try(Transaction tx = graphDb.beginTx()){
-
-            ThreadToStatementContextBridge ctx =((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
-
-            DataWriteOperations ops = ctx.get().dataWriteOperations();
-
-
-            DBUtils.createStringPropertysAtNode(12, "Ja", PROP_ID, ops);
-            DBUtils.createStringPropertysAtNode(13, "Nein", PROP_ID, ops);
-
-            tx.success();
-        } catch (InvalidTransactionTypeKernelException e) {
-            e.printStackTrace();
-        }
-
-
-        /*
         System.out.println(
                 calculateRandomWalkComparison(graphDb, nodeIDhigh, NUMBER_OF_RUNS_TO_AVERAGE_RESULTS)
         );
-        */
 
-        /*
-        AlgorithmRunnable rwSPI = new RandomWalkAlgorithmRunnableNewSPI(RANDOMWALKRANDOM,
-                graphDb,nodeIDhigh,OPERATIONS);
-        Thread thread = new Thread(rwSPI);
-        thread.start();
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        */
 
         timeOfComparision.stop();
 
-        System.out.println("\nWhole Comparison done in: "+ timeOfComparision.elapsed(TimeUnit.SECONDS)+"s (+ WarmUp " + WARMUPTIME + "s)");
+        System.out.println("\nWhole Comparison done in: " + timeOfComparision.elapsed(TimeUnit.SECONDS) + "s (+ WarmUp " + WARMUPTIME + "s)");
+
+        System.out.println("Writing the results ("+ results.keySet().size() +") to DB");
+        writeResultsOut(graphDb);
 
         java.awt.Toolkit.getDefaultToolkit().beep();
+        System.out.println("End: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()));
 
         //System.out.println(calculateConnectedComponentsComparison(graphDb,
         //        nodes,NUMBER_OF_RUNS_TO_AVERAGE_RESULTS,
         //        ConnectedComponentsSingleThreadAlgorithm.AlgorithmType.STRONG));
+
 
 
     }
@@ -176,14 +177,16 @@ public class StartComparison {
             DataWriteOperations ops = ctx.get().dataWriteOperations();
 
             int lookup = ops.propertyKeyGetForName(propertyName);
-            if(lookup>0){
-                System.out.println("Using old ID");
-                DBUtils.removePropertyFromAllNodes(lookup,ops,graphDb);
-                return lookup;
-            } else{
-                System.out.println("Creating new ID");
+            if(lookup==-1){
+                System.out.println("Not found. Creating new ID");
                 highestPropertyKey++;
-                DBUtils.createNewPropertyKey(propertyName,highestPropertyKey,ops);
+                DBUtils.createNewPropertyKey(propertyName, highestPropertyKey, ops);
+
+            } else{
+                System.out.println("Found. Using old ID " + lookup);
+                DBUtils.removePropertyFromAllNodes(lookup, ops, graphDb);
+                tx.success();
+                return lookup;
             }
 
             tx.success();
@@ -222,7 +225,7 @@ public class StartComparison {
     private static long doConnectedComponentsRun(GraphDatabaseService graphDb,int highestNodeId, ConnectedComponentsSingleThreadAlgorithm.AlgorithmType type){
 
         ConnectedComponentsSingleThreadAlgorithm ConnectedSingle = new ConnectedComponentsSingleThreadAlgorithm(
-                graphDb, highestNodeId, type);
+                graphDb, highestNodeId, PROP_ID,PROP_NAME, type);
         Thread t = new Thread(ConnectedSingle);
 
         t.start();
@@ -300,10 +303,10 @@ public class StartComparison {
             AlgorithmRunnable rw;
             if(NEWSPI){
                 rw = new RandomWalkAlgorithmRunnableNewSPI(RANDOMWALKRANDOM,
-                        graphDb,highestNodeId, noOfSteps/NUMBER_OF_THREADS);
+                        graphDb,highestNodeId,PROP_ID,PROP_NAME, noOfSteps/NUMBER_OF_THREADS);
             } else{
                 rw = new RandomWalkAlgorithmRunnable(RANDOMWALKRANDOM,
-                        graphDb,highestNodeId, noOfSteps/NUMBER_OF_THREADS);
+                        graphDb,highestNodeId,PROP_ID,PROP_NAME, noOfSteps/NUMBER_OF_THREADS);
             }
 
             map.put(rw.getNewThread(),rw);
@@ -326,6 +329,9 @@ public class StartComparison {
                 if(elapsedTime<map.get(t).timer.elapsed(TimeUnit.MICROSECONDS)){
                     elapsedTime =map.get(t).timer.elapsed(TimeUnit.MICROSECONDS);
                 }
+
+                addToResults(map.get(t).result);
+
                 t = null; // suggestion for garbage collector
 
             } catch (InterruptedException e) {
@@ -345,9 +351,9 @@ public class StartComparison {
 
         AlgorithmRunnable rwst;
         if(NEWSPI){
-            rwst = new RandomWalkAlgorithmRunnableNewSPI(RANDOMWALKRANDOM, graphDb,highestNodeId,noOfSteps);
+            rwst = new RandomWalkAlgorithmRunnableNewSPI(RANDOMWALKRANDOM, graphDb,highestNodeId,PROP_ID,PROP_NAME,noOfSteps);
         } else{
-            rwst = new RandomWalkAlgorithmRunnable(RANDOMWALKRANDOM, graphDb,highestNodeId,noOfSteps);
+            rwst = new RandomWalkAlgorithmRunnable(RANDOMWALKRANDOM, graphDb,highestNodeId,PROP_ID,PROP_NAME,noOfSteps);
 
         }
         Thread thr = rwst.getNewThread();
@@ -362,6 +368,9 @@ public class StartComparison {
                 rwst.timer.elapsed(TimeUnit.MICROSECONDS) +
                 "\u00B5s (" + rwst.timer.elapsed(TimeUnit.MILLISECONDS) + "ms)"); */
         thr = null;
+
+
+        addToResults(rwst.result);
 
         return rwst.timer.elapsed(TimeUnit.MICROSECONDS);
 
@@ -387,5 +396,40 @@ public class StartComparison {
         return (int) neoStore.getNodeStore().getHighId();
 
 
+    }
+
+    public static void addToResults(Map<Long,Integer> map){
+
+        for(Long l:map.keySet()){
+
+            Integer null_or_oldValue = results.get(l);
+            if(null_or_oldValue==null){
+                results.put(l,map.get(l));
+            } else{
+                results.put(l,null_or_oldValue+map.get(l));
+            }
+        }
+
+    }
+
+    public static boolean writeResultsOut(GraphDatabaseService graphDb){
+
+        try(Transaction tx = graphDb.beginTx()) {
+
+            ThreadToStatementContextBridge ctx =((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
+            DataWriteOperations ops = ctx.get().dataWriteOperations();
+
+            for (Long l : results.keySet()) {
+                DBUtils.createIntPropertyAtNode(l, results.get(l), PROP_ID, ops);
+            }
+
+            tx.success();
+
+        } catch (InvalidTransactionTypeKernelException e) {
+            e.printStackTrace(); // TODO remove
+            return false;
+        }
+
+        return true;
     }
 }

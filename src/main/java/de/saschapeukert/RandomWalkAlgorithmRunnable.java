@@ -11,18 +11,21 @@ import java.util.concurrent.ThreadLocalRandom;
 public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
 
     public int _RandomNodeParameter;
-    private Node currentNode;
+    private  Node currentNode;
     private int NUMBER_OF_STEPS;
     private ThreadLocalRandom random;
 
+
     public RandomWalkAlgorithmRunnable(int randomChanceParameter,
-                                       GraphDatabaseService gdb,int highestNodeId, int NumberOfSteps){
-        super(gdb, highestNodeId);
+                                       GraphDatabaseService gdb,int highestNodeId,int pId,
+                                        String pName, int NumberOfSteps){
+        super(gdb, highestNodeId,pId,pName);
 
         this._RandomNodeParameter = randomChanceParameter;
         this.currentNode = null;
         this.NUMBER_OF_STEPS = NumberOfSteps;
         this.random = ThreadLocalRandom.current();
+
     }
     @Override
     public void compute() {
@@ -61,21 +64,47 @@ public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
         timer.start();
 
         try (Transaction tx = graphDb.beginTx()) {
+
             while (this.NUMBER_OF_STEPS > 0) {
+
+
 
                 int w = random.nextInt(100) + 1;
                 if (w <= _RandomNodeParameter) {
                     currentNode = DBUtils.getSomeRandomNode(graphDb, random, highestNodeId);
-                } else{
+                } else {
                     currentNode = getNextNode(currentNode);
                 }
 
+                Integer count = result.get(currentNode);
+                if(count!=null){
+                    count++;
+                    result.put(currentNode.getId(),count);
+                } else{
+                    result.put(currentNode.getId(),1);
+                }
+
+                /*
+                // WRITE BACK THE VISIT
+                Lock l = tx.acquireWriteLock(currentNode);
+
+                // HOPE THIS WORKS
+
+                Object valueOrNull = currentNode.getProperty(propName, null);
+                if (valueOrNull == null) {
+                    currentNode.setProperty(propName, 1);
+                } else {
+                    currentNode.setProperty(propName, (int) valueOrNull + 1);
+                }
+
+                l.release(); // useless?
+                   */
+
                 NUMBER_OF_STEPS--;
+
             }
-
-            tx.success();  // Important!
+            tx.success();
         }
-
 
         timer.stop();
 

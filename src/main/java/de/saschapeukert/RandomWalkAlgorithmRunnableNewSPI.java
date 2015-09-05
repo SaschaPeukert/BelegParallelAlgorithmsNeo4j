@@ -33,8 +33,9 @@ public class RandomWalkAlgorithmRunnableNewSPI extends AlgorithmRunnable {
     private GraphDatabaseAPI api;
 
     public RandomWalkAlgorithmRunnableNewSPI(int randomChanceParameter,
-                                             GraphDatabaseService gdb,int highestNodeId, int NumberOfSteps){
-        super(gdb, highestNodeId);
+                                             GraphDatabaseService gdb,int highestNodeId,int pId,
+                                             String pName,int NumberOfSteps){
+        super(gdb, highestNodeId,pId, pName);
 
         this.Protocol = "";
         this._RandomNodeParameter = randomChanceParameter;

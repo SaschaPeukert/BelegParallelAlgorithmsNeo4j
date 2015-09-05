@@ -95,11 +95,22 @@ public class DBUtils {
         return true;
     }
 
-    public static boolean createStringPropertysAtNode(long nodeID, String value,int PropertyID, DataWriteOperations ops){
+    public static boolean createStringPropertyAtNode(long nodeID, String value, int PropertyID, DataWriteOperations ops){
 
         try {
-
             ops.nodeSetProperty(nodeID, Property.stringProperty(PropertyID, value));
+        } catch (EntityNotFoundException | ConstraintValidationKernelException e) {
+            e.printStackTrace(); // TODO REMOVE
+            return false;
+        }
+
+        return true;
+    }
+
+    public static boolean createIntPropertyAtNode(long nodeID, int value, int PropertyID, DataWriteOperations ops){
+
+        try {
+            ops.nodeSetProperty(nodeID, Property.intProperty(PropertyID, value));
         } catch (EntityNotFoundException | ConstraintValidationKernelException e) {
             e.printStackTrace(); // TODO REMOVE
             return false;
