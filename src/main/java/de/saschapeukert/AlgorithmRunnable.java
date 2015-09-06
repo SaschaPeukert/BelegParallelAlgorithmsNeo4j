@@ -3,7 +3,7 @@ package de.saschapeukert;
 import com.google.common.base.Stopwatch;
 import org.neo4j.graphdb.GraphDatabaseService;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -35,7 +35,7 @@ public abstract class AlgorithmRunnable implements Runnable {
         this.highestNodeId = highestNodeId;
         this.propID = propID;
         this.propName = propName;
-        this.result = new HashMap<>(highestNodeId);
+        this.result = new LinkedHashMap<>(highestNodeId);
     }
 
 

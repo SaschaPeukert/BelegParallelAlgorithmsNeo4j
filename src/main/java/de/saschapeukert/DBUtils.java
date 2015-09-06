@@ -65,13 +65,14 @@ public class DBUtils {
     }
 
     public static boolean removePropertyFromAllNodes(int PropertyID, DataWriteOperations ops, GraphDatabaseService gdb){
-        GlobalGraphOperations ggo = GlobalGraphOperations.at(gdb);
-
-        ResourceIterable<Node> allNodes = ggo.getAllNodes();
-        Iterator<Node> it = allNodes.iterator();
+        //int i=0;
+        Iterator<Node> it = getIteratorForAllNodes(gdb);
         try {
             while(it.hasNext()){
                 ops.nodeRemoveProperty(it.next().getId(),PropertyID);
+                //i++;
+                //if(i%250000==0)
+                //    System.out.println(i);
             }
 
 
@@ -150,6 +151,15 @@ public class DBUtils {
         // TODO refactoring?
         NeoStore neoStore = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(NeoStore.class);
         return (int) neoStore.getPropertyStore().getHighId();
+
+    }
+
+    public static Iterator<Node> getIteratorForAllNodes( GraphDatabaseService gdb) {
+        GlobalGraphOperations ggo = GlobalGraphOperations.at(gdb);
+
+        ResourceIterable<Node> allNodes = ggo.getAllNodes();
+        Iterator<Node> it = allNodes.iterator();
+        return it;
 
     }
 }

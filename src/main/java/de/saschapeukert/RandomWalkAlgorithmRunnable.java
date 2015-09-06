@@ -76,6 +76,9 @@ public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
                     currentNode = getNextNode(currentNode);
                 }
 
+                StartComparison.resultCounter.get(currentNode.getId()).incrementAndGet();
+
+                /*
                 Integer count = result.get(currentNode);
                 if(count!=null){
                     count++;
@@ -83,6 +86,7 @@ public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
                 } else{
                     result.put(currentNode.getId(),1);
                 }
+                */
 
                 /*
                 // WRITE BACK THE VISIT
@@ -104,6 +108,7 @@ public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
 
             }
             tx.success();
+           // tx.close();
         }
 
         timer.stop();

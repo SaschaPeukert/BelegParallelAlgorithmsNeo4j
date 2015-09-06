@@ -98,6 +98,7 @@ public class RandomWalkAlgorithmRunnableNewSPI extends AlgorithmRunnable {
             }
 
             tx.success();  // Important!
+           // tx.close();
         }
 
         timer.stop();

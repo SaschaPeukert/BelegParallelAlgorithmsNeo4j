@@ -2,6 +2,7 @@ package de.saschapeukert;
 
 import com.google.common.base.Stopwatch;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
@@ -16,27 +17,29 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by Sascha Peukert on 04.08.2015.
  */
 public class StartComparison {
 
-    //private static final String DB_PATH = "neo4j-enterprise-2.3.0-M02/data/graph.db";
-    private  static final String DB_PATH = "C:\\BelegDB\\neo4j-enterprise-2.3.0-M02\\data\\graph.db";
+    private static final String DB_PATH = "neo4j-enterprise-2.3.0-M02/data/graph.db";
+    //private  static final String DB_PATH = "C:\\BelegDB\\neo4j-enterprise-2.3.0-M02\\data\\graph.db";
     /*private  static final String DB_PATH = "E:\\Users\\Sascha\\Documents\\GIT\\" +
            "_Belegarbeit\\neo4j-enterprise-2.3.0-M02\\data\\graph.db";*/
 
-    private static final int OPERATIONS=201000;
-    private static final int NUMBER_OF_THREADS =8;
+    private static final int OPERATIONS=501000;
+    private static final int NUMBER_OF_THREADS =24;
     private static final int NUMBER_OF_RUNS_TO_AVERAGE_RESULTS = 1; //Minimum: 1
     private static final int RANDOMWALKRANDOM = 20;  // Minimum: 1
-    private static final int WARMUPTIME = 20; // in seconds
+    private static final int WARMUPTIME = 120; // in seconds
     private static final boolean NEWSPI = false;
     private static final String PROP_NAME = "RandomWalkCounter";
     private static int PROP_ID;
 
     private static Map<Long,Integer> results;
+    public static Map<Long,AtomicInteger> resultCounter;
 
     public static void main(String[] args)  {
 
@@ -48,7 +51,7 @@ public class StartComparison {
         // Open connection to DB
         GraphDatabaseService graphDb = new GraphDatabaseFactory()
                 .newEmbeddedDatabaseBuilder(new File(DB_PATH))
-                .setConfig(GraphDatabaseSettings.pagecache_memory,"7G")
+                .setConfig(GraphDatabaseSettings.pagecache_memory,"6G")
                 .setConfig(GraphDatabaseSettings.allow_store_upgrade,"true")
                 .newGraphDatabase();
 
@@ -93,11 +96,22 @@ public class StartComparison {
         int highestPropertyKey = DBUtils.getHighestPropertyID(graphDb);
 
 
-        results = new HashMap<>(nodeIDhigh);
+        results = new LinkedHashMap<>(nodeIDhigh);
+        resultCounter = new LinkedHashMap<>(nodeIDhigh);
+
+
+        // TODO REFACTOR
+        try(Transaction tx = graphDb.beginTx()){
+            prepaireResultMap(graphDb);
+            tx.success();
+            //tx.close();
+        }
+
 
         System.out.println("~ " + nodeIDhigh + " Nodes");
 
         PROP_ID = ClearUp_AND_GetPropertyID(PROP_NAME, highestPropertyKey, graphDb);
+        System.out.println("TA closed.");
 
         WarmUp(graphDb, nodeIDhigh, WARMUPTIME, true);
 
@@ -122,10 +136,10 @@ public class StartComparison {
 
         System.out.println("\nWhole Comparison done in: " + timeOfComparision.elapsed(TimeUnit.SECONDS) + "s (+ WarmUp " + WARMUPTIME + "s)");
 
-        System.out.println("Writing the results ("+ results.keySet().size() +") to DB");
-        writeResultsOut(graphDb);
+        //System.out.println("Writing the results ("+ results.keySet().size() +") to DB");
+        //writeResultsOut(graphDb);
 
-        java.awt.Toolkit.getDefaultToolkit().beep();
+        //java.awt.Toolkit.getDefaultToolkit().beep();
         System.out.println("End: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()));
 
         //System.out.println(calculateConnectedComponentsComparison(graphDb,
@@ -183,7 +197,10 @@ public class StartComparison {
             } else{
                 System.out.println("Found. Using old ID " + lookup);
                 DBUtils.removePropertyFromAllNodes(lookup, ops, graphDb);
+                System.out.println("Finished clearing up.");
                 tx.success();
+                System.out.println("Success!");
+
                 return lookup;
             }
 
@@ -415,7 +432,7 @@ public class StartComparison {
         int sizeKeySet = results.keySet().size();
         int partOfData = sizeKeySet/NUMBER_OF_THREADS;  // LAST ONE TAKES MORE!
         Iterator<Long> it = results.keySet().iterator();
-        Map<Long,Integer> newMap = new HashMap<>(partOfData*2);
+        Map<Long,Integer> newMap = new LinkedHashMap<>(partOfData*2);
         List<Map<Long,Integer>> listOfNewMaps = new ArrayList<>();
         int itemCounter=0;
         while(it.hasNext()){
@@ -423,7 +440,7 @@ public class StartComparison {
                 // add oldMap
                 listOfNewMaps.add(newMap);
                 // generate new Map
-                newMap = new HashMap<>(partOfData*2);
+                newMap = new LinkedHashMap<>(partOfData*2);
                 itemCounter=0;
             }
             Long l = it.next();
@@ -456,8 +473,25 @@ public class StartComparison {
 
         for(NeoWriter n:listOfWriters){
             n.commitTransaction();
+            n = null;
         }
+
+        listOfNewMaps = null;
+        listOfThreads = null;
+        listOfWriters = null;
 
         return true;
     }
+
+    private static void prepaireResultMap(GraphDatabaseService graphDb){
+
+        Iterator<Node> it = DBUtils.getIteratorForAllNodes(graphDb);
+
+        while(it.hasNext()){
+            resultCounter.put(it.next().getId(),new AtomicInteger(0));
+        }
+
+    }
+
+
 }

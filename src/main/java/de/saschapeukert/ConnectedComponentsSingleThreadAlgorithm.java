@@ -66,6 +66,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
                 }
                 it.close();
                 tx.success();
+                //tx.close();
             }
 
         } else{
@@ -81,6 +82,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
                 }
                 it.close();
                 tx.success();
+                //tx.close();
             }
 
         }
@@ -121,6 +123,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
             }
 
             tx.success();
+          //  tx.close();
         }
 
         timer.stop();
