@@ -18,27 +18,54 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class StartComparison {
 
-    //private static final String DB_PATH = "neo4j-enterprise-2.3.0-M02/data/graph.db";
-    private  static final String DB_PATH = "C:\\BelegDB\\neo4j-enterprise-2.3.0-M02\\data\\graph.db";
-    /*private  static final String DB_PATH = "E:\\Users\\Sascha\\Documents\\GIT\\" +
-           "_Belegarbeit\\neo4j-enterprise-2.3.0-M02\\data\\graph.db";*/
+    private  static String DB_PATH;
+    // Server: neo4j-enterprise-2.3.0-M02/data/graph.db
+    // SSD: C:\\BelegDB\\neo4j-enterprise-2.3.0-M02\\data\\graph.db
+    // Meine HDD: E:\\Users\\Sascha\\Documents\\GIT\\Belegarbeit\\neo4j-enterprise-2.3.0-M02\\data\\graph.db
 
-    private static final int OPERATIONS=201000;
-    private static final int NUMBER_OF_THREADS =12;
+    private static int OPERATIONS;
+    private static int NUMBER_OF_THREADS;
     private static final int NUMBER_OF_RUNS_TO_AVERAGE_RESULTS = 1; //Minimum: 1
     private static final int RANDOMWALKRANDOM = 20;  // Minimum: 1
-    private static final int WARMUPTIME = 60; // in seconds
-    private static final boolean NEWSPI = true;
-    private static final String PROP_NAME = "RandomWalkCounter";
+    private static  int WARMUPTIME; // in seconds
+    private static  boolean NEWSPI;
+    private static  String PROP_NAME;
     private static int PROP_ID;
+    private static String PAGECACHE_GB;
 
     public static Map<Long,AtomicInteger> resultCounter;
-    public static Object[] keySetOfResultCounter;  // TODO: REFACTOR THE VISIBILTY
+    public static Object[] keySetOfResultCounter;  // TODO: REFACTOR THE VISIBILTY?
 
-    //private static final int GigaBytes = 1073741824;
 
     public static void main(String[] args)  {
 
+        // READING THE INPUTPARAMETER
+        try {
+            OPERATIONS = Integer.valueOf(args[0]); // AS LONG AS ITS RW
+                                                    // TODO: NEED START
+
+            NUMBER_OF_THREADS = Integer.valueOf(args[1]);
+            WARMUPTIME = Integer.valueOf(args[2]);
+            if (args[3].equals("true")) {
+                NEWSPI = true;
+            } else {
+                NEWSPI = false;
+            }
+            PROP_NAME = args[4];
+            PAGECACHE_GB = args[5];
+            DB_PATH = args[6];
+
+            // TODO: ALGORITHM as Input!
+
+        } catch(Exception e){
+
+            System.out.println("Not enough input parameter.");
+            System.out.println("You have to supply: OperationNumber Number_of_Threads WarmUpTime_in_s " +
+                    "NewSPI_bool PropertyName PageCache(String)_in_G/M/K DB-Path");
+            return;
+        }
+
+        // START
         System.out.println("Start: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()));
 
         System.out.println("I will start the RandomWalk Comparison: Single Thread vs. " + NUMBER_OF_THREADS +
@@ -48,7 +75,8 @@ public class StartComparison {
         // Open connection to DB
         GraphDatabaseService graphDb = new GraphDatabaseFactory()
                 .newEmbeddedDatabaseBuilder(new File(DB_PATH))
-                .setConfig(GraphDatabaseSettings.pagecache_memory,"6G")
+                .setConfig(GraphDatabaseSettings.pagecache_memory, PAGECACHE_GB)
+                .setConfig(GraphDatabaseSettings.keep_logical_logs,"false")  // to get rid of all those neostore.trasaction.db ... files
                 .setConfig(GraphDatabaseSettings.allow_store_upgrade, "true")
                 .newGraphDatabase();
 
