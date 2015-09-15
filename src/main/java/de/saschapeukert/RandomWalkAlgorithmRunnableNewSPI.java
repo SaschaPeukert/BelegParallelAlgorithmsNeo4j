@@ -23,30 +23,27 @@ import java.util.concurrent.ThreadLocalRandom;
 public class RandomWalkAlgorithmRunnableNewSPI extends AlgorithmRunnable {
 
 
-    public String Protocol;
     public int _RandomNodeParameter;
     private long currentNodeId;
     private int NUMBER_OF_STEPS;
     private ThreadLocalRandom random;
     private ThreadToStatementContextBridge ctx;
     private ReadOperations ops;
+    @SuppressWarnings("deprecation")
     private GraphDatabaseAPI api;
 
     public RandomWalkAlgorithmRunnableNewSPI(int randomChanceParameter,
                                              GraphDatabaseService gdb,int highestNodeId,int pId,
-                                             String pName,int NumberOfSteps){
-        super(gdb, highestNodeId,pId, pName);
+                                             String pName,int NumberOfSteps, boolean output){
+        super(gdb, highestNodeId,pId, pName, output);
 
-        this.Protocol = "";
         this._RandomNodeParameter = randomChanceParameter;
         this.currentNodeId = -1;
         this.NUMBER_OF_STEPS = NumberOfSteps;
         this.random = ThreadLocalRandom.current();
         this.api = (GraphDatabaseAPI) gdb;
 
-        //GraphDatabaseAPI api = ((GraphDatabaseAPI) graphDb);
         this.ctx = api.getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
-        //api.getDependencyResolver().resolveDependency(SchemaIndexProvider.class);
 
 
         /*
@@ -94,11 +91,15 @@ public class RandomWalkAlgorithmRunnableNewSPI extends AlgorithmRunnable {
                     currentNodeId = getNextNode(currentNodeId);
                 }
 
+                if(output)
+                    StartComparison.resultCounter.get(currentNodeId).incrementAndGet();
+
+
                 NUMBER_OF_STEPS--;
             }
 
             tx.success();  // Important!
-           // tx.close();
+
         }
 
         timer.stop();

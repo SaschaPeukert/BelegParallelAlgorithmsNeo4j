@@ -7,22 +7,24 @@ import org.neo4j.kernel.api.DataWriteOperations;
 import org.neo4j.kernel.api.exceptions.InvalidTransactionTypeKernelException;
 import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
 
-import java.util.Map;
-
 /**
  * Created by Sascha Peukert on 05.09.2015.
  */
-public class NeoWriter implements Runnable {
+public class NeoWriter extends MyBaseRunnable {
 
-    private Map<Long, Integer> myMap;
+
     private GraphDatabaseService graphDb;
     private int propID;
     private Transaction tx;
+    private int startIndex; // inclusive
+    private int endIndex; // exclusive
 
-    public NeoWriter(Map<Long,Integer> results, int propID, GraphDatabaseService graphDb){
-        this.myMap = results;
+    public NeoWriter( int propID, GraphDatabaseService graphDb, int startIndex, int endIndex){
+
         this.graphDb = graphDb;
         this.propID = propID;
+        this.startIndex = startIndex;
+        this.endIndex = endIndex;
     }
 
     @Override
@@ -34,21 +36,40 @@ public class NeoWriter implements Runnable {
             ThreadToStatementContextBridge ctx =((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
             DataWriteOperations ops = ctx.get().dataWriteOperations();
 
-            for (Long l : myMap.keySet()) {
-                DBUtils.createIntPropertyAtNode(l, myMap.get(l), propID, ops);
+            int count =0;
+            for(int i = startIndex;i<endIndex;i++){
+
+                if(count==100){
+
+
+                    commitAndCloseTA();
+
+                    tx = graphDb.beginTx();
+
+                    //ctx =((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
+                    ops = ctx.get().dataWriteOperations();
+
+                    count =0;
+                }
+
+                Long l = (Long) StartComparison.keySetOfResultCounter[i];
+                DBUtils.createIntPropertyAtNode(l, StartComparison.resultCounter.get(l).intValue(), propID, ops);
+                count++;
+
             }
 
-            //tx.success();
+            commitAndCloseTA();
+
+            //System.out.println("Done " + startIndex + " - " + endIndex);
 
         } catch (InvalidTransactionTypeKernelException e) {
             e.printStackTrace(); // TODO remove
 
         }
 
-
     }
 
-    public void commitTransaction(){
+    private void commitAndCloseTA(){
         tx.success();
         tx.close();
     }

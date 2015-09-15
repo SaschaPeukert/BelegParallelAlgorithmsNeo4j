@@ -41,8 +41,8 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
 
 
     public ConnectedComponentsSingleThreadAlgorithm(GraphDatabaseService gdb, int highestNodeId
-            , int pId,String pName, AlgorithmType type){
-        super(gdb, highestNodeId,pId,pName);
+            , int pId,String pName, AlgorithmType type, boolean output){
+        super(gdb, highestNodeId,pId,pName,output);
         componentsMap = new HashMap<Node, String>();
         this.myType = type;
 

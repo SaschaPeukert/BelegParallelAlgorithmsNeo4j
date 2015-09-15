@@ -6,16 +6,10 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
-import org.neo4j.kernel.GraphDatabaseAPI;
-import org.neo4j.kernel.api.DataWriteOperations;
-import org.neo4j.kernel.api.exceptions.InvalidTransactionTypeKernelException;
-import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
-import org.neo4j.kernel.impl.store.NeoStore;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -24,22 +18,24 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class StartComparison {
 
-    private static final String DB_PATH = "neo4j-enterprise-2.3.0-M02/data/graph.db";
-    //private  static final String DB_PATH = "C:\\BelegDB\\neo4j-enterprise-2.3.0-M02\\data\\graph.db";
+    //private static final String DB_PATH = "neo4j-enterprise-2.3.0-M02/data/graph.db";
+    private  static final String DB_PATH = "C:\\BelegDB\\neo4j-enterprise-2.3.0-M02\\data\\graph.db";
     /*private  static final String DB_PATH = "E:\\Users\\Sascha\\Documents\\GIT\\" +
            "_Belegarbeit\\neo4j-enterprise-2.3.0-M02\\data\\graph.db";*/
 
-    private static final int OPERATIONS=501000;
-    private static final int NUMBER_OF_THREADS =24;
+    private static final int OPERATIONS=201000;
+    private static final int NUMBER_OF_THREADS =12;
     private static final int NUMBER_OF_RUNS_TO_AVERAGE_RESULTS = 1; //Minimum: 1
     private static final int RANDOMWALKRANDOM = 20;  // Minimum: 1
-    private static final int WARMUPTIME = 120; // in seconds
-    private static final boolean NEWSPI = false;
+    private static final int WARMUPTIME = 60; // in seconds
+    private static final boolean NEWSPI = true;
     private static final String PROP_NAME = "RandomWalkCounter";
     private static int PROP_ID;
 
-    private static Map<Long,Integer> results;
     public static Map<Long,AtomicInteger> resultCounter;
+    public static Object[] keySetOfResultCounter;  // TODO: REFACTOR THE VISIBILTY
+
+    //private static final int GigaBytes = 1073741824;
 
     public static void main(String[] args)  {
 
@@ -48,11 +44,12 @@ public class StartComparison {
         System.out.println("I will start the RandomWalk Comparison: Single Thread vs. " + NUMBER_OF_THREADS +
                " Threads.\nEvery RandomWalk-Step (Count of Operations) is run " + NUMBER_OF_RUNS_TO_AVERAGE_RESULTS + " times.");
 
+
         // Open connection to DB
         GraphDatabaseService graphDb = new GraphDatabaseFactory()
                 .newEmbeddedDatabaseBuilder(new File(DB_PATH))
                 .setConfig(GraphDatabaseSettings.pagecache_memory,"6G")
-                .setConfig(GraphDatabaseSettings.allow_store_upgrade,"true")
+                .setConfig(GraphDatabaseSettings.allow_store_upgrade, "true")
                 .newGraphDatabase();
 
         /*
@@ -73,9 +70,9 @@ public class StartComparison {
         }
 
         graphDb.shutdown();
-        */
 
-        /*
+
+
         /*GraphDatabaseBuilder builder = new HighlyAvailableGraphDatabaseFactory()
                 .newHighlyAvailableDatabaseBuilder(DB_PATH);
 
@@ -92,28 +89,26 @@ public class StartComparison {
         registerShutdownHook(graphDb);
 
 
-        int nodeIDhigh = getHighestNodeID(graphDb);
+        int nodeIDhigh = DBUtils.getHighestNodeID(graphDb);
         int highestPropertyKey = DBUtils.getHighestPropertyID(graphDb);
 
 
-        results = new LinkedHashMap<>(nodeIDhigh);
-        resultCounter = new LinkedHashMap<>(nodeIDhigh);
-
-
-        // TODO REFACTOR
         try(Transaction tx = graphDb.beginTx()){
-            prepaireResultMap(graphDb);
+            prepaireResultMapAndCounter(graphDb, nodeIDhigh);
             tx.success();
-            //tx.close();
         }
-
 
         System.out.println("~ " + nodeIDhigh + " Nodes");
 
-        PROP_ID = ClearUp_AND_GetPropertyID(PROP_NAME, highestPropertyKey, graphDb);
-        System.out.println("TA closed.");
+        PROP_ID = DBUtils.GetPropertyID(PROP_NAME, highestPropertyKey, graphDb);
 
-        WarmUp(graphDb, nodeIDhigh, WARMUPTIME, true);
+        if(PROP_ID==-1){
+            // ERROR Handling
+            System.out.println("Something went wrong while looking up or creating the PropertyID. See Stacktrace for Answers.");
+            return;
+        }
+
+        WarmUp(graphDb, nodeIDhigh, WARMUPTIME, true,false);
 
         System.out.println("");
 
@@ -128,7 +123,7 @@ public class StartComparison {
 
 
         System.out.println(
-                calculateRandomWalkComparison(graphDb, nodeIDhigh, NUMBER_OF_RUNS_TO_AVERAGE_RESULTS)
+                calculateRandomWalkComparison(graphDb, nodeIDhigh, NUMBER_OF_RUNS_TO_AVERAGE_RESULTS, true)
         );
 
 
@@ -136,15 +131,10 @@ public class StartComparison {
 
         System.out.println("\nWhole Comparison done in: " + timeOfComparision.elapsed(TimeUnit.SECONDS) + "s (+ WarmUp " + WARMUPTIME + "s)");
 
-        //System.out.println("Writing the results ("+ results.keySet().size() +") to DB");
-        //writeResultsOut(graphDb);
+        writeResultsOut(graphDb, nodeIDhigh);
 
         //java.awt.Toolkit.getDefaultToolkit().beep();
         System.out.println("End: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()));
-
-        //System.out.println(calculateConnectedComponentsComparison(graphDb,
-        //        nodes,NUMBER_OF_RUNS_TO_AVERAGE_RESULTS,
-        //        ConnectedComponentsSingleThreadAlgorithm.AlgorithmType.STRONG));
 
 
 
@@ -156,76 +146,30 @@ public class StartComparison {
      * @param highestNodeId
      * @param secs
      */
-    private static void WarmUp(GraphDatabaseService graphDb,int highestNodeId, int secs, boolean output){
-        if(output) System.out.println("Starting WarmUp.");
+    private static void WarmUp(GraphDatabaseService graphDb,int highestNodeId, int secs, boolean StringOutput, boolean DbwriteOutput){
+        if(StringOutput) System.out.println("Starting WarmUp.");
 
         Stopwatch timer = Stopwatch.createStarted();
-        ThreadLocalRandom random = ThreadLocalRandom.current();
-        //try (Transaction tx = graphDb.beginTx()) {
 
         while (timer.elapsed(TimeUnit.SECONDS) < secs) {
-                doMultiThreadRandomWalk(graphDb,highestNodeId,100);
-                //if (random.nextBoolean()) {
-                    //DBUtils.getSomeRandomNode(graphDb, random, highestNodeId);
-                    //        } else {
-                    //                  DBUtils.getSomeRandomRelationship(graphDb, random, highestNodeId);
-//                }
+                doMultiThreadRandomWalk(graphDb,highestNodeId,100,DbwriteOutput);
 
             }
 
-//            tx.success();
-  //      }
         timer.stop();
 
-        if(output)System.out.println("WarmUp finished after " + timer.elapsed(TimeUnit.SECONDS) + "s.");
+        if(StringOutput)System.out.println("WarmUp finished after " + timer.elapsed(TimeUnit.SECONDS) + "s.");
         timer = null;
     }
 
-    private static int ClearUp_AND_GetPropertyID(String propertyName, int highestPropertyKey, GraphDatabaseService graphDb){
-        // TODO: Move?
-        try(Transaction tx = graphDb.beginTx()) {
-
-            ThreadToStatementContextBridge ctx = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
-            DataWriteOperations ops = ctx.get().dataWriteOperations();
-
-            int lookup = ops.propertyKeyGetForName(propertyName);
-            if(lookup==-1){
-                System.out.println("Not found. Creating new ID");
-                highestPropertyKey++;
-                DBUtils.createNewPropertyKey(propertyName, highestPropertyKey, ops);
-
-            } else{
-                System.out.println("Found. Using old ID " + lookup);
-                DBUtils.removePropertyFromAllNodes(lookup, ops, graphDb);
-                System.out.println("Finished clearing up.");
-                tx.success();
-                System.out.println("Success!");
-
-                return lookup;
-            }
-
-            tx.success();
-
-            return highestPropertyKey;  // can be used now, referencing now the correct PropertyKey.
-            // No Node has a Property with this key jet
-
-        } catch (InvalidTransactionTypeKernelException e) {
-            e.printStackTrace();  // TODO REMOVE
-        }
-
-        return -1; // ERROR happend
-
-    }
-
-
     private static String calculateConnectedComponentsComparison
             (GraphDatabaseService graphDb, int highestNodeId, int runs,
-             ConnectedComponentsSingleThreadAlgorithm.AlgorithmType type){
+             ConnectedComponentsSingleThreadAlgorithm.AlgorithmType type, boolean output){
 
         long resultsOfRun =0;
         String result = "";
         for(int i=0;i<runs;i++){
-            long temp = doConnectedComponentsRun(graphDb,highestNodeId,type);
+            long temp = doConnectedComponentsRun(graphDb,highestNodeId,type, output);
             resultsOfRun = resultsOfRun + temp;
             result += "("+i+") " + temp + "ms\n";
 
@@ -237,15 +181,18 @@ public class StartComparison {
         return "Result: " + resultsOfRun + "ms\n" + result;
     }
 
-    private static long doConnectedComponentsRun(GraphDatabaseService graphDb,int highestNodeId, ConnectedComponentsSingleThreadAlgorithm.AlgorithmType type){
+    private static long doConnectedComponentsRun(GraphDatabaseService graphDb,int highestNodeId,
+                                                 ConnectedComponentsSingleThreadAlgorithm.AlgorithmType type, boolean output){
 
         ConnectedComponentsSingleThreadAlgorithm ConnectedSingle = new ConnectedComponentsSingleThreadAlgorithm(
-                graphDb, highestNodeId, PROP_ID,PROP_NAME, type);
+                graphDb, highestNodeId, PROP_ID,PROP_NAME, type, output);
         Thread t = new Thread(ConnectedSingle);
+        t.setName("ConnectedComponentsSingleThreadAlgo");
 
         t.start();
         try {
             t.join();
+            t = null;
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -257,7 +204,7 @@ public class StartComparison {
     }
 
     private static String calculateRandomWalkComparison(GraphDatabaseService graphDb, int highestNodeId,
-                                                        int numberOfRunsPerStep){
+                                                        int numberOfRunsPerStep, boolean output){
         String result="\n\nSteps SingleThread[\u00B5s] MultiThread[\u00B5s] SpeedUp[%]";
 
         long[] resultsOfStep;
@@ -270,7 +217,7 @@ public class StartComparison {
 
             for(int i=0;i<numberOfRunsPerStep;i++){
                 // Run
-                resultsOfRun = doRandomWalkerRun(graphDb, highestNodeId,c);
+                resultsOfRun = doRandomWalkerRun(graphDb, highestNodeId,c,output);
 
                 resultsOfStep[0] += resultsOfRun[0];
                 resultsOfStep[1] += resultsOfRun[1];
@@ -295,36 +242,40 @@ public class StartComparison {
     }
 
 
-    private static long[] doRandomWalkerRun(GraphDatabaseService graphDb,int highestNodeId, int noOfSteps){
+    private static long[] doRandomWalkerRun(GraphDatabaseService graphDb,int highestNodeId, int noOfSteps, boolean output){
         long[] runtimes = new long[2];
 
-        runtimes[0] = doSingleThreadRandomWalk(graphDb, highestNodeId, noOfSteps);
+        runtimes[0] = doSingleThreadRandomWalk(graphDb, highestNodeId, noOfSteps, output);
 
-        // 	comparison with NUMBER_OF_THREADS Threads
-        //
-
-        runtimes[1] =doMultiThreadRandomWalk(graphDb,highestNodeId,noOfSteps);
+        runtimes[1] = doMultiThreadRandomWalk(graphDb,highestNodeId,noOfSteps, output);
 
         return runtimes;
 
     }
 
-    private static long doMultiThreadRandomWalk(GraphDatabaseService graphDb, int highestNodeId, int noOfSteps){
+    private static long doMultiThreadRandomWalk(GraphDatabaseService graphDb, int highestNodeId, int noOfSteps, boolean output){
 
         // INIT
-        Map<Thread,AlgorithmRunnable> map = new HashMap<>();
+        Map<Thread,AlgorithmRunnable> map = new LinkedHashMap<>();
         for(int i=0;i<NUMBER_OF_THREADS;i++){
 
             AlgorithmRunnable rw;
             if(NEWSPI){
                 rw = new RandomWalkAlgorithmRunnableNewSPI(RANDOMWALKRANDOM,
-                        graphDb,highestNodeId,PROP_ID,PROP_NAME, noOfSteps/NUMBER_OF_THREADS);
+                        graphDb,highestNodeId,PROP_ID,PROP_NAME, noOfSteps/NUMBER_OF_THREADS, output);
             } else{
                 rw = new RandomWalkAlgorithmRunnable(RANDOMWALKRANDOM,
-                        graphDb,highestNodeId,PROP_ID,PROP_NAME, noOfSteps/NUMBER_OF_THREADS);
+                        graphDb,highestNodeId,PROP_ID,PROP_NAME, noOfSteps/NUMBER_OF_THREADS, output);
+            }
+            Thread ttemp = rw.getThread();
+
+            if(output){
+                ttemp.setName(rw.getClass().getSimpleName() +"_"+ i);
+            } else{
+                ttemp.setName("WarmUp:" +rw.getClass().getSimpleName() +"_"+ i);
             }
 
-            map.put(rw.getNewThread(),rw);
+            map.put(ttemp, rw);
         }
 
         // Thread start
@@ -345,8 +296,6 @@ public class StartComparison {
                     elapsedTime =map.get(t).timer.elapsed(TimeUnit.MICROSECONDS);
                 }
 
-                addToResults(map.get(t).result);
-
                 t = null; // suggestion for garbage collector
 
             } catch (InterruptedException e) {
@@ -356,22 +305,20 @@ public class StartComparison {
 
         map = null; // suggestion for garbage collector
 
-
-        /*System.out.println("RandomWalk (MultiThread "+ noOfSteps + " steps) done in " + elapsedTime +
-                "\u00B5s (" +elapsedTime/1000 +"ms)");  */
         return elapsedTime;
     }
 
-    private static long doSingleThreadRandomWalk(GraphDatabaseService graphDb, int highestNodeId, int noOfSteps){
+    private static long doSingleThreadRandomWalk(GraphDatabaseService graphDb, int highestNodeId, int noOfSteps, boolean output){
 
         AlgorithmRunnable rwst;
         if(NEWSPI){
-            rwst = new RandomWalkAlgorithmRunnableNewSPI(RANDOMWALKRANDOM, graphDb,highestNodeId,PROP_ID,PROP_NAME,noOfSteps);
+            rwst = new RandomWalkAlgorithmRunnableNewSPI(RANDOMWALKRANDOM, graphDb,highestNodeId,PROP_ID,PROP_NAME,noOfSteps, output);
         } else{
-            rwst = new RandomWalkAlgorithmRunnable(RANDOMWALKRANDOM, graphDb,highestNodeId,PROP_ID,PROP_NAME,noOfSteps);
+            rwst = new RandomWalkAlgorithmRunnable(RANDOMWALKRANDOM, graphDb,highestNodeId,PROP_ID,PROP_NAME,noOfSteps, output);
 
         }
-        Thread thr = rwst.getNewThread();
+        Thread thr = rwst.getThread();
+        thr.setName(rwst.getClass().getSimpleName() + "_single");
         thr.start();
         try {
             thr.join();
@@ -379,13 +326,7 @@ public class StartComparison {
             e.printStackTrace();
         }
 
-        /*System.out.println("RandomWalk (SingleThread " + noOfSteps + " steps) done in " +
-                rwst.timer.elapsed(TimeUnit.MICROSECONDS) +
-                "\u00B5s (" + rwst.timer.elapsed(TimeUnit.MILLISECONDS) + "ms)"); */
         thr = null;
-
-
-        addToResults(rwst.result);
 
         return rwst.timer.elapsed(TimeUnit.MICROSECONDS);
 
@@ -399,64 +340,40 @@ public class StartComparison {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                graphDb.shutdown();
+                try {
+                    graphDb.shutdown();
+                } catch (Exception e) {
+                    graphDb.shutdown();
+                }
             }
         });
     }
 
 
-    public static int getHighestNodeID(GraphDatabaseService graphDb ){
+    public static boolean writeResultsOut(GraphDatabaseService graphDb, int highestNodeid){
 
-        NeoStore neoStore = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(NeoStore.class);
-        return (int) neoStore.getNodeStore().getHighId();
-
-
-    }
-
-    public static void addToResults(Map<Long,Integer> map){
-
-        for(Long l:map.keySet()){
-
-            Integer null_or_oldValue = results.get(l);
-            if(null_or_oldValue==null){
-                results.put(l,map.get(l));
-            } else{
-                results.put(l,null_or_oldValue+map.get(l));
-            }
-        }
-
-    }
-
-    public static boolean writeResultsOut(GraphDatabaseService graphDb){
-
-        int sizeKeySet = results.keySet().size();
+        int sizeKeySet = resultCounter.keySet().size();
         int partOfData = sizeKeySet/NUMBER_OF_THREADS;  // LAST ONE TAKES MORE!
-        Iterator<Long> it = results.keySet().iterator();
-        Map<Long,Integer> newMap = new LinkedHashMap<>(partOfData*2);
-        List<Map<Long,Integer>> listOfNewMaps = new ArrayList<>();
-        int itemCounter=0;
-        while(it.hasNext()){
-            if((itemCounter>=partOfData) && (listOfNewMaps.size() != NUMBER_OF_THREADS)){
-                // add oldMap
-                listOfNewMaps.add(newMap);
-                // generate new Map
-                newMap = new LinkedHashMap<>(partOfData*2);
-                itemCounter=0;
-            }
-            Long l = it.next();
-            newMap.put(l,results.get(l));
-            itemCounter++;
 
-        }
+        List<Thread> listOfThreads = new ArrayList<>();  // TODO: CHANGE TO ARRAYS
 
-        List<NeoWriter> listOfWriters = new ArrayList<>();
-        List<Thread> listOfThreads = new ArrayList<>();
-
+        int startIndex =0;
+        int endIndex = partOfData;
         for(int i=0;i<NUMBER_OF_THREADS;i++){
-            NeoWriter neoWriter = new NeoWriter(listOfNewMaps.get(i),PROP_ID,graphDb);
-            listOfWriters.add(neoWriter);
-            Thread t = new Thread(neoWriter);
+
+            NeoWriter neoWriter = new NeoWriter(PROP_ID,graphDb,startIndex,endIndex);
+            Thread t = neoWriter.getThread();
+            t.setName(neoWriter.getClass().getSimpleName() + "_" + i);
             listOfThreads.add(t);
+
+            // new indexes for next round
+            startIndex = endIndex;
+            endIndex = endIndex + partOfData;
+
+            if(i==NUMBER_OF_THREADS-2){
+                endIndex= sizeKeySet;
+            }
+
         }
 
         for(Thread t:listOfThreads){
@@ -466,31 +383,32 @@ public class StartComparison {
         for(Thread t:listOfThreads){
             try {
                 t.join();
+                t = null;  // just to try it
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
 
-        for(NeoWriter n:listOfWriters){
-            n.commitTransaction();
-            n = null;
-        }
 
-        listOfNewMaps = null;
+        System.out.println("Done Writing");
+
         listOfThreads = null;
-        listOfWriters = null;
+
 
         return true;
     }
 
-    private static void prepaireResultMap(GraphDatabaseService graphDb){
+    private static void prepaireResultMapAndCounter(GraphDatabaseService graphDb, int nodeIDhigh){
 
         Iterator<Node> it = DBUtils.getIteratorForAllNodes(graphDb);
+
+        resultCounter = new LinkedHashMap<>(nodeIDhigh);
 
         while(it.hasNext()){
             resultCounter.put(it.next().getId(),new AtomicInteger(0));
         }
 
+        keySetOfResultCounter = resultCounter.keySet().toArray();  // should only be called once!
     }
 
 

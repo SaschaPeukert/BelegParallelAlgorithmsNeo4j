@@ -5,9 +5,11 @@ import org.neo4j.kernel.GraphDatabaseAPI;
 import org.neo4j.kernel.api.DataWriteOperations;
 import org.neo4j.kernel.api.ReadOperations;
 import org.neo4j.kernel.api.exceptions.EntityNotFoundException;
+import org.neo4j.kernel.api.exceptions.InvalidTransactionTypeKernelException;
 import org.neo4j.kernel.api.exceptions.schema.ConstraintValidationKernelException;
 import org.neo4j.kernel.api.exceptions.schema.IllegalTokenNameException;
 import org.neo4j.kernel.api.properties.Property;
+import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
 import org.neo4j.kernel.impl.store.NeoStore;
 import org.neo4j.tooling.GlobalGraphOperations;
 
@@ -25,11 +27,20 @@ public class DBUtils {
         while(true) {
 
             try {
+
+                // NEW VERSION, checks Map for ID and not DB
                 r = (long) random.nextInt(highestNodeId);
-                Node n = graphDb.getNodeById(r);
-                return n;
+                if(StartComparison.resultCounter.containsKey(r)){
+                    Node n = graphDb.getNodeById(r);
+                    return n;
+                } else{
+                    continue;
+                }
+
             } catch (NotFoundException e){
-                // NEXT!
+                // NEXT! OLD VERSION
+                // NEW: this should never be happening!
+                System.out.println("Something terrible is happend");
             }
 
         }
@@ -41,8 +52,14 @@ public class DBUtils {
         while(true) {
 
             r = (long) random.nextInt(highestNodeId);
-            if(ops.nodeExists(r))
+
+            // NEW VERSION without DB-Lookup
+            if(StartComparison.resultCounter.containsKey(r))
                 return r;
+
+            // OLD VERSION
+            //if(ops.nodeExists(r))
+            //    return r;
 
         }
 
@@ -154,12 +171,53 @@ public class DBUtils {
 
     }
 
-    public static Iterator<Node> getIteratorForAllNodes( GraphDatabaseService gdb) {
+    public static ResourceIterator<Node> getIteratorForAllNodes( GraphDatabaseService gdb) {
         GlobalGraphOperations ggo = GlobalGraphOperations.at(gdb);
 
         ResourceIterable<Node> allNodes = ggo.getAllNodes();
-        Iterator<Node> it = allNodes.iterator();
+        ResourceIterator<Node> it = allNodes.iterator();
         return it;
+
+    }
+
+    /**
+     * Gets the PropertyID for a given PropertyName or creates a new ID for that name and returns it.
+     * @param propertyName
+     * @param highestPropertyKey
+     * @param graphDb
+     * @return -1 if error happend
+     */
+    public static int GetPropertyID(String propertyName, int highestPropertyKey, GraphDatabaseService graphDb){
+        try(Transaction tx = graphDb.beginTx()) {
+
+            ThreadToStatementContextBridge ctx = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
+            DataWriteOperations ops = ctx.get().dataWriteOperations();
+
+            int lookup = ops.propertyKeyGetForName(propertyName);
+            if(lookup==-1){
+                System.out.println("Not found. Creating new ID");
+                highestPropertyKey++;
+                createNewPropertyKey(propertyName, highestPropertyKey, ops);
+
+                tx.success();
+
+                return highestPropertyKey;  // can be used now, referencing now the correct PropertyKey.
+                                            // No Node has a Property with this key jet
+
+            } else{
+                System.out.println("Found. Using old ID " + lookup);
+                //DBUtils.removePropertyFromAllNodes(lookup, ops, graphDb);  useless since every one of this properties will be overwritten later
+                //System.out.println("Finished clearing up.");
+                tx.success();
+
+                return lookup;
+            }
+
+        } catch (InvalidTransactionTypeKernelException e) {
+            e.printStackTrace();  // TODO REMOVE
+        }
+
+        return -1; // ERROR happend
 
     }
 }
