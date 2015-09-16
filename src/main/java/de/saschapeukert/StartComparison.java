@@ -1,6 +1,7 @@
 package de.saschapeukert;
 
 import com.google.common.base.Stopwatch;
+import org.HdrHistogram.DoubleHistogram;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
@@ -25,42 +26,47 @@ public class StartComparison {
 
     private static int OPERATIONS;
     private static int NUMBER_OF_THREADS;
-    private static final int NUMBER_OF_RUNS_TO_AVERAGE_RESULTS = 1; //Minimum: 1
+    private static int NUMBER_OF_RUNS; // = 30; //Minimum: 1
     private static final int RANDOMWALKRANDOM = 20;  // Minimum: 1
     private static  int WARMUPTIME; // in seconds
     private static  boolean NEWSPI;
     private static  String PROP_NAME;
     private static int PROP_ID;
-    private static String PAGECACHE_GB;
+    private static String PAGECACHE;
+    private static String ALGORITHM;
+    private static String WRITE;
 
     public static Map<Long,AtomicInteger> resultCounter;
     public static Object[] keySetOfResultCounter;  // TODO: REFACTOR THE VISIBILTY?
+
+    public static DoubleHistogram histogram = new DoubleHistogram(3600000000000L, 3);
 
 
     public static void main(String[] args)  {
 
         // READING THE INPUTPARAMETER
         try {
-            OPERATIONS = Integer.valueOf(args[0]); // AS LONG AS ITS RW
+            ALGORITHM = args[0];
+            OPERATIONS = Integer.valueOf(args[1]); // AS LONG AS ITS RW
                                                     // TODO: NEED START
 
-            NUMBER_OF_THREADS = Integer.valueOf(args[1]);
-            WARMUPTIME = Integer.valueOf(args[2]);
-            if (args[3].equals("true")) {
+            NUMBER_OF_RUNS = Integer.valueOf(args[2]);
+            NUMBER_OF_THREADS = Integer.valueOf(args[3]);
+            WARMUPTIME = Integer.valueOf(args[4]);
+            if (args[5].equals("true")) {
                 NEWSPI = true;
             } else {
                 NEWSPI = false;
             }
-            PROP_NAME = args[4];
-            PAGECACHE_GB = args[5];
-            DB_PATH = args[6];
-
-            // TODO: ALGORITHM as Input!
+            PROP_NAME = args[6];
+            PAGECACHE= args[7];
+            DB_PATH = args[8];
+            WRITE = args[9];
 
         } catch(Exception e){
 
             System.out.println("Not enough input parameter.");
-            System.out.println("You have to supply: OperationNumber Number_of_Threads WarmUpTime_in_s " +
+            System.out.println("You have to supply: AlgorithmName OperationNumber Number_of_Threads WarmUpTime_in_s " +
                     "NewSPI_bool PropertyName PageCache(String)_in_G/M/K DB-Path");
             return;
         }
@@ -68,14 +74,14 @@ public class StartComparison {
         // START
         System.out.println("Start: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()));
 
-        System.out.println("I will start the RandomWalk Comparison: Single Thread vs. " + NUMBER_OF_THREADS +
-               " Threads.\nEvery RandomWalk-Step (Count of Operations) is run " + NUMBER_OF_RUNS_TO_AVERAGE_RESULTS + " times.");
+        System.out.println("I will start the "+ ALGORITHM +" Comparison: Single Thread vs. " + NUMBER_OF_THREADS +
+               " Threads.\n");
 
 
         // Open connection to DB
         GraphDatabaseService graphDb = new GraphDatabaseFactory()
                 .newEmbeddedDatabaseBuilder(new File(DB_PATH))
-                .setConfig(GraphDatabaseSettings.pagecache_memory, PAGECACHE_GB)
+                .setConfig(GraphDatabaseSettings.pagecache_memory, PAGECACHE)
                 .setConfig(GraphDatabaseSettings.keep_logical_logs,"false")  // to get rid of all those neostore.trasaction.db ... files
                 .setConfig(GraphDatabaseSettings.allow_store_upgrade, "true")
                 .newGraphDatabase();
@@ -144,26 +150,47 @@ public class StartComparison {
 
         /*
         System.out.println(calculateConnectedComponentsComparison(graphDb,
-                nodeIDhigh,NUMBER_OF_RUNS_TO_AVERAGE_RESULTS,
+                nodeIDhigh,NUMBER_OF_RUNS,
                 ConnectedComponentsSingleThreadAlgorithm.AlgorithmType.STRONG));
 
         */
 
+        switch (ALGORITHM){
+            case "RW_old":
+                System.out.println("Overwrite: Only doing 1 Run per Step");
+                System.out.println(
+                        calculateRandomWalkComparison_old(graphDb, nodeIDhigh, 1, true) // REMOVED MORE THEN ONE RUN! Because...
+                );
+                break;
+            case "RW_new":
+                calculateRandomWalkComparison_new(graphDb, nodeIDhigh, NUMBER_OF_RUNS, true);
+                break;
+            case "WCC":
+                System.out.println(calculateConnectedComponentsComparison(graphDb,
+                        nodeIDhigh, NUMBER_OF_RUNS,
+                        ConnectedComponentsSingleThreadAlgorithm.AlgorithmType.WEAK, true));
+                break;
+            case "SCC":
+                System.out.println(calculateConnectedComponentsComparison(graphDb,
+                        nodeIDhigh, NUMBER_OF_RUNS,
+                        ConnectedComponentsSingleThreadAlgorithm.AlgorithmType.STRONG, true));
+                break;
+            default:
 
-        System.out.println(
-                calculateRandomWalkComparison(graphDb, nodeIDhigh, NUMBER_OF_RUNS_TO_AVERAGE_RESULTS, true)
-        );
+                System.out.println("Error: Unknown Algorithm.");
+                return;
+        }
 
 
         timeOfComparision.stop();
 
         System.out.println("\nWhole Comparison done in: " + timeOfComparision.elapsed(TimeUnit.SECONDS) + "s (+ WarmUp " + WARMUPTIME + "s)");
 
-        writeResultsOut(graphDb, nodeIDhigh);
+        if(WRITE.equals("Write"))
+            writeResultsOut(graphDb, nodeIDhigh);
 
         //java.awt.Toolkit.getDefaultToolkit().beep();
         System.out.println("End: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()));
-
 
 
     }
@@ -231,8 +258,8 @@ public class StartComparison {
 
     }
 
-    private static String calculateRandomWalkComparison(GraphDatabaseService graphDb, int highestNodeId,
-                                                        int numberOfRunsPerStep, boolean output){
+    private static String calculateRandomWalkComparison_old(GraphDatabaseService graphDb, int highestNodeId,
+                                                            int numberOfRunsPerStep, boolean output){
         String result="\n\nSteps SingleThread[\u00B5s] MultiThread[\u00B5s] SpeedUp[%]";
 
         long[] resultsOfStep;
@@ -267,6 +294,27 @@ public class StartComparison {
         }
 
         return result;
+    }
+
+    private static void calculateRandomWalkComparison_new(GraphDatabaseService graphDb, int highestNodeId,
+                                                            int numberOfRunsPerStep, boolean output){
+        long[] resultsOfRun;
+
+        for(int i=0;i<numberOfRunsPerStep;i++){
+            System.out.println("Now doing run " + (i+1));
+            // Run
+            resultsOfRun = doRandomWalkerRun(graphDb, highestNodeId,OPERATIONS,output);
+
+            histogram.recordValue(((((float)100/resultsOfRun[0])*resultsOfRun[1])));
+
+            resultsOfRun = null; // suggestion for garbage collector
+
+        }
+
+        System.out.println("");
+        System.out.println("Value = Percentage of corresponding SingleThread runtime.");
+        histogram.outputPercentileDistribution(System.out, 1.00);
+        System.out.println("");
     }
 
 
