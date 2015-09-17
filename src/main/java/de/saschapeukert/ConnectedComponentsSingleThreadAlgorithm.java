@@ -5,6 +5,7 @@ import org.neo4j.tooling.GlobalGraphOperations;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by Sascha Peukert on 06.08.2015.
@@ -29,7 +30,6 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
     }
 
 
-    private Map<Node,String> componentsMap;
     private int componentID;
     private AlgorithmType myType;
 
@@ -37,13 +37,13 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
     private Stack<Node> stack;
     private int maxdfs=0;
 
-    private Set<Node> allNodes;
+    public static Set<Node> allNodes;
 
 
     public ConnectedComponentsSingleThreadAlgorithm(GraphDatabaseService gdb, int highestNodeId
-            , int pId,String pName, AlgorithmType type, boolean output){
-        super(gdb, highestNodeId,pId,pName,output);
-        componentsMap = new HashMap<Node, String>();
+            , AlgorithmType type, boolean output){
+        super(gdb, highestNodeId, output);
+
         this.myType = type;
 
         allNodes = new HashSet<Node>(highestNodeId);
@@ -66,7 +66,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
                 }
                 it.close();
                 tx.success();
-                //tx.close();
+
             }
 
         } else{
@@ -82,7 +82,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
                 }
                 it.close();
                 tx.success();
-                //tx.close();
+
             }
 
         }
@@ -95,7 +95,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
 
         timer.start();
 
-        componentID = 0;
+        componentID = 1;
 
         try (Transaction tx = graphDb.beginTx()) {
             // GlobalGraphOperations operations = GlobalGraphOperations.at(graphDb);
@@ -109,8 +109,13 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
                     Node n = it.next();
 
                     if(myType==AlgorithmType.WEAK){
-                        DFS(n, "C" + componentID);
-                        componentID++;
+                       // try (Transaction tx = graphDb.beginTx()) {
+                            new DFS(n, componentID).go(100);  // just to try it
+                            componentID++;
+                            //System.out.println(allNodes.size());
+                       //     tx.success();
+                     //   }
+
                     } else{
                         // System.out.println(allNodes.size());  // just for me TODO Remove!
                         tarjan(n);
@@ -123,7 +128,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
             }
 
             tx.success();
-          //  tx.close();
+
         }
 
         timer.stop();
@@ -169,7 +174,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
                 TarjanNode v_new = nodeDictionary.get(node_v);  // !
                 v_new.onStack= false;                           // !
 
-                componentsMap.put(node_v, "C" + componentID);
+                StartComparison.resultCounter.put(node_v.getId(), new AtomicInteger(componentID));
                 if(node_v.getId()== currentNode.getId()){
                     componentID++;
                     break;
@@ -181,39 +186,21 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
     }
 
 
-    private void DFS(Node n, String compName){
-
-        if(componentsMap.get(n)==compName){
-            return;// Already visited
-        }
-
-        // NOW IT HAS TO BE NULL
-        componentsMap.put(n, compName);
-        allNodes.remove(n); // correct?   notwendig?!
-
-        for(Relationship r :n.getRelationships()){
-            DFS(r.getOtherNode(n), compName);
-
-        }
-
-    }
-
-
     public String getResults(){
 
-        Map<String, List<Node>> myResults = new TreeMap<String,List<Node>>();
+        Map<Integer, List<Long>> myResults = new TreeMap<Integer,List<Long>>();
 
         // to adapt to the "old" structure of componentsMap
 
-        for(Node n: componentsMap.keySet()){
-            if(!myResults.containsKey(componentsMap.get(n))){
-                ArrayList<Node> newList = new ArrayList<>();
+        for(Long n: StartComparison.resultCounter.keySet()){
+            if(!myResults.containsKey(StartComparison.resultCounter.get(n).intValue())){
+                ArrayList<Long> newList = new ArrayList<>();
                 newList.add(n);
-                myResults.put(componentsMap.get(n),newList);
+                myResults.put(StartComparison.resultCounter.get(n).intValue(),newList);
             } else{
-                List<Node> oldList = myResults.get(componentsMap.get(n));
+                List<Long> oldList = myResults.get(StartComparison.resultCounter.get(n).intValue());
                 oldList.add(n);
-                myResults.put(componentsMap.get(n),oldList);
+                myResults.put(StartComparison.resultCounter.get(n).intValue(),oldList);
             }
         }
 
@@ -221,22 +208,22 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
 
         StringBuilder returnString = new StringBuilder();
         returnString.append("Component count: " + myResults.keySet().size() + "\n");
-        returnString.append("Components with Size >1\n");
+        returnString.append("Components with Size >4\n");
         returnString.append("- - - - - - - -\n");
-        for(String s:myResults.keySet()){
-            if(myResults.get(s).size()<=1){
+        for(Integer s:myResults.keySet()){
+            if(myResults.get(s).size()<=5){
                 continue;
             }
 
             boolean first = true;
             returnString.append("Component " + s + ": ");
-            for(Node n:myResults.get(s)){
+            for(Long n:myResults.get(s)){
                 if(!first){
                     returnString.append(", ");
                 } else{
                     first = false;
                 }
-                returnString.append(n.getId());
+                returnString.append(n);
             }
             returnString.append("\n");
         }

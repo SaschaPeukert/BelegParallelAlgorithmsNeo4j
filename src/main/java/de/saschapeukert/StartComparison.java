@@ -39,7 +39,7 @@ public class StartComparison {
     public static Map<Long,AtomicInteger> resultCounter;
     public static Object[] keySetOfResultCounter;  // TODO: REFACTOR THE VISIBILTY?
 
-    public static DoubleHistogram histogram = new DoubleHistogram(3600000000000L, 3);
+    private static DoubleHistogram histogram = new DoubleHistogram(3600000000000L, 3);
 
 
     public static void main(String[] args)  {
@@ -84,6 +84,7 @@ public class StartComparison {
                 .setConfig(GraphDatabaseSettings.pagecache_memory, PAGECACHE)
                 .setConfig(GraphDatabaseSettings.keep_logical_logs,"false")  // to get rid of all those neostore.trasaction.db ... files
                 .setConfig(GraphDatabaseSettings.allow_store_upgrade, "true")
+              //  .setConfig(GraphDatabaseSettings.read_only,"true")
                 .newGraphDatabase();
 
         /*
@@ -134,12 +135,16 @@ public class StartComparison {
 
         System.out.println("~ " + nodeIDhigh + " Nodes");
 
-        PROP_ID = DBUtils.GetPropertyID(PROP_NAME, highestPropertyKey, graphDb);
 
-        if(PROP_ID==-1){
-            // ERROR Handling
-            System.out.println("Something went wrong while looking up or creating the PropertyID. See Stacktrace for Answers.");
-            return;
+        if(WRITE.equals("Write")){
+
+            PROP_ID = DBUtils.GetPropertyID(PROP_NAME, highestPropertyKey, graphDb);
+
+            if(PROP_ID==-1){
+                // ERROR Handling
+                System.out.println("Something went wrong while looking up or creating the PropertyID. See Stacktrace for Answers.");
+                return;
+            }
         }
 
         WarmUp(graphDb, nodeIDhigh, WARMUPTIME, true,false);
@@ -227,7 +232,7 @@ public class StartComparison {
             long temp = doConnectedComponentsRun(graphDb,highestNodeId,type, output);
             resultsOfRun = resultsOfRun + temp;
             result += "("+i+") " + temp + "ms\n";
-
+            // TODO: Histogram
             //System.gc();
         }
 
@@ -240,7 +245,7 @@ public class StartComparison {
                                                  ConnectedComponentsSingleThreadAlgorithm.AlgorithmType type, boolean output){
 
         ConnectedComponentsSingleThreadAlgorithm ConnectedSingle = new ConnectedComponentsSingleThreadAlgorithm(
-                graphDb, highestNodeId, PROP_ID,PROP_NAME, type, output);
+                graphDb, highestNodeId, type, output);
         Thread t = new Thread(ConnectedSingle);
         t.setName("ConnectedComponentsSingleThreadAlgo");
 
@@ -313,6 +318,7 @@ public class StartComparison {
 
         System.out.println("");
         System.out.println("Value = Percentage of corresponding SingleThread runtime.");
+        
         histogram.outputPercentileDistribution(System.out, 1.00);
         System.out.println("");
     }
@@ -338,10 +344,10 @@ public class StartComparison {
             AlgorithmRunnable rw;
             if(NEWSPI){
                 rw = new RandomWalkAlgorithmRunnableNewSPI(RANDOMWALKRANDOM,
-                        graphDb,highestNodeId,PROP_ID,PROP_NAME, noOfSteps/NUMBER_OF_THREADS, output);
+                        graphDb,highestNodeId, noOfSteps/NUMBER_OF_THREADS, output);
             } else{
                 rw = new RandomWalkAlgorithmRunnable(RANDOMWALKRANDOM,
-                        graphDb,highestNodeId,PROP_ID,PROP_NAME, noOfSteps/NUMBER_OF_THREADS, output);
+                        graphDb,highestNodeId, noOfSteps/NUMBER_OF_THREADS, output);
             }
             Thread ttemp = rw.getThread();
 
@@ -388,9 +394,9 @@ public class StartComparison {
 
         AlgorithmRunnable rwst;
         if(NEWSPI){
-            rwst = new RandomWalkAlgorithmRunnableNewSPI(RANDOMWALKRANDOM, graphDb,highestNodeId,PROP_ID,PROP_NAME,noOfSteps, output);
+            rwst = new RandomWalkAlgorithmRunnableNewSPI(RANDOMWALKRANDOM, graphDb,highestNodeId,noOfSteps, output);
         } else{
-            rwst = new RandomWalkAlgorithmRunnable(RANDOMWALKRANDOM, graphDb,highestNodeId,PROP_ID,PROP_NAME,noOfSteps, output);
+            rwst = new RandomWalkAlgorithmRunnable(RANDOMWALKRANDOM, graphDb,highestNodeId,noOfSteps, output);
 
         }
         Thread thr = rwst.getThread();

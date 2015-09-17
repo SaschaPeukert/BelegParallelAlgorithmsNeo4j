@@ -195,7 +195,7 @@ public class DBUtils {
 
             int lookup = ops.propertyKeyGetForName(propertyName);
             if(lookup==-1){
-                System.out.println("Not found. Creating new ID");
+                System.out.println("Property not found. Creating new ID");
                 highestPropertyKey++;
                 createNewPropertyKey(propertyName, highestPropertyKey, ops);
 
@@ -205,7 +205,7 @@ public class DBUtils {
                                             // No Node has a Property with this key jet
 
             } else{
-                System.out.println("Found. Using old ID " + lookup);
+                System.out.println("Property found. Using old ID " + lookup);
                 //DBUtils.removePropertyFromAllNodes(lookup, ops, graphDb);  useless since every one of this properties will be overwritten later
                 //System.out.println("Finished clearing up.");
                 tx.success();

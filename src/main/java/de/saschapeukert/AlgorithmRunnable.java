@@ -11,8 +11,6 @@ public abstract class AlgorithmRunnable extends MyBaseRunnable {
     public Stopwatch timer;
     protected GraphDatabaseService graphDb;
     protected final int highestNodeId;
-    protected final int propID;
-    protected final String propName;
     protected final boolean output;
 
     public abstract void compute();
@@ -25,12 +23,11 @@ public abstract class AlgorithmRunnable extends MyBaseRunnable {
     /*
         This will also initialize the timer but NOT start it!
      */
-    public AlgorithmRunnable(GraphDatabaseService gdb, int highestNodeId, int propID, String propName, boolean output){
+    public AlgorithmRunnable(GraphDatabaseService gdb, int highestNodeId, boolean output){
         this.timer = Stopwatch.createUnstarted();
         this.graphDb = gdb;
         this.highestNodeId = highestNodeId;
-        this.propID = propID;
-        this.propName = propName;
+
         this.output = output;
 
     }

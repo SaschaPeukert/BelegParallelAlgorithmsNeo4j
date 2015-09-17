@@ -17,9 +17,8 @@ public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
 
 
     public RandomWalkAlgorithmRunnable(int randomChanceParameter,
-                                       GraphDatabaseService gdb,int highestNodeId,int pId,
-                                        String pName, int NumberOfSteps, boolean output){
-        super(gdb, highestNodeId,pId,pName, output);
+                                       GraphDatabaseService gdb,int highestNodeId, int NumberOfSteps, boolean output){
+        super(gdb, highestNodeId, output);
 
         this._RandomNodeParameter = randomChanceParameter;
         this.currentNode = null;
