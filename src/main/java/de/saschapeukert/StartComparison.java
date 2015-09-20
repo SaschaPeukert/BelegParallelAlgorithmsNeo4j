@@ -1,6 +1,12 @@
 package de.saschapeukert;
 
 import com.google.common.base.Stopwatch;
+import de.saschapeukert.Algorithms.Impl.ConnectedComponentsSingleThreadAlgorithm;
+import de.saschapeukert.Algorithms.Impl.RandomWalkAlgorithmRunnable;
+import de.saschapeukert.Algorithms.Impl.RandomWalkAlgorithmRunnableNewSPI;
+import de.saschapeukert.Algorithms.MyAlgorithmBaseRunnable;
+import de.saschapeukert.Database.DBUtils;
+import de.saschapeukert.Database.NeoWriter;
 import org.HdrHistogram.Histogram;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -128,10 +134,9 @@ public class StartComparison {
         int highestPropertyKey = DBUtils.getHighestPropertyID(graphDb);
 
 
-        try(Transaction tx = graphDb.beginTx()){
+        Transaction t = DBUtils.openTransaction(graphDb);
             prepaireResultMapAndCounter(graphDb, nodeIDhigh);
-            tx.success();
-        }
+        DBUtils.closeTransactionSuccess(t);
 
         System.out.println("~ " + nodeIDhigh + " Nodes");
 
@@ -278,9 +283,9 @@ public class StartComparison {
         for(int i=0;i<numberOfRunsPerStep;i++){
             System.out.println("Now doing run " + (i + 1));
             // Run
-
-            histogram.recordValue(doMultiThreadRandomWalk(graphDb,highestNodeId,OPERATIONS, output));
-
+            long run = doMultiThreadRandomWalk(graphDb,highestNodeId,OPERATIONS, output);
+            //System.out.println(run);
+            histogram.recordValue(run);
 
         }
 
@@ -337,10 +342,10 @@ public class StartComparison {
     private static long doMultiThreadRandomWalk(GraphDatabaseService graphDb, int highestNodeId, int noOfSteps, boolean output){
 
         // INIT
-        Map<Thread,AlgorithmRunnable> map = new HashMap<>();
+        Map<Thread,MyAlgorithmBaseRunnable> map = new HashMap<>();
         for(int i=0;i<NUMBER_OF_THREADS;i++){
 
-            AlgorithmRunnable rw;
+            MyAlgorithmBaseRunnable rw;
             if(NEWSPI){
                 rw = new RandomWalkAlgorithmRunnableNewSPI(RANDOMWALKRANDOM,
                         graphDb,highestNodeId, noOfSteps/NUMBER_OF_THREADS, output);
@@ -391,7 +396,7 @@ public class StartComparison {
 
     private static long doSingleThreadRandomWalk(GraphDatabaseService graphDb, int highestNodeId, int noOfSteps, boolean output){
 
-        AlgorithmRunnable rwst;
+        MyAlgorithmBaseRunnable rwst;
         if(NEWSPI){
             rwst = new RandomWalkAlgorithmRunnableNewSPI(RANDOMWALKRANDOM, graphDb,highestNodeId,noOfSteps, output);
         } else{

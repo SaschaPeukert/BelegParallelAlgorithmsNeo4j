@@ -1,4 +1,4 @@
-package de.saschapeukert;
+package de.saschapeukert.Datastructures;
 
 import org.neo4j.graphdb.Node;
 

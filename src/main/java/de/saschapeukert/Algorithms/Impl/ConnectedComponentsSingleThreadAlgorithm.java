@@ -1,5 +1,9 @@
-package de.saschapeukert;
+package de.saschapeukert.Algorithms.Impl;
 
+import de.saschapeukert.*;
+import de.saschapeukert.Algorithms.MyAlgorithmBaseRunnable;
+import de.saschapeukert.Database.DBUtils;
+import de.saschapeukert.Datastructures.TarjanNode;
 import org.neo4j.graphdb.*;
 import org.neo4j.kernel.GraphDatabaseAPI;
 import org.neo4j.kernel.api.ReadOperations;
@@ -15,18 +19,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 
 
-public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable {
+public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRunnable {
 
-    /*
-        public ConnectedComponentsSingleThreadAlgorithm(GraphDatabaseService gdb, int highestNodeId, AlgorithmType type) {
-            super(gdb, highestNodeId);
-        }
-
-        @Override
-        public void compute() {
-
-        }
-    */
     public enum AlgorithmType{
         WEAK,
         STRONG
@@ -139,7 +133,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
         //for(Relationship r: it){
         //   Node n_new = r.getOtherNode(currentNode);
 
-        Iterable<Long> it = DBUtils.getOtherNodes(ops,currentNode,Direction.OUTGOING);
+        Iterable<Long> it = DBUtils.getConnectedNodeIDs(ops, currentNode, Direction.OUTGOING);
         for(Long l:it){
 
             TarjanNode v_new = nodeDictionary.get(l);
@@ -185,7 +179,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
         StartComparison.resultCounter.put(n, new AtomicInteger(compName));
         allNodes.remove(n); // correct?   notwendig?!
 
-        for(Long l: DBUtils.getOtherNodes(ConnectedComponentsSingleThreadAlgorithm.ops,n,Direction.BOTH)){
+        for(Long l: DBUtils.getConnectedNodeIDs(ConnectedComponentsSingleThreadAlgorithm.ops, n, Direction.BOTH)){
             DFS(l, compName);
 
         }

@@ -1,5 +1,7 @@
-package de.saschapeukert;
+package de.saschapeukert.Algorithms.Impl;
 
+import de.saschapeukert.Database.DBUtils;
+import de.saschapeukert.StartComparison;
 import org.neo4j.graphdb.Direction;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -58,7 +60,7 @@ public class DFS {
         ConnectedComponentsSingleThreadAlgorithm.allNodes.remove(currentNodeID); //  notwendig?!
 
         int barrier_new = barrier-1;
-        for(Long l:DBUtils.getOtherNodes(ConnectedComponentsSingleThreadAlgorithm.ops,currentNodeID, Direction.BOTH)){
+        for(Long l: DBUtils.getConnectedNodeIDs(ConnectedComponentsSingleThreadAlgorithm.ops, currentNodeID, Direction.BOTH)){
             currentNodeID = l;
             go(barrier_new);
         }

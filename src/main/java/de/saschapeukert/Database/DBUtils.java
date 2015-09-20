@@ -1,5 +1,6 @@
-package de.saschapeukert;
+package de.saschapeukert.Database;
 
+import de.saschapeukert.StartComparison;
 import org.neo4j.cursor.Cursor;
 import org.neo4j.graphdb.*;
 import org.neo4j.kernel.GraphDatabaseAPI;
@@ -226,7 +227,7 @@ public class DBUtils {
     }
 
 
-    public static Iterable<Long> getOtherNodes(ReadOperations ops, long nodeID, Direction dir){
+    public static Iterable<Long> getConnectedNodeIDs(ReadOperations ops, long nodeID, Direction dir){
 
         LinkedList<Long> it = new LinkedList<>();
         try {

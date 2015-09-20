@@ -1,12 +1,13 @@
-package de.saschapeukert;
+package de.saschapeukert.Algorithms;
 
 import com.google.common.base.Stopwatch;
+import de.saschapeukert.Database.DBUtils;
 import org.neo4j.graphdb.GraphDatabaseService;
 
 /**
  * Created by Sascha Peukert on 06.08.2015.
  */
-public abstract class AlgorithmRunnable extends MyBaseRunnable {
+public abstract class MyAlgorithmBaseRunnable extends MyBaseRunnable {
 
     public Stopwatch timer;
     protected GraphDatabaseService graphDb;
@@ -20,7 +21,7 @@ public abstract class AlgorithmRunnable extends MyBaseRunnable {
      * It will automaticly open a TA
      */
     public void run() {
-        DBUtils.openTransaction(graphDb);
+        tx = DBUtils.openTransaction(graphDb);
         compute();
         DBUtils.closeTransactionSuccess(tx);
     }
@@ -29,7 +30,7 @@ public abstract class AlgorithmRunnable extends MyBaseRunnable {
     /*
         This will also initialize the timer but NOT start it!
      */
-    public AlgorithmRunnable(GraphDatabaseService gdb, int highestNodeId, boolean output){
+    public MyAlgorithmBaseRunnable(GraphDatabaseService gdb, int highestNodeId, boolean output){
         this.timer = Stopwatch.createUnstarted();
         this.graphDb = gdb;
         this.highestNodeId = highestNodeId;

@@ -1,4 +1,4 @@
-package de.saschapeukert;
+package de.saschapeukert.Algorithms;
 
 import org.neo4j.graphdb.Transaction;
 

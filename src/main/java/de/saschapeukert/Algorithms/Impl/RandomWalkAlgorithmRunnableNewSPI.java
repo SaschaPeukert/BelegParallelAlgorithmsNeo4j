@@ -1,5 +1,8 @@
-package de.saschapeukert;
+package de.saschapeukert.Algorithms.Impl;
 
+import de.saschapeukert.Algorithms.MyAlgorithmBaseRunnable;
+import de.saschapeukert.Database.DBUtils;
+import de.saschapeukert.StartComparison;
 import org.neo4j.cursor.Cursor;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -19,7 +22,7 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 
 
-public class RandomWalkAlgorithmRunnableNewSPI extends AlgorithmRunnable {
+public class RandomWalkAlgorithmRunnableNewSPI extends MyAlgorithmBaseRunnable {
 
 
     public int _RandomNodeParameter;

@@ -1,5 +1,7 @@
-package de.saschapeukert;
+package de.saschapeukert.Database;
 
+import de.saschapeukert.Algorithms.MyBaseRunnable;
+import de.saschapeukert.StartComparison;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.kernel.GraphDatabaseAPI;
 import org.neo4j.kernel.api.DataWriteOperations;

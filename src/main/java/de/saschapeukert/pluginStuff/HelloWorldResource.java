@@ -1,4 +1,4 @@
-package de.saschapeukert.stuff;
+package de.saschapeukert.pluginStuff;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 
@@ -34,7 +34,7 @@ public class HelloWorldResource
     @Path( "/{nodeId}" )
     public Response hello( @PathParam( "nodeId" ) long nodeId )
     {
-        // Do stuff with the database
+        // Do pluginStuff with the database
         return Response.status( Status.OK ).entity(
                 ("Hello World, nodeId=" + nodeId).getBytes( Charset.forName("UTF-8") ) ).build();
     }

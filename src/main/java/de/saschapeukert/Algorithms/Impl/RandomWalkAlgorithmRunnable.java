@@ -1,5 +1,8 @@
-package de.saschapeukert;
+package de.saschapeukert.Algorithms.Impl;
 
+import de.saschapeukert.Algorithms.MyAlgorithmBaseRunnable;
+import de.saschapeukert.Database.DBUtils;
+import de.saschapeukert.StartComparison;
 import org.neo4j.graphdb.*;
 
 import java.util.Iterator;
@@ -8,7 +11,7 @@ import java.util.concurrent.ThreadLocalRandom;
 /**
  * Created by Sascha Peukert on 03.08.2015.
  */
-public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
+public class RandomWalkAlgorithmRunnable extends MyAlgorithmBaseRunnable {
 
     public int _RandomNodeParameter;
     private  Node currentNode;
