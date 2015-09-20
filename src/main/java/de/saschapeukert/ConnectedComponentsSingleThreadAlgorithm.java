@@ -1,6 +1,9 @@
 package de.saschapeukert;
 
 import org.neo4j.graphdb.*;
+import org.neo4j.kernel.GraphDatabaseAPI;
+import org.neo4j.kernel.api.ReadOperations;
+import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
 import org.neo4j.tooling.GlobalGraphOperations;
 
 import java.util.*;
@@ -14,16 +17,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable {
 
-/*
-    public ConnectedComponentsSingleThreadAlgorithm(GraphDatabaseService gdb, int highestNodeId, AlgorithmType type) {
-        super(gdb, highestNodeId);
-    }
+    /*
+        public ConnectedComponentsSingleThreadAlgorithm(GraphDatabaseService gdb, int highestNodeId, AlgorithmType type) {
+            super(gdb, highestNodeId);
+        }
 
-    @Override
-    public void compute() {
+        @Override
+        public void compute() {
 
-    }
-*/
+        }
+    */
     public enum AlgorithmType{
         WEAK,
         STRONG
@@ -33,11 +36,13 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
     private int componentID;
     private AlgorithmType myType;
 
-    private Map<Node,TarjanNode> nodeDictionary;
-    private Stack<Node> stack;
+    private Map<Long,TarjanNode> nodeDictionary;
+    private Stack<Long> stack;
     private int maxdfs=0;
 
-    public static Set<Node> allNodes;
+    public static ReadOperations ops; //TODO REFACTOR THIS
+
+    public static Set<Long> allNodes;
 
 
     public ConnectedComponentsSingleThreadAlgorithm(GraphDatabaseService gdb, int highestNodeId
@@ -46,47 +51,29 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
 
         this.myType = type;
 
-        allNodes = new HashSet<Node>(highestNodeId);
+        allNodes = new HashSet<Long>(highestNodeId);
 
-        if(myType==AlgorithmType.STRONG){
-
-            this.stack = new Stack<Node>();
-            this.nodeDictionary = new HashMap<Node,TarjanNode>();
-
+        if(myType==AlgorithmType.STRONG) {
             // initialize nodeDictionary for tarjans algo
-            try (Transaction tx = graphDb.beginTx()) {
-                GlobalGraphOperations ggop = GlobalGraphOperations.at(gdb);
-                ggop.getAllNodes().iterator();
+            this.stack = new Stack<>();
+            this.nodeDictionary = new HashMap<Long, TarjanNode>(highestNodeId);
+        }
+        tx = DBUtils.openTransaction(graphDb);
+        GlobalGraphOperations ggop = GlobalGraphOperations.at(gdb);
+        ggop.getAllNodes().iterator();
 
-                ResourceIterator<Node> it = ggop.getAllNodes().iterator();
-                while(it.hasNext()){
-                    Node n = it.next();
-                    allNodes.add(n);
-                    nodeDictionary.put(n,new TarjanNode(n));
-                }
-                it.close();
-                tx.success();
+        ResourceIterator<Node> it = ggop.getAllNodes().iterator();
+        while(it.hasNext()){
+            Node n = it.next();
+            allNodes.add(n.getId());
 
-            }
-
-        } else{
-            // TODO Refactor this!
-            try (Transaction tx = graphDb.beginTx()) {
-                GlobalGraphOperations ggop = GlobalGraphOperations.at(gdb);
-                ggop.getAllNodes().iterator();
-
-                ResourceIterator<Node> it = ggop.getAllNodes().iterator();
-                while(it.hasNext()) {
-                    Node n = it.next();
-                    allNodes.add(n);
-                }
-                it.close();
-                tx.success();
-
-            }
+            if(myType==AlgorithmType.STRONG)
+                nodeDictionary.put(n.getId(),new TarjanNode(n));
 
         }
 
+        it.close();
+        DBUtils.closeTransactionSuccess(tx);
     }
 
 
@@ -94,49 +81,48 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
     public void compute() {
 
         timer.start();
-
         componentID = 1;
 
-        try (Transaction tx = graphDb.beginTx()) {
-            // GlobalGraphOperations operations = GlobalGraphOperations.at(graphDb);
-            // ResourceIterable<Node> it = operations.getAllNodes();
-            Iterator<Node> it = allNodes.iterator();
-            while(it.hasNext()){
-                // Every node has to be marked as (part of) a component
-                it = allNodes.iterator();
+        tx = DBUtils.openTransaction(graphDb);
 
-                try {
-                    Node n = it.next();
+        ThreadToStatementContextBridge ctx = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
 
-                    if(myType==AlgorithmType.WEAK){
-                       // try (Transaction tx = graphDb.beginTx()) {
-                            new DFS(n, componentID).go(100);  // just to try it
-                            componentID++;
-                            //System.out.println(allNodes.size());
-                       //     tx.success();
-                     //   }
+        ops = ctx.get().readOperations();
 
-                    } else{
-                        // System.out.println(allNodes.size());  // just for me TODO Remove!
-                        tarjan(n);
-                    }
+        Iterator<Long> it = allNodes.iterator();
+        DFS dfs = new DFS(this.highestNodeId);
+        while(it.hasNext()){
+            // Every node has to be marked as (part of) a component
+            it = allNodes.iterator();
 
-                }catch (NoSuchElementException e){
-                    break;
+            try {
+                Long n = it.next();
+                if(myType==AlgorithmType.WEAK){
+
+                    //dfs.setCurrentNodeID(n);
+                    //dfs.setId(componentID);
+                    //dfs.resetList();
+                    //dfs.go(100);  // just to try it
+                    DFS(n,componentID);
+                    componentID++;
+                    //System.out.println(allNodes.size());
+
+                } else{
+                    //System.out.println(allNodes.size());  // just for me TODO Remove!
+                    tarjan(n);
                 }
 
+            }catch (NoSuchElementException e){
+                break;
             }
 
-            tx.success();
-
         }
+        DBUtils.closeTransactionSuccess(tx);
 
         timer.stop();
-
-
     }
 
-    private void tarjan(Node currentNode){
+    private void tarjan(Long currentNode){
 
         TarjanNode v = nodeDictionary.get(currentNode);
         v.dfs = maxdfs;
@@ -149,13 +135,17 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
         //itN.remove();
         allNodes.remove(currentNode);
 
-        Iterable<Relationship> it = currentNode.getRelationships(Direction.OUTGOING);
-        for(Relationship r: it){
-            Node n_new = r.getOtherNode(currentNode);
-            TarjanNode v_new = nodeDictionary.get(n_new);
+        //Iterable<Relationship> it = currentNode.getRelationships(Direction.OUTGOING);
+        //for(Relationship r: it){
+        //   Node n_new = r.getOtherNode(currentNode);
 
-            if(allNodes.contains(n_new)){
-                tarjan(n_new);
+        Iterable<Long> it = DBUtils.getOtherNodes(ops,currentNode,Direction.OUTGOING);
+        for(Long l:it){
+
+            TarjanNode v_new = nodeDictionary.get(l);
+
+            if(allNodes.contains(l)){
+                tarjan(l);
 
                 v.lowlink = Math.min(v.lowlink,v_new.lowlink);
 
@@ -170,17 +160,34 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
             // Root of a SCC
 
             while(true){
-                Node node_v = stack.pop();                      // This should be atomic
+                Long node_v = stack.pop();                      // This should be atomic
                 TarjanNode v_new = nodeDictionary.get(node_v);  // !
                 v_new.onStack= false;                           // !
 
-                StartComparison.resultCounter.put(node_v.getId(), new AtomicInteger(componentID));
-                if(node_v.getId()== currentNode.getId()){
+                StartComparison.resultCounter.put(node_v, new AtomicInteger(componentID));
+                if(node_v== currentNode){
                     componentID++;
                     break;
                 }
 
             }
+        }
+
+    }
+
+    private void DFS(Long n, int compName){
+
+        if(StartComparison.resultCounter.get(n).intValue()==compName){
+            return;// Already visited
+        }
+
+        // NOW IT HAS TO BE NULL
+        StartComparison.resultCounter.put(n, new AtomicInteger(compName));
+        allNodes.remove(n); // correct?   notwendig?!
+
+        for(Long l: DBUtils.getOtherNodes(ConnectedComponentsSingleThreadAlgorithm.ops,n,Direction.BOTH)){
+            DFS(l, compName);
+
         }
 
     }
@@ -208,10 +215,10 @@ public class ConnectedComponentsSingleThreadAlgorithm extends AlgorithmRunnable 
 
         StringBuilder returnString = new StringBuilder();
         returnString.append("Component count: " + myResults.keySet().size() + "\n");
-        returnString.append("Components with Size >4\n");
+        returnString.append("Components with Size between 4 and 10\n");
         returnString.append("- - - - - - - -\n");
         for(Integer s:myResults.keySet()){
-            if(myResults.get(s).size()<=5){
+            if((myResults.get(s).size()<=5) || (myResults.get(s).size()>=10)){
                 continue;
             }
 

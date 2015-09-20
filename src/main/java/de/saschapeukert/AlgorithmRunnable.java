@@ -16,9 +16,15 @@ public abstract class AlgorithmRunnable extends MyBaseRunnable {
     public abstract void compute();
 
     @Override
+    /**
+     * It will automaticly open a TA
+     */
     public void run() {
+        DBUtils.openTransaction(graphDb);
         compute();
+        DBUtils.closeTransactionSuccess(tx);
     }
+
 
     /*
         This will also initialize the timer but NOT start it!

@@ -62,7 +62,6 @@ public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
 
         timer.start();
 
-        try (Transaction tx = graphDb.beginTx()) {
 
             while (this.NUMBER_OF_STEPS > 0) {
 
@@ -79,8 +78,7 @@ public class RandomWalkAlgorithmRunnable extends AlgorithmRunnable {
                 NUMBER_OF_STEPS--;
 
             }
-            tx.success();
-        }
+
 
         timer.stop();
 

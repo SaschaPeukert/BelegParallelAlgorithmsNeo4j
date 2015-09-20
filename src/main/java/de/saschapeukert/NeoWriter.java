@@ -1,7 +1,6 @@
 package de.saschapeukert;
 
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.GraphDatabaseAPI;
 import org.neo4j.kernel.api.DataWriteOperations;
 import org.neo4j.kernel.api.exceptions.InvalidTransactionTypeKernelException;
@@ -15,7 +14,6 @@ public class NeoWriter extends MyBaseRunnable {
 
     private GraphDatabaseService graphDb;
     private int propID;
-    private Transaction tx;
     private int startIndex; // inclusive
     private int endIndex; // exclusive
 
@@ -31,7 +29,7 @@ public class NeoWriter extends MyBaseRunnable {
     public void run() {
 
         try {
-            tx = graphDb.beginTx();
+            tx = DBUtils.openTransaction(graphDb);
 
             ThreadToStatementContextBridge ctx =((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
             DataWriteOperations ops = ctx.get().dataWriteOperations();
@@ -41,10 +39,9 @@ public class NeoWriter extends MyBaseRunnable {
 
                 if(count==100){
 
+                    DBUtils.closeTransactionSuccess(tx);
 
-                    commitAndCloseTA();
-
-                    tx = graphDb.beginTx();
+                    tx = DBUtils.openTransaction(graphDb);
 
                     //ctx =((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
                     ops = ctx.get().dataWriteOperations();
@@ -58,8 +55,7 @@ public class NeoWriter extends MyBaseRunnable {
 
             }
 
-            commitAndCloseTA();
-
+            DBUtils.closeTransactionSuccess(tx);
             //System.out.println("Done " + startIndex + " - " + endIndex);
 
         } catch (InvalidTransactionTypeKernelException e) {
@@ -69,8 +65,4 @@ public class NeoWriter extends MyBaseRunnable {
 
     }
 
-    private void commitAndCloseTA(){
-        tx.success();
-        tx.close();
-    }
 }

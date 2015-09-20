@@ -3,7 +3,6 @@ package de.saschapeukert;
 import org.neo4j.cursor.Cursor;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.GraphDatabaseAPI;
 import org.neo4j.kernel.api.ReadOperations;
 import org.neo4j.kernel.api.cursor.RelationshipItem;
@@ -78,7 +77,6 @@ public class RandomWalkAlgorithmRunnableNewSPI extends AlgorithmRunnable {
 
         timer.start();
 
-        try (Transaction tx = graphDb.beginTx()) {
             this.ops = ctx.get().readOperations();
 
             while (this.NUMBER_OF_STEPS > 0) {
@@ -97,9 +95,7 @@ public class RandomWalkAlgorithmRunnableNewSPI extends AlgorithmRunnable {
                 NUMBER_OF_STEPS--;
             }
 
-            tx.success();  // Important!
 
-        }
 
         timer.stop();
 

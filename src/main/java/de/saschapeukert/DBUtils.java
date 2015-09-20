@@ -1,19 +1,23 @@
 package de.saschapeukert;
 
+import org.neo4j.cursor.Cursor;
 import org.neo4j.graphdb.*;
 import org.neo4j.kernel.GraphDatabaseAPI;
 import org.neo4j.kernel.api.DataWriteOperations;
 import org.neo4j.kernel.api.ReadOperations;
+import org.neo4j.kernel.api.cursor.RelationshipItem;
 import org.neo4j.kernel.api.exceptions.EntityNotFoundException;
 import org.neo4j.kernel.api.exceptions.InvalidTransactionTypeKernelException;
 import org.neo4j.kernel.api.exceptions.schema.ConstraintValidationKernelException;
 import org.neo4j.kernel.api.exceptions.schema.IllegalTokenNameException;
 import org.neo4j.kernel.api.properties.Property;
+import org.neo4j.kernel.impl.api.store.RelationshipIterator;
 import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
 import org.neo4j.kernel.impl.store.NeoStore;
 import org.neo4j.tooling.GlobalGraphOperations;
 
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -146,7 +150,7 @@ public class DBUtils {
      */
     public static boolean createNewPropertyKey(String key,int newPropertyID, DataWriteOperations ops){
         try{
-            ops.propertyKeyCreateForName(key,newPropertyID);
+            ops.propertyKeyCreateForName(key, newPropertyID);
         } catch (IllegalTokenNameException e) {
             e.printStackTrace();  // TODO REMOVE
             return false;
@@ -219,5 +223,42 @@ public class DBUtils {
 
         return -1; // ERROR happend
 
+    }
+
+
+    public static Iterable<Long> getOtherNodes(ReadOperations ops, long nodeID, Direction dir){
+
+        LinkedList<Long> it = new LinkedList<>();
+        try {
+            RelationshipIterator itR = ops.nodeGetRelationships(nodeID, dir);
+            while(itR.hasNext()){
+                long rID = itR.next();
+
+                Cursor<RelationshipItem> relCursor = ops.relationshipCursor(rID);
+                while(relCursor.next()){
+                    RelationshipItem item = relCursor.get();
+                    it.add(item.otherNode(nodeID));
+                }
+                relCursor.close();
+
+            }
+
+
+        } catch (EntityNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return it;
+
+    }
+
+    public static Transaction openTransaction(GraphDatabaseService graphDb){
+        return graphDb.beginTx();
+
+    }
+
+    public static void closeTransactionSuccess(Transaction tx){
+        tx.success();
+        tx.close();
     }
 }

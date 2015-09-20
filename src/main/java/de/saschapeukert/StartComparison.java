@@ -1,7 +1,7 @@
 package de.saschapeukert;
 
 import com.google.common.base.Stopwatch;
-import org.HdrHistogram.DoubleHistogram;
+import org.HdrHistogram.Histogram;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
@@ -39,7 +39,7 @@ public class StartComparison {
     public static Map<Long,AtomicInteger> resultCounter;
     public static Object[] keySetOfResultCounter;  // TODO: REFACTOR THE VISIBILTY?
 
-    private static DoubleHistogram histogram = new DoubleHistogram(3600000000000L, 3);
+    private static Histogram histogram = new Histogram(3600000000000L, 3);
 
 
     public static void main(String[] args)  {
@@ -74,8 +74,8 @@ public class StartComparison {
         // START
         System.out.println("Start: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()));
 
-        System.out.println("I will start the "+ ALGORITHM +" Comparison: Single Thread vs. " + NUMBER_OF_THREADS +
-               " Threads.\n");
+        System.out.println("I will start the "+ ALGORITHM +" with: " + NUMBER_OF_THREADS +
+               " Thread(s).\n");
 
 
         // Open connection to DB
@@ -153,32 +153,26 @@ public class StartComparison {
 
         Stopwatch timeOfComparision = Stopwatch.createStarted();
 
-        /*
-        System.out.println(calculateConnectedComponentsComparison(graphDb,
-                nodeIDhigh,NUMBER_OF_RUNS,
-                ConnectedComponentsSingleThreadAlgorithm.AlgorithmType.STRONG));
-
-        */
 
         switch (ALGORITHM){
             case "RW_old":
                 System.out.println("Overwrite: Only doing 1 Run per Step");
                 System.out.println(
-                        calculateRandomWalkComparison_old(graphDb, nodeIDhigh, 1, true) // REMOVED MORE THEN ONE RUN! Because...
+                        calculateRandomWalk_old(graphDb, nodeIDhigh, 1, true) // REMOVED MORE THEN ONE RUN! Because...
                 );
                 break;
             case "RW_new":
-                calculateRandomWalkComparison_new(graphDb, nodeIDhigh, NUMBER_OF_RUNS, true);
+                calculateRandomWalk_new(graphDb, nodeIDhigh, NUMBER_OF_RUNS, true);
                 break;
             case "WCC":
-                System.out.println(calculateConnectedComponentsComparison(graphDb,
+                calculateConnectedComponents(graphDb,
                         nodeIDhigh, NUMBER_OF_RUNS,
-                        ConnectedComponentsSingleThreadAlgorithm.AlgorithmType.WEAK, true));
+                        ConnectedComponentsSingleThreadAlgorithm.AlgorithmType.WEAK, true);
                 break;
             case "SCC":
-                System.out.println(calculateConnectedComponentsComparison(graphDb,
+                calculateConnectedComponents(graphDb,
                         nodeIDhigh, NUMBER_OF_RUNS,
-                        ConnectedComponentsSingleThreadAlgorithm.AlgorithmType.STRONG, true));
+                        ConnectedComponentsSingleThreadAlgorithm.AlgorithmType.STRONG, true);
                 break;
             default:
 
@@ -222,49 +216,26 @@ public class StartComparison {
         timer = null;
     }
 
-    private static String calculateConnectedComponentsComparison
+    private static void calculateConnectedComponents
             (GraphDatabaseService graphDb, int highestNodeId, int runs,
              ConnectedComponentsSingleThreadAlgorithm.AlgorithmType type, boolean output){
 
-        long resultsOfRun =0;
-        String result = "";
         for(int i=0;i<runs;i++){
-            long temp = doConnectedComponentsRun(graphDb,highestNodeId,type, output);
-            resultsOfRun = resultsOfRun + temp;
-            result += "("+i+") " + temp + "ms\n";
-            // TODO: Histogram
-            //System.gc();
+            System.out.println("Now doing run " + (i + 1));
+
+            histogram.recordValue(doConnectedComponentsRun(graphDb, highestNodeId, type, output));
+
         }
 
-        resultsOfRun = resultsOfRun/runs;
+        System.out.println("");
+        System.out.println("Times of CC with " + NUMBER_OF_THREADS + " Threads:");
 
-        return "Result: " + resultsOfRun + "ms\n" + result;
+        histogram.outputPercentileDistribution(System.out, 1.00);
     }
 
-    private static long doConnectedComponentsRun(GraphDatabaseService graphDb,int highestNodeId,
-                                                 ConnectedComponentsSingleThreadAlgorithm.AlgorithmType type, boolean output){
 
-        ConnectedComponentsSingleThreadAlgorithm ConnectedSingle = new ConnectedComponentsSingleThreadAlgorithm(
-                graphDb, highestNodeId, type, output);
-        Thread t = new Thread(ConnectedSingle);
-        t.setName("ConnectedComponentsSingleThreadAlgo");
-
-        t.start();
-        try {
-            t.join();
-            t = null;
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        System.out.println(ConnectedSingle.getResults());
-
-        return ConnectedSingle.timer.elapsed(TimeUnit.MILLISECONDS);
-
-    }
-
-    private static String calculateRandomWalkComparison_old(GraphDatabaseService graphDb, int highestNodeId,
-                                                            int numberOfRunsPerStep, boolean output){
+    private static String calculateRandomWalk_old(GraphDatabaseService graphDb, int highestNodeId,
+                                                  int numberOfRunsPerStep, boolean output){
         String result="\n\nSteps SingleThread[\u00B5s] MultiThread[\u00B5s] SpeedUp[%]";
 
         long[] resultsOfStep;
@@ -301,28 +272,56 @@ public class StartComparison {
         return result;
     }
 
-    private static void calculateRandomWalkComparison_new(GraphDatabaseService graphDb, int highestNodeId,
-                                                            int numberOfRunsPerStep, boolean output){
-        long[] resultsOfRun;
+    private static void calculateRandomWalk_new(GraphDatabaseService graphDb, int highestNodeId,
+                                                int numberOfRunsPerStep, boolean output){
 
         for(int i=0;i<numberOfRunsPerStep;i++){
-            System.out.println("Now doing run " + (i+1));
+            System.out.println("Now doing run " + (i + 1));
             // Run
-            resultsOfRun = doRandomWalkerRun(graphDb, highestNodeId,OPERATIONS,output);
 
-            histogram.recordValue(((((float)100/resultsOfRun[0])*resultsOfRun[1])));
+            histogram.recordValue(doMultiThreadRandomWalk(graphDb,highestNodeId,OPERATIONS, output));
 
-            resultsOfRun = null; // suggestion for garbage collector
 
         }
 
         System.out.println("");
-        System.out.println("Value = Percentage of corresponding SingleThread runtime.");
-        
+        System.out.println("Times of RW with " + NUMBER_OF_THREADS +" Threads:");
+
         histogram.outputPercentileDistribution(System.out, 1.00);
-        System.out.println("");
+
     }
 
+
+    /**
+     *
+     * @param graphDb
+     * @param highestNodeId
+     * @param type
+     * @param output
+     * @return elapsed time as MILLISECONDS!
+     */
+
+    private static long doConnectedComponentsRun(GraphDatabaseService graphDb,int highestNodeId,
+                                                 ConnectedComponentsSingleThreadAlgorithm.AlgorithmType type, boolean output){
+
+        ConnectedComponentsSingleThreadAlgorithm ConnectedSingle = new ConnectedComponentsSingleThreadAlgorithm(
+                graphDb, highestNodeId, type, output);
+        Thread t = new Thread(ConnectedSingle);
+        t.setName("ConnectedComponentsSingleThreadAlgo");
+
+        t.start();
+        try {
+            t.join();
+            t = null;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        //System.out.println(ConnectedSingle.getResults());    //TODO REMOVE, JUST FOR DEBUG
+
+        return ConnectedSingle.timer.elapsed(TimeUnit.MILLISECONDS);
+
+    }
 
     private static long[] doRandomWalkerRun(GraphDatabaseService graphDb,int highestNodeId, int noOfSteps, boolean output){
         long[] runtimes = new long[2];
@@ -338,7 +337,7 @@ public class StartComparison {
     private static long doMultiThreadRandomWalk(GraphDatabaseService graphDb, int highestNodeId, int noOfSteps, boolean output){
 
         // INIT
-        Map<Thread,AlgorithmRunnable> map = new LinkedHashMap<>();
+        Map<Thread,AlgorithmRunnable> map = new HashMap<>();
         for(int i=0;i<NUMBER_OF_THREADS;i++){
 
             AlgorithmRunnable rw;
@@ -484,11 +483,12 @@ public class StartComparison {
 
         Iterator<Node> it = DBUtils.getIteratorForAllNodes(graphDb);
 
-        resultCounter = new LinkedHashMap<>(nodeIDhigh);
+        resultCounter = new HashMap<>(nodeIDhigh*2,1f);
 
         while(it.hasNext()){
             resultCounter.put(it.next().getId(),new AtomicInteger(0));
         }
+
 
         keySetOfResultCounter = resultCounter.keySet().toArray();  // should only be called once!
     }

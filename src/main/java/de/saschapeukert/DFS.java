@@ -1,10 +1,7 @@
 package de.saschapeukert;
 
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.Direction;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -12,49 +9,58 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class DFS {
 
-    private Node currentNode;
+    private Long currentNodeID;
     private int id;
-    private List<Long> visited;
+    //private List<Long> visited;
 
-    public DFS(Node n, int id){
-        this.currentNode = n;
-        this.id = id;
-        this.visited = new LinkedList<Long>();
+    public DFS(int max){
+        //this.visited = new ArrayList<Long>(max/2);
     }
+
+    public void setCurrentNodeID(Long newId){
+        this.currentNodeID = newId;
+    }
+
+    public void setId(int id){
+        this.id = id;
+    }
+    /*public void resetList(){
+        visited.clear();
+    }*/
 
     public void go(int barrier){
 
         if(barrier<=0)
             return;
 
-        int oldID= StartComparison.resultCounter.get(currentNode.getId()).intValue();
+        //Stopwatch timer = Stopwatch.createStarted();
+        AtomicInteger aIntID = StartComparison.resultCounter.get(currentNodeID);
+        int oldID = aIntID.intValue();
+        //timer.stop();
+        //System.out.println(timer.elapsed(TimeUnit.NANOSECONDS));
         if(oldID!=0){
             // Already visted
 
             if(oldID!=id){
                 // not by myself! Rewrite!
                 id = oldID;
-                for(Long k:visited){
-                    StartComparison.resultCounter.put(k,new AtomicInteger(id));
-                }
+                //for(Long k:visited){
+                //    StartComparison.resultCounter.put(k,aIntID);
+                //}
 
             } // else: by myself
 
             return;
-        }
-        // else: not yet visited. Lets do that now:
+        }// else: not yet visited. Lets do that now:
 
-        visited.add(currentNode.getId());
-        StartComparison.resultCounter.put(currentNode.getId(), new AtomicInteger(id));
-        ConnectedComponentsSingleThreadAlgorithm.allNodes.remove(currentNode); // correct?   notwendig?!
+        //visited.add(currentNodeID);
+        StartComparison.resultCounter.put(currentNodeID, new AtomicInteger(id));
+        ConnectedComponentsSingleThreadAlgorithm.allNodes.remove(currentNodeID); //  notwendig?!
 
-        Node oldCurrent = currentNode;
         int barrier_new = barrier-1;
-        for(Relationship r :currentNode.getRelationships()){
-            currentNode = r.getOtherNode(oldCurrent);
+        for(Long l:DBUtils.getOtherNodes(ConnectedComponentsSingleThreadAlgorithm.ops,currentNodeID, Direction.BOTH)){
+            currentNodeID = l;
             go(barrier_new);
-
         }
-
     }
 }
