@@ -9,12 +9,12 @@ import org.neo4j.graphdb.GraphDatabaseService;
  */
 public abstract class MyAlgorithmBaseRunnable extends MyBaseRunnable {
 
-    public Stopwatch timer;
-    protected GraphDatabaseService graphDb;
+    public final Stopwatch timer;
+    protected final GraphDatabaseService graphDb;
     protected final int highestNodeId;
     protected final boolean output;
 
-    public abstract void compute();
+    protected abstract void compute();
 
     @Override
     /**
@@ -30,7 +30,7 @@ public abstract class MyAlgorithmBaseRunnable extends MyBaseRunnable {
     /*
         This will also initialize the timer but NOT start it!
      */
-    public MyAlgorithmBaseRunnable(GraphDatabaseService gdb, int highestNodeId, boolean output){
+    protected MyAlgorithmBaseRunnable(GraphDatabaseService gdb, int highestNodeId, boolean output){
         this.timer = Stopwatch.createUnstarted();
         this.graphDb = gdb;
         this.highestNodeId = highestNodeId;

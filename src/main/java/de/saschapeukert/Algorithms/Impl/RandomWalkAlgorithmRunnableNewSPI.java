@@ -25,14 +25,12 @@ import java.util.concurrent.ThreadLocalRandom;
 public class RandomWalkAlgorithmRunnableNewSPI extends MyAlgorithmBaseRunnable {
 
 
-    public int _RandomNodeParameter;
+    private final int _RandomNodeParameter;
     private long currentNodeId;
     private int NUMBER_OF_STEPS;
-    private ThreadLocalRandom random;
-    private ThreadToStatementContextBridge ctx;
+    private final ThreadLocalRandom random;
+    private final ThreadToStatementContextBridge ctx;
     private ReadOperations ops;
-    @SuppressWarnings("deprecation")
-    private GraphDatabaseAPI api;
 
     public RandomWalkAlgorithmRunnableNewSPI(int randomChanceParameter,
                                              GraphDatabaseService gdb,int highestNodeId,int NumberOfSteps, boolean output){
@@ -42,7 +40,7 @@ public class RandomWalkAlgorithmRunnableNewSPI extends MyAlgorithmBaseRunnable {
         this.currentNodeId = -1;
         this.NUMBER_OF_STEPS = NumberOfSteps;
         this.random = ThreadLocalRandom.current();
-        this.api = (GraphDatabaseAPI) gdb;
+        GraphDatabaseAPI api = (GraphDatabaseAPI) gdb;
 
         this.ctx = api.getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
 
@@ -86,7 +84,7 @@ public class RandomWalkAlgorithmRunnableNewSPI extends MyAlgorithmBaseRunnable {
 
                 int w = random.nextInt(100) + 1;
                 if (w <= _RandomNodeParameter) {
-                    currentNodeId = DBUtils.getSomeRandomNodeId(ops, random, highestNodeId);
+                    currentNodeId = DBUtils.getSomeRandomNodeId(random, highestNodeId);
                 } else{
                     currentNodeId = getNextNode(currentNodeId);
                 }
@@ -107,7 +105,7 @@ public class RandomWalkAlgorithmRunnableNewSPI extends MyAlgorithmBaseRunnable {
 
     private long getNextNode(long n){
         if (n != -1) {
-            int relationshipsOfNode = 0;
+            int relationshipsOfNode;
 
             try {
                 relationshipsOfNode = ops.nodeGetDegree(n, Direction.OUTGOING);
@@ -143,7 +141,7 @@ public class RandomWalkAlgorithmRunnableNewSPI extends MyAlgorithmBaseRunnable {
             }
 
         }
-        return DBUtils.getSomeRandomNodeId(ops, random, highestNodeId);  // Node has no outgoing relationships or is start "node"
+        return DBUtils.getSomeRandomNodeId(random, highestNodeId);  // Node has no outgoing relationships or is start "node"
     }
 
 

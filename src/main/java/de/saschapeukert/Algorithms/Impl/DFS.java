@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Created by Sascha Peukert on 17.09.2015.
  */
-public class DFS {
+class DFS {
 
     private Long currentNodeID;
     private int id;
@@ -30,7 +30,7 @@ public class DFS {
         visited.clear();
     }*/
 
-    public void go(int barrier){
+    private void go(int barrier){
 
         if(barrier<=0)
             return;

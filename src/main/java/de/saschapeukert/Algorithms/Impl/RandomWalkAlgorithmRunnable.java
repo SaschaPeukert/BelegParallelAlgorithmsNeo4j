@@ -13,10 +13,10 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class RandomWalkAlgorithmRunnable extends MyAlgorithmBaseRunnable {
 
-    public int _RandomNodeParameter;
+    private final int _RandomNodeParameter;
     private  Node currentNode;
     private int NUMBER_OF_STEPS;
-    private ThreadLocalRandom random;
+    private final ThreadLocalRandom random;
 
 
     public RandomWalkAlgorithmRunnable(int randomChanceParameter,

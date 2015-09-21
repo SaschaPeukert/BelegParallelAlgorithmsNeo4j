@@ -14,7 +14,7 @@ import org.neo4j.kernel.api.exceptions.schema.IllegalTokenNameException;
 import org.neo4j.kernel.api.properties.Property;
 import org.neo4j.kernel.impl.api.store.RelationshipIterator;
 import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
-import org.neo4j.kernel.impl.store.NeoStore;
+import org.neo4j.kernel.impl.store.StoreAccess;
 import org.neo4j.tooling.GlobalGraphOperations;
 
 import java.util.Iterator;
@@ -25,7 +25,11 @@ import java.util.concurrent.ThreadLocalRandom;
 /**
  * Created by Sascha Peukert on 31.08.2015.
  */
+@SuppressWarnings("deprecation")
 public class DBUtils {
+
+
+    private static StoreAccess neoStore;
 
     public static Node getSomeRandomNode(GraphDatabaseService graphDb, ThreadLocalRandom random, int highestNodeId){
         long r;
@@ -36,10 +40,7 @@ public class DBUtils {
                 // NEW VERSION, checks Map for ID and not DB
                 r = (long) random.nextInt(highestNodeId);
                 if(StartComparison.resultCounter.containsKey(r)){
-                    Node n = graphDb.getNodeById(r);
-                    return n;
-                } else{
-                    continue;
+                    return graphDb.getNodeById(r);
                 }
 
             } catch (NotFoundException e){
@@ -52,7 +53,7 @@ public class DBUtils {
 
     }
 
-    public static long getSomeRandomNodeId(ReadOperations ops, ThreadLocalRandom random, int highestNodeId){
+    public static long getSomeRandomNodeId(ThreadLocalRandom random, int highestNodeId){
         long r;
         while(true) {
 
@@ -113,9 +114,9 @@ public class DBUtils {
      * @param ops
      * @return
      */
-    public static boolean removePropertyKey(int propertyID, DataWriteOperations ops){
+    public static void removePropertyKey(int propertyID, DataWriteOperations ops){
         ops.graphRemoveProperty(propertyID);
-        return true;
+
     }
 
     public static boolean createStringPropertyAtNode(long nodeID, String value, int PropertyID, DataWriteOperations ops){
@@ -162,26 +163,27 @@ public class DBUtils {
 
     public static int getHighestNodeID(GraphDatabaseService graphDb ){
 
-        // TODO refactoring?
-        NeoStore neoStore = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(NeoStore.class);
-        return (int) neoStore.getNodeStore().getHighId();
+        return (int) getStoreAcess(graphDb).getNodeStore().getHighId();
 
     }
 
-    public static int getHighestPropertyID(GraphDatabaseService graphDb ){
+    public static int getHighestPropertyID(GraphDatabaseService graphDb){
 
-        // TODO refactoring?
-        NeoStore neoStore = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(NeoStore.class);
-        return (int) neoStore.getPropertyStore().getHighId();
+        return (int) getStoreAcess(graphDb).getPropertyStore().getHighId();
 
+    }
+
+    private static StoreAccess getStoreAcess(GraphDatabaseService graphDb){
+        if(neoStore==null)
+            neoStore = new StoreAccess((GraphDatabaseAPI)graphDb).initialize();
+        return neoStore;
     }
 
     public static ResourceIterator<Node> getIteratorForAllNodes( GraphDatabaseService gdb) {
         GlobalGraphOperations ggo = GlobalGraphOperations.at(gdb);
 
         ResourceIterable<Node> allNodes = ggo.getAllNodes();
-        ResourceIterator<Node> it = allNodes.iterator();
-        return it;
+        return allNodes.iterator();
 
     }
 

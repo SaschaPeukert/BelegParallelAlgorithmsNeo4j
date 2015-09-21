@@ -14,10 +14,10 @@ import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
 public class NeoWriter extends MyBaseRunnable {
 
 
-    private GraphDatabaseService graphDb;
-    private int propID;
-    private int startIndex; // inclusive
-    private int endIndex; // exclusive
+    private final GraphDatabaseService graphDb;
+    private final int propID;
+    private final int startIndex; // inclusive
+    private final int endIndex; // exclusive
 
     public NeoWriter( int propID, GraphDatabaseService graphDb, int startIndex, int endIndex){
 

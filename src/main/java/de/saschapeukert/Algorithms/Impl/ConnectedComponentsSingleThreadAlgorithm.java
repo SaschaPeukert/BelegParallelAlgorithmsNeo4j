@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 
 
+@SuppressWarnings("deprecation")
 public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRunnable {
 
     public enum AlgorithmType{
@@ -28,7 +29,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
 
 
     private int componentID;
-    private AlgorithmType myType;
+    private final AlgorithmType myType;
 
     private Map<Long,TarjanNode> nodeDictionary;
     private Stack<Long> stack;
@@ -45,12 +46,12 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
 
         this.myType = type;
 
-        allNodes = new HashSet<Long>(highestNodeId);
+        allNodes = new HashSet<>(highestNodeId);
 
         if(myType==AlgorithmType.STRONG) {
             // initialize nodeDictionary for tarjans algo
             this.stack = new Stack<>();
-            this.nodeDictionary = new HashMap<Long, TarjanNode>(highestNodeId);
+            this.nodeDictionary = new HashMap<>(highestNodeId);
         }
         tx = DBUtils.openTransaction(graphDb);
         GlobalGraphOperations ggop = GlobalGraphOperations.at(gdb);
@@ -62,7 +63,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
             allNodes.add(n.getId());
 
             if(myType==AlgorithmType.STRONG)
-                nodeDictionary.put(n.getId(),new TarjanNode(n));
+                nodeDictionary.put(n.getId(),new TarjanNode());
 
         }
 
@@ -159,7 +160,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
                 v_new.onStack= false;                           // !
 
                 StartComparison.resultCounter.put(node_v, new AtomicInteger(componentID));
-                if(node_v== currentNode){
+                if(Objects.equals(node_v, currentNode)){
                     componentID++;
                     break;
                 }
@@ -189,7 +190,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
 
     public String getResults(){
 
-        Map<Integer, List<Long>> myResults = new TreeMap<Integer,List<Long>>();
+        Map<Integer, List<Long>> myResults = new TreeMap<>();
 
         // to adapt to the "old" structure of componentsMap
 
@@ -208,7 +209,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
         // Building the result string
 
         StringBuilder returnString = new StringBuilder();
-        returnString.append("Component count: " + myResults.keySet().size() + "\n");
+        returnString.append("Component count: ").append(myResults.keySet().size()).append("\n");
         returnString.append("Components with Size between 4 and 10\n");
         returnString.append("- - - - - - - -\n");
         for(Integer s:myResults.keySet()){
@@ -217,7 +218,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
             }
 
             boolean first = true;
-            returnString.append("Component " + s + ": ");
+            returnString.append("Component ").append(s).append(": ");
             for(Long n:myResults.get(s)){
                 if(!first){
                     returnString.append(", ");
@@ -230,7 +231,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
         }
 
         returnString.append("- - - - - - - -\n");
-        returnString.append("Done in: " + timer.elapsed(TimeUnit.MICROSECONDS)+ "\u00B5s");
+        returnString.append("Done in: ").append(timer.elapsed(TimeUnit.MICROSECONDS)).append("\u00B5s");
 
         return returnString.toString();
     }
