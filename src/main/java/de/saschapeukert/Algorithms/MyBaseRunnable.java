@@ -7,18 +7,6 @@ import org.neo4j.graphdb.Transaction;
  */
 public abstract class MyBaseRunnable implements Runnable {
 
-    private Thread thisSingleton;
-
     protected Transaction tx;
 
-    /**
-     * This is just purely convinience
-     */
-    public Thread getThread(){
-        if(thisSingleton==null) {
-            thisSingleton = new Thread(this);
-        }
-
-        return thisSingleton;
-    }
 }

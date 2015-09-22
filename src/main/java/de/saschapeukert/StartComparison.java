@@ -1,9 +1,9 @@
 package de.saschapeukert;
 
 import com.google.common.base.Stopwatch;
-import de.saschapeukert.Algorithms.Impl.ConnectedComponentsSingleThreadAlgorithm;
-import de.saschapeukert.Algorithms.Impl.RandomWalkAlgorithmRunnable;
-import de.saschapeukert.Algorithms.Impl.RandomWalkAlgorithmRunnableNewSPI;
+import de.saschapeukert.Algorithms.Impl.ConnectedComponents.ConnectedComponentsSingleThreadAlgorithm;
+import de.saschapeukert.Algorithms.Impl.RandomWalk.RandomWalkAlgorithmRunnable;
+import de.saschapeukert.Algorithms.Impl.RandomWalk.RandomWalkAlgorithmRunnableNewSPI;
 import de.saschapeukert.Algorithms.MyAlgorithmBaseRunnable;
 import de.saschapeukert.Database.DBUtils;
 import de.saschapeukert.Database.NeoWriter;
@@ -17,6 +17,8 @@ import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -259,7 +261,10 @@ public class StartComparison {
     private static long doMultiThreadRandomWalk(GraphDatabaseService graphDb, int highestNodeId, int noOfSteps, boolean output){
 
         // INIT
-        Map<Thread,MyAlgorithmBaseRunnable> map = new HashMap<>();
+        List<MyAlgorithmBaseRunnable> list = new ArrayList<>(NUMBER_OF_THREADS);
+
+        ExecutorService executor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
+
         for(int i=0;i<NUMBER_OF_THREADS;i++){
 
             MyAlgorithmBaseRunnable rw;
@@ -270,41 +275,25 @@ public class StartComparison {
                 rw = new RandomWalkAlgorithmRunnable(RANDOMWALKRANDOM,
                         graphDb,highestNodeId, noOfSteps/NUMBER_OF_THREADS, output);
             }
-            Thread ttemp = rw.getThread();
+            executor.execute(rw);
+            list.add(rw);
 
-            if(output){
-                ttemp.setName(rw.getClass().getSimpleName() +"_"+ i);
-            } else{
-                ttemp.setName("WarmUp:" +rw.getClass().getSimpleName() +"_"+ i);
-            }
-
-            map.put(ttemp, rw);
         }
 
-        // Thread start
-        for(Thread t:map.keySet()){
-            t.start();
-        }
+        waitForExecutorToFinishAll(executor);
 
-
-        // Thread join
         long elapsedTime=0;
-        for(Thread t:map.keySet()){
-            try {
-                t.join();
 
-                if(elapsedTime<map.get(t).timer.elapsed(TimeUnit.MICROSECONDS)){
-                    elapsedTime =map.get(t).timer.elapsed(TimeUnit.MICROSECONDS);
-                }
+        for(MyAlgorithmBaseRunnable runnable : list){
 
-                t = null; // suggestion for garbage collector
+          // only the longest running thread time is of importance
+          if(elapsedTime<runnable.timer.elapsed(TimeUnit.MICROSECONDS)){
+             elapsedTime =runnable.timer.elapsed(TimeUnit.MICROSECONDS);
+          }
 
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+          runnable = null; // suggestion for garbage collector
+
         }
-
-        map = null; // suggestion for garbage collector
 
         return elapsedTime;
     }
@@ -329,21 +318,18 @@ public class StartComparison {
 
     private static boolean writeResultsOut(GraphDatabaseService graphDb){
 
-        boolean check = true;
-
         int sizeKeySet = resultCounter.keySet().size();
         int partOfData = sizeKeySet/NUMBER_OF_THREADS;  // LAST ONE TAKES MORE!
 
-        List<Thread> listOfThreads = new ArrayList<>();  // TODO: CHANGE TO ARRAYS
-
         int startIndex =0;
         int endIndex = partOfData;
+        //ThreadPoolExecutor executor = new ThreadPoolExecutor(NUMBER_OF_THREADS,NUMBER_OF_THREADS,0L,TimeUnit.NANOSECONDS,new ArrayBlockingQueue<Runnable>(1));
+        ExecutorService executor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
+
         for(int i=0;i<NUMBER_OF_THREADS;i++){
 
             NeoWriter neoWriter = new NeoWriter(PROP_ID,graphDb,startIndex,endIndex);
-            Thread t = neoWriter.getThread();
-            t.setName(neoWriter.getClass().getSimpleName() + "_" + i);
-            listOfThreads.add(t);
+            executor.execute(neoWriter);
 
             // new indexes for next round
             startIndex = endIndex;
@@ -354,25 +340,9 @@ public class StartComparison {
             }
 
         }
-
-        for(Thread t:listOfThreads){
-            t.start();
-        }
-
-        for(Thread t:listOfThreads){
-            try {
-                t.join();
-                t = null;  // just to try it
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                check = false;
-            }
-        }
-
+        boolean check = waitForExecutorToFinishAll(executor);
 
         System.out.println("Done Writing");
-
-        listOfThreads = null;
 
         return check;
     }
@@ -389,6 +359,18 @@ public class StartComparison {
 
 
         keySetOfResultCounter = resultCounter.keySet().toArray();  // should only be called once!
+    }
+
+    private static boolean waitForExecutorToFinishAll(ExecutorService executor){
+        executor.shutdown();
+        try {
+            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
     }
 
 

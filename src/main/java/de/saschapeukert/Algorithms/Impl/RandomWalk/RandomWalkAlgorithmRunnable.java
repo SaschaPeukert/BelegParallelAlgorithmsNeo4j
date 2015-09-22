@@ -1,4 +1,4 @@
-package de.saschapeukert.Algorithms.Impl;
+package de.saschapeukert.Algorithms.Impl.RandomWalk;
 
 import de.saschapeukert.Algorithms.MyAlgorithmBaseRunnable;
 import de.saschapeukert.Database.DBUtils;

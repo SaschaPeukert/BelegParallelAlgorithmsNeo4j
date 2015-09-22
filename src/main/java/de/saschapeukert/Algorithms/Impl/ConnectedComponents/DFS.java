@@ -1,4 +1,4 @@
-package de.saschapeukert.Algorithms.Impl;
+package de.saschapeukert.Algorithms.Impl.ConnectedComponents;
 
 import de.saschapeukert.Database.DBUtils;
 import de.saschapeukert.StartComparison;
