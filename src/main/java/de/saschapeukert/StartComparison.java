@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class StartComparison {
 
     private  static String DB_PATH;
-    // Server: neo4j-enterprise-2.3.0-M02/data/graph.db
+    // Server: /mnt/flash2/neo4j-enterprise-2.3.0-M02/data/graph.db
     // SSD: C:\\BelegDB\\neo4j-enterprise-2.3.0-M02\\data\\graph.db
     // Meine HDD: E:\\Users\\Sascha\\Documents\\GIT\\Belegarbeit\\neo4j-enterprise-2.3.0-M02\\data\\graph.db
 
@@ -45,7 +45,7 @@ public class StartComparison {
     private static String WRITE;
 
     public static Map<Long,AtomicInteger> resultCounter;
-    public static Object[] keySetOfResultCounter;  // TODO: REFACTOR THE VISIBILTY?
+    private static Object[] keySetOfResultCounter;
 
     private static final Histogram histogram = new Histogram(3600000000000L, 3);
 
@@ -371,6 +371,10 @@ public class StartComparison {
         }
 
         return true;
+    }
+
+    public static Object getObjInResultCounterKeySet(int pos){
+        return keySetOfResultCounter[pos];
     }
 
 

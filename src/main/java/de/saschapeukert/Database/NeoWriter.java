@@ -51,7 +51,7 @@ public class NeoWriter extends MyBaseRunnable {
                     count =0;
                 }
 
-                Long l = (Long) StartComparison.keySetOfResultCounter[i];
+                Long l = (Long) StartComparison.getObjInResultCounterKeySet(i);
                 DBUtils.createIntPropertyAtNode(l, StartComparison.resultCounter.get(l).intValue(), propID, ops);
                 count++;
 

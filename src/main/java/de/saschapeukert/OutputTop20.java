@@ -8,7 +8,8 @@ import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 
 import java.io.File;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -61,28 +62,33 @@ class OutputTop20 {
         DBUtils.closeTransactionSuccess(tx);
     }
 
-    public static Map<String, Integer> getTop20(String propName, GraphDatabaseService graphDb){
+    public static List<Object[]> getTop20(String propName, GraphDatabaseService graphDb){
         Result result = graphDb.execute("MATCH (n) WHERE n." + propName
                 + ">0 RETURN id(n),n." + propName + " ORDER BY n." + propName + " DESC LIMIT 20");
-        Map<String,Integer> resultMap = new HashMap<>(20);
-        //String rows = "";
+
+        List<Object[]> resultList = new ArrayList<>();
+
         while (result.hasNext()) {
             Map<String, Object> row = result.next();
+
+            Object[] id_value = new Object[2];
+            int i=0;
+
+
             for (Map.Entry<String, Object> column : row.entrySet()) {
-                //rows += column.getKey() + ": " + column.getValue() + "; ";
-                resultMap.put(column.getKey(),(int)column.getValue());
+                id_value[i]=column.getValue();
+                i++;
             }
-            //rows += "\n";
+            resultList.add(id_value);
         }
 
-        return resultMap;
+        return resultList;
     }
 
-    private static String printOutput(Map<String,Integer> map){
+    private static String printOutput(List<Object[]> list){
         String result="";
-
-        for(String s:map.keySet()){
-            result += s +" => " + map.get(s) + "\n";
+        for(Object[] objs:list){
+            result +=  "id("+objs[0] +") => "+ objs[1] + "\n";
         }
 
         return result;
