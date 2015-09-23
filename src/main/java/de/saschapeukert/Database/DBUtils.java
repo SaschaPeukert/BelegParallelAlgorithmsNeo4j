@@ -39,7 +39,7 @@ public class DBUtils {
 
                 // NEW VERSION, checks Map for ID and not DB
                 r = (long) random.nextInt(highestNodeId);
-                if(StartComparison.resultCounter.containsKey(r)){
+                if(StartComparison.resultCounterContainsKey(r)){
                     return graphDb.getNodeById(r);
                 }
 
@@ -60,7 +60,7 @@ public class DBUtils {
             r = (long) random.nextInt(highestNodeId);
 
             // NEW VERSION without DB-Lookup
-            if(StartComparison.resultCounter.containsKey(r))
+            if(StartComparison.resultCounterContainsKey(r))
                 return r;
 
             // OLD VERSION

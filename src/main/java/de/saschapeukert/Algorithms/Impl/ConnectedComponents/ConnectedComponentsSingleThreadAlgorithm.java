@@ -159,7 +159,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
                 TarjanNode v_new = nodeDictionary.get(node_v);  // !
                 v_new.onStack= false;                           // !
 
-                StartComparison.resultCounter.put(node_v, new AtomicInteger(componentID));
+                StartComparison.putIntoResultCounter(node_v, new AtomicInteger(componentID));
                 if(Objects.equals(node_v, currentNode)){
                     componentID++;
                     break;
@@ -172,12 +172,12 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
 
     private void DFS(Long n, int compName){
 
-        if(StartComparison.resultCounter.get(n).intValue()==compName){
+        if(StartComparison.getResultCounterforId(n).intValue()==compName){
             return;// Already visited
         }
 
         // NOW IT HAS TO BE NULL
-        StartComparison.resultCounter.put(n, new AtomicInteger(compName));
+        StartComparison.putIntoResultCounter(n, new AtomicInteger(compName));
         allNodes.remove(n); // correct?   notwendig?!
 
         for(Long l: DBUtils.getConnectedNodeIDs(ConnectedComponentsSingleThreadAlgorithm.ops, n, Direction.BOTH)){
@@ -193,16 +193,18 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
         Map<Integer, List<Long>> myResults = new TreeMap<>();
 
         // to adapt to the "old" structure of componentsMap
+        Iterator<Long> it = StartComparison.getIteratorforKeySetOfResultCounter();
+        while(it.hasNext()){
+            long n = it.next();
+            if(!myResults.containsKey(StartComparison.getResultCounterforId(n).intValue())){
 
-        for(Long n: StartComparison.resultCounter.keySet()){
-            if(!myResults.containsKey(StartComparison.resultCounter.get(n).intValue())){
                 ArrayList<Long> newList = new ArrayList<>();
                 newList.add(n);
-                myResults.put(StartComparison.resultCounter.get(n).intValue(),newList);
+                myResults.put(StartComparison.getResultCounterforId(n).intValue(),newList);
             } else{
-                List<Long> oldList = myResults.get(StartComparison.resultCounter.get(n).intValue());
+                List<Long> oldList = myResults.get(StartComparison.getResultCounterforId(n).intValue());
                 oldList.add(n);
-                myResults.put(StartComparison.resultCounter.get(n).intValue(),oldList);
+                myResults.put(StartComparison.getResultCounterforId(n).intValue(),oldList);
             }
         }
 

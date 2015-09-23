@@ -36,7 +36,7 @@ class DFS {
             return;
 
         //Stopwatch timer = Stopwatch.createStarted();
-        AtomicInteger aIntID = StartComparison.resultCounter.get(currentNodeID);
+        AtomicInteger aIntID = StartComparison.getResultCounterforId(currentNodeID);
         int oldID = aIntID.intValue();
         //timer.stop();
         //System.out.println(timer.elapsed(TimeUnit.NANOSECONDS));
@@ -56,7 +56,7 @@ class DFS {
         }// else: not yet visited. Lets do that now:
 
         //visited.add(currentNodeID);
-        StartComparison.resultCounter.put(currentNodeID, new AtomicInteger(id));
+        StartComparison.putIntoResultCounter(currentNodeID, new AtomicInteger(id));
         ConnectedComponentsSingleThreadAlgorithm.allNodes.remove(currentNodeID); //  notwendig?!
 
         int barrier_new = barrier-1;

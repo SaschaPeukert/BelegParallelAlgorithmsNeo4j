@@ -65,24 +65,21 @@ public class RandomWalkAlgorithmRunnable extends MyAlgorithmBaseRunnable {
 
         timer.start();
 
+        while (this.NUMBER_OF_STEPS > 0) {
 
-            while (this.NUMBER_OF_STEPS > 0) {
-
-                int w = random.nextInt(100) + 1;
-                if (w <= _RandomNodeParameter) {
-                    currentNode = DBUtils.getSomeRandomNode(graphDb, random, highestNodeId);
-                } else {
-                    currentNode = getNextNode(currentNode);
-                }
-
-                if(output)
-                    StartComparison.resultCounter.get(currentNode.getId()).incrementAndGet();
-
-                NUMBER_OF_STEPS--;
-
+            int w = random.nextInt(100) + 1;
+            if (w <= _RandomNodeParameter) {
+                currentNode = DBUtils.getSomeRandomNode(graphDb, random, highestNodeId);
+            } else {
+                currentNode = getNextNode(currentNode);
             }
 
+            if(output)
+                StartComparison.incrementResultCounterforId(currentNode.getId());
 
+            NUMBER_OF_STEPS--;
+
+        }
         timer.stop();
 
     }

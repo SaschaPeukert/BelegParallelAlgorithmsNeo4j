@@ -44,7 +44,7 @@ public class StartComparison {
     private static String ALGORITHM;
     private static String WRITE;
 
-    public static Map<Long,AtomicInteger> resultCounter;
+    private static Map<Long,AtomicInteger> resultCounter;
     private static Object[] keySetOfResultCounter;
 
     private static final Histogram histogram = new Histogram(3600000000000L, 3);
@@ -251,7 +251,7 @@ public class StartComparison {
             e.printStackTrace();
         }
 
-        //System.out.println(ConnectedSingle.getResults());    //TODO REMOVE, JUST FOR DEBUG
+        System.out.println(ConnectedSingle.getResults());    //TODO REMOVE, JUST FOR DEBUG
 
         return ConnectedSingle.timer.elapsed(TimeUnit.MILLISECONDS);
 
@@ -376,6 +376,22 @@ public class StartComparison {
     public static Object getObjInResultCounterKeySet(int pos){
         return keySetOfResultCounter[pos];
     }
+    public static int incrementResultCounterforId(long id){
+       return getResultCounterforId(id).incrementAndGet();
+    }
 
+    public static AtomicInteger getResultCounterforId(long id){
+        return resultCounter.get(id);
+    }
+    public static boolean resultCounterContainsKey(long id){
+        return resultCounter.containsKey(id);
+    }
+    public static void putIntoResultCounter(long id, AtomicInteger value){
+        resultCounter.put(id,value);
+    }
+
+    public static Iterator<Long> getIteratorforKeySetOfResultCounter(){
+        return resultCounter.keySet().iterator();
+    }
 
 }

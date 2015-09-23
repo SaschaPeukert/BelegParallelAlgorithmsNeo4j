@@ -52,13 +52,13 @@ public class NeoWriter extends MyBaseRunnable {
                 }
 
                 Long l = (Long) StartComparison.getObjInResultCounterKeySet(i);
-                DBUtils.createIntPropertyAtNode(l, StartComparison.resultCounter.get(l).intValue(), propID, ops);
+                DBUtils.createIntPropertyAtNode(l, StartComparison.getResultCounterforId(l).intValue(), propID, ops);
                 count++;
 
             }
 
             DBUtils.closeTransactionSuccess(tx);
-            //System.out.println("Done " + startIndex + " - " + endIndex);
+
 
         } catch (InvalidTransactionTypeKernelException e) {
             e.printStackTrace(); // TODO remove

@@ -44,34 +44,6 @@ public class RandomWalkAlgorithmRunnableNewSPI extends MyAlgorithmBaseRunnable {
 
         this.ctx = api.getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
 
-
-        /*
-        PrimitiveLongIterator p =  ctx.get().readOperations().nodesGetAll();
-        Cursor<NodeItem> allNodesCursor = ctx.get().readOperations().nodeCursorGetAll();
-
-        while (allNodesCursor.next()) {
-            NodeItem nodeItem = allNodesCursor.get();
-            nodeItem.getRelationships(Direction.BOTH);
-        }
-        int i=0;
-        while(p.hasNext()){
-            i++;
-            p.next();
-        }
-        */
-        /*try {
-            Iterator<DefinedProperty> intIt = ctx.get().readOperations().node
-
-            while(intIt.hasNext()){
-                System.out.println((intIt.next().valueAsString()));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }*/
-
-
-
-
     }
     @Override
     public void compute() {
@@ -90,13 +62,11 @@ public class RandomWalkAlgorithmRunnableNewSPI extends MyAlgorithmBaseRunnable {
                 }
 
                 if(output)
-                    StartComparison.resultCounter.get(currentNodeId).incrementAndGet();
+                    StartComparison.incrementResultCounterforId(currentNodeId);
 
 
                 NUMBER_OF_STEPS--;
             }
-
-
 
         timer.stop();
 
