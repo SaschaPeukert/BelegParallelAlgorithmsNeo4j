@@ -1,0 +1,51 @@
+CREATE (:Node { name : 'A' })
+CREATE (:Node { name : 'B' })
+CREATE (:Node { name : 'C' })
+CREATE (:Node { name : 'D' })
+CREATE (:Node { name : 'E' })
+CREATE (:Node { name : 'F' })
+CREATE (:Node { name : 'G' })
+CREATE (:Node { name : 'H' })
+CREATE (:Node { name : 'I' })
+CREATE (:Node { name : 'J' })
+CREATE (:Node { name : 'K' })
+CREATE (:Node { name : 'L' })
+CREATE (:Node { name : 'M' })
+CREATE (:Node { name : 'N' })
+CREATE (:Node { name : 'Z' })
+
+MATCH (a:Node),(b:Node),(c:Node)
+WHERE a.name = 'C' AND b.name = 'D' AND c.name = 'E'
+CREATE (a)-[:RELATIONSHIP]->(b)-[:RELATIONSHIP]->(c)-[:RELATIONSHIP]->(a)   // Test this!
+
+MATCH (a:Node),(b:Node)
+WHERE a.name = 'F' AND b.name = 'G' 
+CREATE (a)-[:RELATIONSHIP]->(b)-[:RELATIONSHIP]->(a)
+
+MATCH (a:Node),(b:Node)
+WHERE a.name = 'H' AND b.name = 'Z' 
+CREATE (a)-[:RELATIONSHIP]->(b)-[:RELATIONSHIP]->(a)
+
+MATCH (a:Node),(b:Node)
+WHERE a.name = 'I' AND b.name = 'Z' 
+CREATE (a)-[:RELATIONSHIP]->(b)
+
+MATCH (a:Node),(b:Node)
+WHERE a.name = 'J' AND b.name = 'Z' 
+CREATE (a)-[:RELATIONSHIP]->(b)
+
+MATCH (a:Node),(b:Node)
+WHERE a.name = 'K' AND b.name = 'Z' 
+CREATE (a)-[:RELATIONSHIP]->(b)
+
+MATCH (a:Node),(b:Node)
+WHERE a.name = 'L' AND b.name = 'Z' 
+CREATE (a)-[:RELATIONSHIP]->(b)
+
+MATCH (a:Node),(b:Node)
+WHERE a.name = 'M' AND b.name = 'Z' 
+CREATE (a)-[:RELATIONSHIP]->(b)
+
+MATCH (a:Node),(b:Node)
+WHERE a.name = 'N' AND b.name = 'Z' 
+CREATE (a)-[:RELATIONSHIP]->(b)
