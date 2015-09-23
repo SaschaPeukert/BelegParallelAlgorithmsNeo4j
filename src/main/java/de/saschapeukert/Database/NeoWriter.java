@@ -11,6 +11,7 @@ import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
 /**
  * Created by Sascha Peukert on 05.09.2015.
  */
+@SuppressWarnings("deprecation")
 public class NeoWriter extends MyBaseRunnable {
 
 

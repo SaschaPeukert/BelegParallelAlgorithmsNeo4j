@@ -85,7 +85,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
         ops = ctx.get().readOperations();
 
         Iterator<Long> it = allNodes.iterator();
-        DFS dfs = new DFS(this.highestNodeId);
+        //DFS dfs = new DFS(this.highestNodeId);
         while(it.hasNext()){
             // Every node has to be marked as (part of) a component
             it = allNodes.iterator();
