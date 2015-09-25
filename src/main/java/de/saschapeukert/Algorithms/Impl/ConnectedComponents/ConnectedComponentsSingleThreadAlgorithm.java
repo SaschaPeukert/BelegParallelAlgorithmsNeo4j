@@ -68,7 +68,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
         }
 
         it.close();
-        DBUtils.closeTransactionSuccess(tx);
+        DBUtils.closeTransactionWithSuccess(tx);
     }
 
 
@@ -112,7 +112,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
             }
 
         }
-        DBUtils.closeTransactionSuccess(tx);
+        DBUtils.closeTransactionWithSuccess(tx);
 
         timer.stop();
     }

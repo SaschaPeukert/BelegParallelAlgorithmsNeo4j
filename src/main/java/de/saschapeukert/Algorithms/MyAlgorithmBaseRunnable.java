@@ -23,7 +23,7 @@ public abstract class MyAlgorithmBaseRunnable extends MyBaseRunnable {
     public void run() {
         tx = DBUtils.openTransaction(graphDb);
         compute();
-        DBUtils.closeTransactionSuccess(tx);
+        DBUtils.closeTransactionWithSuccess(tx);
     }
 
 

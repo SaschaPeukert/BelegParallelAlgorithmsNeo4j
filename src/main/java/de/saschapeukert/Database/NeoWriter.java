@@ -42,7 +42,7 @@ public class NeoWriter extends MyBaseRunnable {
 
                 if(count==100){
 
-                    DBUtils.closeTransactionSuccess(tx);
+                    DBUtils.closeTransactionWithSuccess(tx);
 
                     tx = DBUtils.openTransaction(graphDb);
 
@@ -58,7 +58,7 @@ public class NeoWriter extends MyBaseRunnable {
 
             }
 
-            DBUtils.closeTransactionSuccess(tx);
+            DBUtils.closeTransactionWithSuccess(tx);
 
 
         } catch (InvalidTransactionTypeKernelException e) {

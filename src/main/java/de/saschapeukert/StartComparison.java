@@ -11,10 +11,7 @@ import org.HdrHistogram.Histogram;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.graphdb.factory.GraphDatabaseFactory;
-import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 
-import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -30,7 +27,7 @@ public class StartComparison {
     private  static String DB_PATH;
     // Server: /mnt/flash2/neo4j-enterprise-2.3.0-M02/data/graph.db
     // SSD: C:\\BelegDB\\neo4j-enterprise-2.3.0-M02\\data\\graph.db
-    // Meine HDD: E:\\Users\\Sascha\\Documents\\GIT\\Belegarbeit\\neo4j-enterprise-2.3.0-M02\\data\\graph.db
+    // Meine HDD: E:\\Users\\Sascha\\Documents\\GIT\\BelegParallelAlgorithmsNeo4j\\testDB\\graph.db
 
     private static int OPERATIONS;
     private static int NUMBER_OF_THREADS;
@@ -60,12 +57,7 @@ public class StartComparison {
                " Thread(s).\n");
 
         // Open connection to DB
-        GraphDatabaseService graphDb = new GraphDatabaseFactory()
-                .newEmbeddedDatabaseBuilder(new File(DB_PATH))
-                .setConfig(GraphDatabaseSettings.pagecache_memory, PAGECACHE)
-                .setConfig(GraphDatabaseSettings.keep_logical_logs,"false")  // to get rid of all those neostore.trasaction.db ... files
-                .setConfig(GraphDatabaseSettings.allow_store_upgrade, "true")
-                .newGraphDatabase();
+        GraphDatabaseService graphDb = DBUtils.getGraphDb(DB_PATH,PAGECACHE);
 
         /*GraphDatabaseBuilder builder = new HighlyAvailableGraphDatabaseFactory()
                 .newHighlyAvailableDatabaseBuilder(DB_PATH);
@@ -80,16 +72,19 @@ public class StartComparison {
         */
 
 
-        registerShutdownHook(graphDb);
-
-
         int nodeIDhigh = DBUtils.getHighestNodeID(graphDb);
+        if(nodeIDhigh==0){
+            System.out.println("No Nodes/DB found at this Path:" + DB_PATH);
+            System.out.println("Abort.");
+            return;
+        }
+
         int highestPropertyKey = DBUtils.getHighestPropertyID(graphDb);
 
 
         Transaction t = DBUtils.openTransaction(graphDb);
             prepaireResultMapAndCounter(graphDb, nodeIDhigh);
-        DBUtils.closeTransactionSuccess(t);
+        DBUtils.closeTransactionWithSuccess(t);
 
         System.out.println("~ " + nodeIDhigh + " Nodes");
 
@@ -141,6 +136,8 @@ public class StartComparison {
 
         //java.awt.Toolkit.getDefaultToolkit().beep();
         System.out.println("End: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()));
+
+       // graphDb.shutdown();
 
     }
 
@@ -296,23 +293,6 @@ public class StartComparison {
         }
 
         return elapsedTime;
-    }
-
-    private static void registerShutdownHook( final GraphDatabaseService graphDb )
-    {
-        // Registers a shutdown hook for the Neo4j instance so that it
-        // shuts down nicely when the VM exits (even if you "Ctrl-C" the
-        // running application).
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                try {
-                    graphDb.shutdown();
-                } catch (Exception e) {
-                    graphDb.shutdown();
-                }
-            }
-        });
     }
 
 

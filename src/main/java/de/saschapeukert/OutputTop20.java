@@ -17,7 +17,7 @@ import java.util.Map;
  *
  * This class is used for debugging and displaying results
  */
-class OutputTop20 {
+public class OutputTop20 {
 
     public static void main(String[] args) {
 
@@ -59,12 +59,16 @@ class OutputTop20 {
                 printOutput(
                         getTop20(PROP_NAME,graphDb)));
 
-        DBUtils.closeTransactionSuccess(tx);
+        DBUtils.closeTransactionWithSuccess(tx);
+
+        graphDb.shutdown();
     }
 
     public static List<Object[]> getTop20(String propName, GraphDatabaseService graphDb){
-        Result result = graphDb.execute("MATCH (n) WHERE n." + propName
-                + ">0 RETURN id(n),n." + propName + " ORDER BY n." + propName + " DESC LIMIT 20");
+        String query = "MATCH (n) WHERE n." + propName
+                + ">0 RETURN id(n),n." + propName + " ORDER BY n." + propName + " DESC LIMIT 20";
+        Result result = graphDb.execute(
+                query);
 
         List<Object[]> resultList = new ArrayList<>();
 

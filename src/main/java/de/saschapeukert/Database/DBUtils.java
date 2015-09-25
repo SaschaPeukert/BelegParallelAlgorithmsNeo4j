@@ -3,6 +3,8 @@ package de.saschapeukert.Database;
 import de.saschapeukert.StartComparison;
 import org.neo4j.cursor.Cursor;
 import org.neo4j.graphdb.*;
+import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.kernel.GraphDatabaseAPI;
 import org.neo4j.kernel.api.DataWriteOperations;
 import org.neo4j.kernel.api.ReadOperations;
@@ -14,9 +16,11 @@ import org.neo4j.kernel.api.exceptions.schema.IllegalTokenNameException;
 import org.neo4j.kernel.api.properties.Property;
 import org.neo4j.kernel.impl.api.store.RelationshipIterator;
 import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
+import org.neo4j.kernel.impl.store.NeoStore;
 import org.neo4j.kernel.impl.store.StoreAccess;
 import org.neo4j.tooling.GlobalGraphOperations;
 
+import java.io.File;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
@@ -30,6 +34,8 @@ public class DBUtils {
 
 
     private static StoreAccess neoStore;
+    private static GraphDatabaseService graphDb;
+    public static volatile boolean DB_Offline=true;
 
     public static Node getSomeRandomNode(GraphDatabaseService graphDb, ThreadLocalRandom random, int highestNodeId){
         long r;
@@ -175,7 +181,7 @@ public class DBUtils {
 
     private static StoreAccess getStoreAcess(GraphDatabaseService graphDb){
         if(neoStore==null)
-            neoStore = new StoreAccess((GraphDatabaseAPI)graphDb).initialize();
+            neoStore = new StoreAccess(((GraphDatabaseAPI)graphDb).getDependencyResolver().resolveDependency( NeoStore.class ));
         return neoStore;
     }
 
@@ -260,8 +266,49 @@ public class DBUtils {
 
     }
 
-    public static void closeTransactionSuccess(Transaction tx){
+    public static void closeTransactionWithSuccess(Transaction tx){
         tx.success();
         tx.close();
     }
+
+    public static GraphDatabaseService getGraphDb(String path, String pagecache) {
+        if(graphDb==null){
+            graphDb = new GraphDatabaseFactory()
+                    .newEmbeddedDatabaseBuilder(new File(path))
+                    .setConfig(GraphDatabaseSettings.pagecache_memory, pagecache)
+                    .setConfig(GraphDatabaseSettings.keep_logical_logs, "false")  // to get rid of all those neostore.trasaction.db ... files
+                    .setConfig(GraphDatabaseSettings.allow_store_upgrade, "true")
+                    .newGraphDatabase();
+
+            registerShutdownHook(graphDb);
+            DB_Offline = false;
+        }
+
+
+        return graphDb;
+
+    }
+
+    private static void registerShutdownHook( final GraphDatabaseService graphDb )
+    {
+        // Registers a shutdown hook for the Neo4j instance so that it
+        // shuts down nicely when the VM exits (even if you "Ctrl-C" the
+        // running application).
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                System.out.println("Shutting down neo4j.");
+                try {
+                    graphDb.shutdown();
+                } catch (Exception e) {
+                    graphDb.shutdown();
+                } finally {
+                    DB_Offline = true;
+                }
+                System.out.println("Shutting down neo4j complete.");
+
+            }
+        });
+    }
+
 }
