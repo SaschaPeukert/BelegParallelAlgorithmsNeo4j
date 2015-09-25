@@ -18,7 +18,7 @@ import static org.junit.Assert.assertEquals;
 public class RandomWalkTest {
 
     private static String[] args = {"RW", "1001000", "1", "8", "1", "true", "RandomWalkCounterTest",
-            "6G", "E:\\Users\\Sascha\\Documents\\GIT\\BelegParallelAlgorithmsNeo4j\\testDB\\graph.db", "Write"};
+            "6G", "testDB\\graph.db", "Write"};
 
 
     @BeforeClass
