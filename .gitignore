@@ -17,3 +17,4 @@ neo4j
 hs_err_pid*
 
 *.log
+neostore.transaction.*

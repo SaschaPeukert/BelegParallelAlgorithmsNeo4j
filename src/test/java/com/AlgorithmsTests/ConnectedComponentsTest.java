@@ -11,9 +11,9 @@ import java.util.*;
  */
 public class ConnectedComponentsTest {
 
-    private static String[] argsWCC = {"WCC", "1001000", "1", "8", "1", "true", "WeaklyConnectedComponentTest",
+    private static final String[] argsWCC = {"WCC", "1001000", "1", "8", "1", "true", "WeaklyConnectedComponentTest",
             "1G", "testDB\\graph.db", "Write"};
-    private static String[] argsSCC = {"SCC", "1001000", "1", "8", "1", "true", "StronglyConnectedComponentTest",
+    private static final String[] argsSCC = {"SCC", "1001000", "1", "8", "1", "true", "StronglyConnectedComponentTest",
             "1G", "testDB\\graph.db", "Write"};
     // don't realy need to write here
 
@@ -47,39 +47,6 @@ public class ConnectedComponentsTest {
     @Test
     public void WeaklyConnectedComponentsShouldBeCorrect() {
 
-        // Build correctMap with correct Results on the testDB-graph
-        Map<Integer,List<Long>> correctMap = new HashMap<>();
-
-        ArrayList<Long> list = new ArrayList<Long>();
-        list.add(0L);
-        correctMap.put(1,list);
-
-        list = new ArrayList<Long>();
-        list.add(1L);
-        correctMap.put(2,list);
-
-        list = new ArrayList<Long>();
-        list.add(2L);
-        list.add(3L);
-        list.add(4L);
-        correctMap.put(3,list);
-
-        list = new ArrayList<Long>();
-        list.add(5L);
-        list.add(6L);
-        correctMap.put(4,list);
-
-        list = new ArrayList<Long>();
-        list.add(7L);
-        list.add(8L);
-        list.add(9L);
-        list.add(10L);
-        list.add(11L);
-        list.add(12L);
-        list.add(13L);
-        list.add(14L);
-        correctMap.put(5,list);
-
         // Do the Run, get results
         StartComparison.main(argsWCC);
         Map<Integer,List<Long>> resultOfRun = ConnectedComponentsSingleThreadAlgorithm.getMapofComponentToIDs();
@@ -97,57 +64,6 @@ public class ConnectedComponentsTest {
 
     @Test
     public void StronglyConnectedComponentsShouldBeCorrect() {
-
-        // Build correctMap with correct Results on the testDB-graph
-        Map<Integer,List<Long>> correctMap = new HashMap<>();
-
-        ArrayList<Long> list = new ArrayList<Long>();
-        list.add(0L);
-        correctMap.put(1,list);
-
-        list = new ArrayList<Long>();
-        list.add(1L);
-        correctMap.put(2,list);
-
-        list = new ArrayList<Long>();
-        list.add(2L);
-        list.add(3L);
-        list.add(4L);
-        correctMap.put(3,list);
-
-        list = new ArrayList<Long>();
-        list.add(5L);
-        list.add(6L);
-        correctMap.put(4,list);
-
-        list = new ArrayList<Long>();
-        list.add(7L);
-        list.add(14L);
-        correctMap.put(5,list);
-
-        list = new ArrayList<Long>();
-        list.add(8L);
-        correctMap.put(6,list);
-
-        list = new ArrayList<Long>();
-        list.add(9L);
-        correctMap.put(7,list);
-
-        list = new ArrayList<Long>();
-        list.add(10L);
-        correctMap.put(8,list);
-
-        list = new ArrayList<Long>();
-        list.add(11L);
-        correctMap.put(9,list);
-
-        list = new ArrayList<Long>();
-        list.add(12L);
-        correctMap.put(10,list);
-
-        list = new ArrayList<Long>();
-        list.add(13L);
-        correctMap.put(11,list);
 
         // Do the Run, get results
         StartComparison.main(argsSCC);

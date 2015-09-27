@@ -33,7 +33,6 @@ public class DBUtils {
 
     private static StoreAccess neoStore;
     private static GraphDatabaseService graphDb;
-    public static int highestPropertyKey;
     public static int highestNodeKey;
 
     public static Node getSomeRandomNode(GraphDatabaseService graphDb, ThreadLocalRandom random){
@@ -49,7 +48,6 @@ public class DBUtils {
                 }
 
             } catch (NotFoundException e){
-                // NEXT! OLD VERSION
                 // NEW: this should never be happening!
                 System.out.println("Something terrible is happend");
             }
@@ -67,10 +65,6 @@ public class DBUtils {
             // NEW VERSION without DB-Lookup
             if(StartComparison.resultCounterContainsKey(r))
                 return r;
-
-            // OLD VERSION
-            //if(ops.nodeExists(r))
-            //    return r;
 
         }
 
@@ -117,7 +111,6 @@ public class DBUtils {
      *  You have to remove the Property from every node too
      * @param propertyID
      * @param ops
-     * @return
      */
     public static void removePropertyKey(int propertyID, DataWriteOperations ops){
         ops.graphRemoveProperty(propertyID);
@@ -148,14 +141,9 @@ public class DBUtils {
         return true;
     }
 
-    public static int getHighestNodeID(GraphDatabaseService graphDb ){
+    private static int getHighestNodeID(GraphDatabaseService graphDb ){
 
         return (int) getStoreAcess(graphDb).getNodeStore().getHighId();
-
-    }
-
-    public static int getHighestPropertyID(GraphDatabaseService graphDb){
-        return (int) getStoreAcess(graphDb).getPropertyStore().getHighId();
 
     }
 
@@ -188,7 +176,6 @@ public class DBUtils {
             ThreadToStatementContextBridge ctx = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
             DataWriteOperations ops = ctx.get().dataWriteOperations();
 
-            int test = getHighestPropertyID(graphDb);
             return  ops.propertyKeyGetOrCreateForName(propertyName);
 
         } catch (Exception e) {
@@ -248,7 +235,6 @@ public class DBUtils {
             registerShutdownHook(graphDb);
 
             highestNodeKey = getHighestNodeID(graphDb);
-            highestPropertyKey = getHighestPropertyID(graphDb);
         }
 
 
@@ -268,10 +254,11 @@ public class DBUtils {
                 try {
                     graphDb.shutdown();
                 } catch (Exception e) {
+                    e.printStackTrace();
                     graphDb.shutdown();
                 } finally {
+                    System.out.println("Shutting down neo4j complete.");
                 }
-                System.out.println("Shutting down neo4j complete.");
 
             }
         });

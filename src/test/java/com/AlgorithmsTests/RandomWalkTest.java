@@ -17,7 +17,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class RandomWalkTest {
 
-    private static String[] args = {"RW", "1001000", "1", "8", "1", "true", "RandomWalkCounterTest",
+    private static final String[] args = {"RW", "1001000", "1", "8", "1", "true", "RandomWalkCounterTest",
             "1G", "testDB\\graph.db", "Write"};
 
 
