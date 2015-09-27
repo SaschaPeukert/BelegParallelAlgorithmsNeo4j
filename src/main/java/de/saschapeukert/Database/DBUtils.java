@@ -10,9 +10,7 @@ import org.neo4j.kernel.api.DataWriteOperations;
 import org.neo4j.kernel.api.ReadOperations;
 import org.neo4j.kernel.api.cursor.RelationshipItem;
 import org.neo4j.kernel.api.exceptions.EntityNotFoundException;
-import org.neo4j.kernel.api.exceptions.InvalidTransactionTypeKernelException;
 import org.neo4j.kernel.api.exceptions.schema.ConstraintValidationKernelException;
-import org.neo4j.kernel.api.exceptions.schema.IllegalTokenNameException;
 import org.neo4j.kernel.api.properties.Property;
 import org.neo4j.kernel.impl.api.store.RelationshipIterator;
 import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
@@ -35,15 +33,17 @@ public class DBUtils {
 
     private static StoreAccess neoStore;
     private static GraphDatabaseService graphDb;
+    public static int highestPropertyKey;
+    public static int highestNodeKey;
 
-    public static Node getSomeRandomNode(GraphDatabaseService graphDb, ThreadLocalRandom random, int highestNodeId){
+    public static Node getSomeRandomNode(GraphDatabaseService graphDb, ThreadLocalRandom random){
         long r;
         while(true) {
 
             try {
 
                 // NEW VERSION, checks Map for ID and not DB
-                r = (long) random.nextInt(highestNodeId);
+                r = (long) random.nextInt(highestNodeKey);
                 if(StartComparison.resultCounterContainsKey(r)){
                     return graphDb.getNodeById(r);
                 }
@@ -58,11 +58,11 @@ public class DBUtils {
 
     }
 
-    public static long getSomeRandomNodeId(ThreadLocalRandom random, int highestNodeId){
+    public static long getSomeRandomNodeId(ThreadLocalRandom random){
         long r;
         while(true) {
 
-            r = (long) random.nextInt(highestNodeId);
+            r = (long) random.nextInt(highestNodeKey);
 
             // NEW VERSION without DB-Lookup
             if(StartComparison.resultCounterContainsKey(r))
@@ -148,24 +148,6 @@ public class DBUtils {
         return true;
     }
 
-    /**
-     *
-     * @param key HAS TO BE UNIQUE!
-     * @param newPropertyID
-     * @param ops
-     * @return
-     */
-    public static boolean createNewPropertyKey(String key,int newPropertyID, DataWriteOperations ops){
-        try{
-            ops.propertyKeyCreateForName(key, newPropertyID);
-        } catch (IllegalTokenNameException e) {
-            e.printStackTrace();  // TODO REMOVE
-            return false;
-        }
-        return true;
-
-    }
-
     public static int getHighestNodeID(GraphDatabaseService graphDb ){
 
         return (int) getStoreAcess(graphDb).getNodeStore().getHighId();
@@ -173,9 +155,12 @@ public class DBUtils {
     }
 
     public static int getHighestPropertyID(GraphDatabaseService graphDb){
-
         return (int) getStoreAcess(graphDb).getPropertyStore().getHighId();
 
+    }
+
+    private static long getNextPropertyID(GraphDatabaseService graphDb){
+        return getStoreAcess(graphDb).getPropertyStore().nextId();
     }
 
     private static StoreAccess getStoreAcess(GraphDatabaseService graphDb){
@@ -194,38 +179,19 @@ public class DBUtils {
 
     /**
      * Gets the PropertyID for a given PropertyName or creates a new ID for that name and returns it.
-     * @param propertyName
-     * @param highestPropertyKey
-     * @param graphDb
+     * @param propertyName HAS TO BE UNIQUE
      * @return -1 if error happend
      */
-    public static int GetPropertyID(String propertyName, int highestPropertyKey, GraphDatabaseService graphDb){
+    public static int GetPropertyID(String propertyName){
         try(Transaction tx = graphDb.beginTx()) {
 
             ThreadToStatementContextBridge ctx = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
             DataWriteOperations ops = ctx.get().dataWriteOperations();
 
-            int lookup = ops.propertyKeyGetForName(propertyName);
-            if(lookup==-1){
-                System.out.println("Property not found. Creating new ID");
-                highestPropertyKey++;
-                createNewPropertyKey(propertyName, highestPropertyKey, ops);
+            int test = getHighestPropertyID(graphDb);
+            return  ops.propertyKeyGetOrCreateForName(propertyName);
 
-                tx.success();
-
-                return highestPropertyKey;  // can be used now, referencing now the correct PropertyKey.
-                                            // No Node has a Property with this key jet
-
-            } else{
-                System.out.println("Property found. Using old ID " + lookup);
-                //DBUtils.removePropertyFromAllNodes(lookup, ops, graphDb);  useless since every one of this properties will be overwritten later
-                //System.out.println("Finished clearing up.");
-                tx.success();
-
-                return lookup;
-            }
-
-        } catch (InvalidTransactionTypeKernelException e) {
+        } catch (Exception e) {
             e.printStackTrace();  // TODO REMOVE
         }
 
@@ -280,6 +246,9 @@ public class DBUtils {
                     .newGraphDatabase();
 
             registerShutdownHook(graphDb);
+
+            highestNodeKey = getHighestNodeID(graphDb);
+            highestPropertyKey = getHighestPropertyID(graphDb);
         }
 
 

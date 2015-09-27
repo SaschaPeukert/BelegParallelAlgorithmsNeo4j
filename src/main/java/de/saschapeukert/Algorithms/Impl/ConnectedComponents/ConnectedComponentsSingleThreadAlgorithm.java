@@ -40,18 +40,17 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
     public static Set<Long> allNodes;
 
 
-    public ConnectedComponentsSingleThreadAlgorithm(GraphDatabaseService gdb, int highestNodeId
-            , AlgorithmType type, boolean output){
-        super(gdb, highestNodeId, output);
+    public ConnectedComponentsSingleThreadAlgorithm(GraphDatabaseService gdb, AlgorithmType type, boolean output){
+        super(gdb, output);
 
         this.myType = type;
 
-        allNodes = new HashSet<>(highestNodeId);
+        allNodes = new HashSet<>(DBUtils.highestNodeKey);
 
         if(myType==AlgorithmType.STRONG) {
             // initialize nodeDictionary for tarjans algo
             this.stack = new Stack<>();
-            this.nodeDictionary = new HashMap<>(highestNodeId);
+            this.nodeDictionary = new HashMap<>(DBUtils.highestNodeKey);
         }
         tx = DBUtils.openTransaction(graphDb);
         GlobalGraphOperations ggop = GlobalGraphOperations.at(gdb);
@@ -187,8 +186,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
 
     }
 
-
-    public String getResults(){
+    public static Map<Integer, List<Long>> getMapofComponentToIDs(){
 
         Map<Integer, List<Long>> myResults = new TreeMap<>();
 
@@ -208,8 +206,15 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
             }
         }
 
-        // Building the result string
+        return myResults;
+    }
 
+
+    public String getResults(){
+
+        Map<Integer, List<Long>> myResults = getMapofComponentToIDs();
+
+        // Building the result string
         StringBuilder returnString = new StringBuilder();
         returnString.append("Component count: ").append(myResults.keySet().size()).append("\n");
         returnString.append("Components with Size between 4 and 10\n");

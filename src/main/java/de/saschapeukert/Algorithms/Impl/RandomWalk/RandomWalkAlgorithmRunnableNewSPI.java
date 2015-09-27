@@ -33,8 +33,8 @@ public class RandomWalkAlgorithmRunnableNewSPI extends MyAlgorithmBaseRunnable {
     private ReadOperations ops;
 
     public RandomWalkAlgorithmRunnableNewSPI(int randomChanceParameter,
-                                             GraphDatabaseService gdb,int highestNodeId,int NumberOfSteps, boolean output){
-        super(gdb, highestNodeId, output);
+                                             GraphDatabaseService gdb,int NumberOfSteps, boolean output){
+        super(gdb, output);
 
         this._RandomNodeParameter = randomChanceParameter;
         this.currentNodeId = -1;
@@ -56,7 +56,7 @@ public class RandomWalkAlgorithmRunnableNewSPI extends MyAlgorithmBaseRunnable {
 
                 int w = random.nextInt(100) + 1;
                 if (w <= _RandomNodeParameter) {
-                    currentNodeId = DBUtils.getSomeRandomNodeId(random, highestNodeId);
+                    currentNodeId = DBUtils.getSomeRandomNodeId(random);
                 } else{
                     currentNodeId = getNextNode(currentNodeId);
                 }
@@ -111,7 +111,7 @@ public class RandomWalkAlgorithmRunnableNewSPI extends MyAlgorithmBaseRunnable {
             }
 
         }
-        return DBUtils.getSomeRandomNodeId(random, highestNodeId);  // Node has no outgoing relationships or is start "node"
+        return DBUtils.getSomeRandomNodeId(random);  // Node has no outgoing relationships or is start "node"
     }
 
 

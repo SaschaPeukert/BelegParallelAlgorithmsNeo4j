@@ -71,27 +71,24 @@ public class StartComparison {
         GraphDatabaseService graphDb = builder.newGraphDatabase();
         */
 
-
-        int nodeIDhigh = DBUtils.getHighestNodeID(graphDb);
-        if(nodeIDhigh==0){
+        if(DBUtils.highestNodeKey==0){
             System.out.println("No Nodes/DB found at this Path:" + DB_PATH);
             System.out.println("Abort.");
             return;
         }
 
-        int highestPropertyKey = DBUtils.getHighestPropertyID(graphDb);
 
 
         Transaction t = DBUtils.openTransaction(graphDb);
-            prepaireResultMapAndCounter(graphDb, nodeIDhigh);
+            prepaireResultMapAndCounter(graphDb, DBUtils.highestNodeKey);
         DBUtils.closeTransactionWithSuccess(t);
 
-        System.out.println("~ " + nodeIDhigh + " Nodes");
+        System.out.println("~ " + DBUtils.highestNodeKey + " Nodes");
 
 
         if(WRITE.equals("Write")){
 
-            PROP_ID = DBUtils.GetPropertyID(PROP_NAME, highestPropertyKey, graphDb);
+            PROP_ID = DBUtils.GetPropertyID(PROP_NAME);
 
             if(PROP_ID==-1){
                 // ERROR Handling
@@ -100,7 +97,7 @@ public class StartComparison {
             }
         }
 
-        WarmUp(graphDb, nodeIDhigh, WARMUPTIME);
+        WarmUp(graphDb, WARMUPTIME);
 
         System.out.println("");
 
@@ -109,16 +106,16 @@ public class StartComparison {
 
         switch (ALGORITHM){
             case "RW":
-                calculateRandomWalk_new(graphDb, nodeIDhigh, NUMBER_OF_RUNS, true);
+                calculateRandomWalk_new(graphDb,NUMBER_OF_RUNS, true);
                 break;
             case "WCC":
                 calculateConnectedComponents(graphDb,
-                        nodeIDhigh, NUMBER_OF_RUNS,
+                         NUMBER_OF_RUNS,
                         ConnectedComponentsSingleThreadAlgorithm.AlgorithmType.WEAK, true);
                 break;
             case "SCC":
                 calculateConnectedComponents(graphDb,
-                        nodeIDhigh, NUMBER_OF_RUNS,
+                        NUMBER_OF_RUNS,
                         ConnectedComponentsSingleThreadAlgorithm.AlgorithmType.STRONG, true);
                 break;
             default:
@@ -167,16 +164,15 @@ public class StartComparison {
     /**
      * WarmUp
      * @param graphDb
-     * @param highestNodeId
      * @param secs
      */
-    private static void WarmUp(GraphDatabaseService graphDb, int highestNodeId, int secs){
+    private static void WarmUp(GraphDatabaseService graphDb, int secs){
         System.out.println("Starting WarmUp.");
 
         Stopwatch timer = Stopwatch.createStarted();
 
         while (timer.elapsed(TimeUnit.SECONDS) < secs) {
-                doMultiThreadRandomWalk(graphDb,highestNodeId,100, false);
+                doMultiThreadRandomWalk(graphDb,100, false);
 
             }
 
@@ -187,13 +183,13 @@ public class StartComparison {
     }
 
     private static void calculateConnectedComponents
-            (GraphDatabaseService graphDb, int highestNodeId, int runs,
+            (GraphDatabaseService graphDb, int runs,
              ConnectedComponentsSingleThreadAlgorithm.AlgorithmType type, boolean output){
 
         for(int i=0;i<runs;i++){
             System.out.println("Now doing run " + (i + 1));
 
-            histogram.recordValue(doConnectedComponentsRun(graphDb, highestNodeId, type, output));
+            histogram.recordValue(doConnectedComponentsRun(graphDb, type, output));
 
         }
 
@@ -204,13 +200,13 @@ public class StartComparison {
     }
 
 
-    private static void calculateRandomWalk_new(GraphDatabaseService graphDb, int highestNodeId,
+    private static void calculateRandomWalk_new(GraphDatabaseService graphDb,
                                                 int numberOfRunsPerStep, boolean output){
 
         for(int i=0;i<numberOfRunsPerStep;i++){
             System.out.println("Now doing run " + (i + 1));
             // Run
-            long run = doMultiThreadRandomWalk(graphDb,highestNodeId,OPERATIONS, output);
+            long run = doMultiThreadRandomWalk(graphDb,OPERATIONS, output);
             //System.out.println(run);
             histogram.recordValue(run);
 
@@ -226,17 +222,16 @@ public class StartComparison {
     /**
      *
      * @param graphDb
-     * @param highestNodeId
      * @param type
      * @param output
      * @return elapsed time as MILLISECONDS!
      */
 
-    private static long doConnectedComponentsRun(GraphDatabaseService graphDb,int highestNodeId,
+    private static long doConnectedComponentsRun(GraphDatabaseService graphDb,
                                                  ConnectedComponentsSingleThreadAlgorithm.AlgorithmType type, boolean output){
 
         ConnectedComponentsSingleThreadAlgorithm ConnectedSingle = new ConnectedComponentsSingleThreadAlgorithm(
-                graphDb, highestNodeId, type, output);
+                graphDb,type, output);
         Thread t = new Thread(ConnectedSingle);
         t.setName("ConnectedComponentsSingleThreadAlgo");
 
@@ -255,7 +250,7 @@ public class StartComparison {
     }
 
 
-    private static long doMultiThreadRandomWalk(GraphDatabaseService graphDb, int highestNodeId, int noOfSteps, boolean output){
+    private static long doMultiThreadRandomWalk(GraphDatabaseService graphDb, int noOfSteps, boolean output){
 
         // INIT
         List<MyAlgorithmBaseRunnable> list = new ArrayList<>(NUMBER_OF_THREADS);
@@ -267,10 +262,10 @@ public class StartComparison {
             MyAlgorithmBaseRunnable rw;
             if(NEWSPI){
                 rw = new RandomWalkAlgorithmRunnableNewSPI(RANDOMWALKRANDOM,
-                        graphDb,highestNodeId, noOfSteps/NUMBER_OF_THREADS, output);
+                        graphDb, noOfSteps/NUMBER_OF_THREADS, output);
             } else{
                 rw = new RandomWalkAlgorithmRunnable(RANDOMWALKRANDOM,
-                        graphDb,highestNodeId, noOfSteps/NUMBER_OF_THREADS, output);
+                        graphDb, noOfSteps/NUMBER_OF_THREADS, output);
             }
             executor.execute(rw);
             list.add(rw);

@@ -20,8 +20,8 @@ public class RandomWalkAlgorithmRunnable extends MyAlgorithmBaseRunnable {
 
 
     public RandomWalkAlgorithmRunnable(int randomChanceParameter,
-                                       GraphDatabaseService gdb,int highestNodeId, int NumberOfSteps, boolean output){
-        super(gdb, highestNodeId, output);
+                                       GraphDatabaseService gdb, int NumberOfSteps, boolean output){
+        super(gdb, output);
 
         this._RandomNodeParameter = randomChanceParameter;
         this.currentNode = null;
@@ -69,7 +69,7 @@ public class RandomWalkAlgorithmRunnable extends MyAlgorithmBaseRunnable {
 
             int w = random.nextInt(100) + 1;
             if (w <= _RandomNodeParameter) {
-                currentNode = DBUtils.getSomeRandomNode(graphDb, random, highestNodeId);
+                currentNode = DBUtils.getSomeRandomNode(graphDb, random);
             } else {
                 currentNode = getNextNode(currentNode);
             }
@@ -110,7 +110,7 @@ public class RandomWalkAlgorithmRunnable extends MyAlgorithmBaseRunnable {
             }
 
         }
-        return DBUtils.getSomeRandomNode(graphDb, random, highestNodeId);  // Node has no outgoing relationships or is start "node"
+        return DBUtils.getSomeRandomNode(graphDb, random);  // Node has no outgoing relationships or is start "node"
     }
 
 }
