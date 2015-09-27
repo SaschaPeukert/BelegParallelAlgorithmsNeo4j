@@ -35,7 +35,6 @@ public class DBUtils {
 
     private static StoreAccess neoStore;
     private static GraphDatabaseService graphDb;
-    public static volatile boolean DB_Offline=true;
 
     public static Node getSomeRandomNode(GraphDatabaseService graphDb, ThreadLocalRandom random, int highestNodeId){
         long r;
@@ -281,7 +280,6 @@ public class DBUtils {
                     .newGraphDatabase();
 
             registerShutdownHook(graphDb);
-            DB_Offline = false;
         }
 
 
@@ -303,7 +301,6 @@ public class DBUtils {
                 } catch (Exception e) {
                     graphDb.shutdown();
                 } finally {
-                    DB_Offline = true;
                 }
                 System.out.println("Shutting down neo4j complete.");
 
