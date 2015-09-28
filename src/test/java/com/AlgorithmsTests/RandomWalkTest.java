@@ -3,6 +3,7 @@ package com.AlgorithmsTests;
 import de.saschapeukert.Database.DBUtils;
 import de.saschapeukert.OutputTop20;
 import de.saschapeukert.StartComparison;
+import org.apache.commons.lang3.SystemUtils;
 import org.junit.*;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
@@ -24,6 +25,9 @@ public class RandomWalkTest {
     @BeforeClass
     public static void oneTimeSetUp() {
 
+        if(SystemUtils.IS_OS_UNIX){
+            args[8] = "testDB/graph.db";
+        }
 
     }
     @AfterClass

@@ -2,6 +2,7 @@ package com.AlgorithmsTests;
 
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.ConnectedComponentsSingleThreadAlgorithm;
 import de.saschapeukert.StartComparison;
+import org.apache.commons.lang3.SystemUtils;
 import org.junit.*;
 
 import java.util.*;
@@ -20,7 +21,10 @@ public class ConnectedComponentsTest {
     @BeforeClass
     public static void oneTimeSetUp() {
 
-
+        if(SystemUtils.IS_OS_UNIX){
+            argsWCC[8] = "testDB/graph.db";
+            argsSCC[8] = "testDB/graph.db";
+        }
     }
     @AfterClass
     public static void oneTimeTearDown() {
