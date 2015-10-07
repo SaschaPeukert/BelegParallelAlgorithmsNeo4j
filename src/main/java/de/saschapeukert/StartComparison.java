@@ -30,7 +30,7 @@ public class StartComparison {
     // Meine HDD: E:\\Users\\Sascha\\Documents\\GIT\\BelegParallelAlgorithmsNeo4j\\testDB\\graph.db
 
     private static int OPERATIONS;
-    private static int NUMBER_OF_THREADS;
+    public static int NUMBER_OF_THREADS;
     private static int NUMBER_OF_RUNS; //Minimum: 1
     private static final int RANDOMWALKRANDOM = 20;  // Minimum: 1
     private static  int WARMUPTIME; // in seconds
@@ -243,7 +243,7 @@ public class StartComparison {
             e.printStackTrace();
         }
 
-        System.out.println(ConnectedSingle.getResults());    //TODO REMOVE, JUST FOR DEBUG
+        //System.out.println(ConnectedSingle.getResults());    //TODO REMOVE, JUST FOR DEBUG
 
         return ConnectedSingle.timer.elapsed(TimeUnit.MILLISECONDS);
 
@@ -336,7 +336,7 @@ public class StartComparison {
         keySetOfResultCounter = resultCounter.keySet().toArray();  // should only be called once!
     }
 
-    private static boolean waitForExecutorToFinishAll(ExecutorService executor){
+    public static boolean waitForExecutorToFinishAll(ExecutorService executor){
         executor.shutdown();
         try {
             executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);

@@ -15,14 +15,15 @@ public abstract class MyAlgorithmBaseRunnable extends MyBaseRunnable {
 
     protected abstract void compute();
 
+
     @Override
     /**
      * It will automaticly open a TA
      */
     public void run() {
-        tx = DBUtils.openTransaction(graphDb);
+        this.tx = DBUtils.openTransaction(graphDb);
         compute();
-        DBUtils.closeTransactionWithSuccess(tx);
+        DBUtils.closeTransactionWithSuccess(this.tx);
     }
 
 

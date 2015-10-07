@@ -19,9 +19,10 @@ import org.neo4j.kernel.impl.store.StoreAccess;
 import org.neo4j.tooling.GlobalGraphOperations;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -53,6 +54,12 @@ public class DBUtils {
             }
 
         }
+
+    }
+
+    public static ReadOperations getReadOperations(){
+        ThreadToStatementContextBridge ctx = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
+        return ctx.get().readOperations();
 
     }
 
@@ -187,30 +194,29 @@ public class DBUtils {
     }
 
 
-    public static Iterable<Long> getConnectedNodeIDs(ReadOperations ops, long nodeID, Direction dir){
-
-        LinkedList<Long> it = new LinkedList<>();
+    public static Set<Long> getConnectedNodeIDs(ReadOperations ops, long nodeID, Direction dir){
+        Set<Long> it = new HashSet<>();
         try {
             RelationshipIterator itR = ops.nodeGetRelationships(nodeID, dir);
+
             while(itR.hasNext()){
                 long rID = itR.next();
 
                 Cursor<RelationshipItem> relCursor = ops.relationshipCursor(rID);
+
                 while(relCursor.next()){
+
                     RelationshipItem item = relCursor.get();
                     it.add(item.otherNode(nodeID));
                 }
                 relCursor.close();
-
             }
-
 
         } catch (EntityNotFoundException e) {
             e.printStackTrace();
         }
 
         return it;
-
     }
 
     public static Transaction openTransaction(GraphDatabaseService graphDb){

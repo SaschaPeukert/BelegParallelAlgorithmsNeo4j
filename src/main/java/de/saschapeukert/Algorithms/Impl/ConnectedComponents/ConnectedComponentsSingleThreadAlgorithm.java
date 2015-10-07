@@ -1,13 +1,14 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents;
 
-import de.saschapeukert.*;
 import de.saschapeukert.Algorithms.MyAlgorithmBaseRunnable;
 import de.saschapeukert.Database.DBUtils;
 import de.saschapeukert.Datastructures.TarjanNode;
-import org.neo4j.graphdb.*;
-import org.neo4j.kernel.GraphDatabaseAPI;
+import de.saschapeukert.StartComparison;
+import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.ResourceIterator;
 import org.neo4j.kernel.api.ReadOperations;
-import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
 import org.neo4j.tooling.GlobalGraphOperations;
 
 import java.util.*;
@@ -28,16 +29,16 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
     }
 
 
-    private int componentID;
+    private int componentID=1;
     private final AlgorithmType myType;
 
     private Map<Long,TarjanNode> nodeDictionary;
     private Stack<Long> stack;
     private int maxdfs=0;
 
-    public static ReadOperations ops; //TODO REFACTOR THIS
+    public static ReadOperations ops;
 
-    public static Set<Long> allNodes;
+    public static Set<Long> allNodes; // except the trivial CCs
 
 
     public ConnectedComponentsSingleThreadAlgorithm(GraphDatabaseService gdb, AlgorithmType type, boolean output){
@@ -59,7 +60,15 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
         ResourceIterator<Node> it = ggop.getAllNodes().iterator();
         while(it.hasNext()){
             Node n = it.next();
-            allNodes.add(n.getId());
+
+            // Trimming
+            if(n.getDegree()==0){
+                StartComparison.putIntoResultCounter(n.getId(), new AtomicInteger(componentID));
+                componentID++;
+
+            } else{
+                allNodes.add(n.getId());
+            }
 
             if(myType==AlgorithmType.STRONG)
                 nodeDictionary.put(n.getId(),new TarjanNode());
@@ -75,14 +84,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
     public void compute() {
 
         timer.start();
-        componentID = 1;
-
-        tx = DBUtils.openTransaction(graphDb);
-
-        ThreadToStatementContextBridge ctx = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
-
-        ops = ctx.get().readOperations();
-
+        ops = DBUtils.getReadOperations();
         Iterator<Long> it = allNodes.iterator();
         //DFS dfs = new DFS(this.highestNodeId);
         while(it.hasNext()){
@@ -111,7 +113,6 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
             }
 
         }
-        DBUtils.closeTransactionWithSuccess(tx);
 
         timer.stop();
     }
@@ -133,7 +134,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
         //for(Relationship r: it){
         //   Node n_new = r.getOtherNode(currentNode);
 
-        Iterable<Long> it = DBUtils.getConnectedNodeIDs(ops, currentNode, Direction.OUTGOING);
+        Iterable<Long> it = DBUtils.getConnectedNodeIDs(DBUtils.getReadOperations(), currentNode, Direction.OUTGOING);
         for(Long l:it){
 
             TarjanNode v_new = nodeDictionary.get(l);
@@ -170,7 +171,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
     }
 
     private void DFS(Long n, int compName){
-
+        /*
         if(StartComparison.getResultCounterforId(n).intValue()==compName){
             return;// Already visited
         }
@@ -182,6 +183,18 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
         for(Long l: DBUtils.getConnectedNodeIDs(ConnectedComponentsSingleThreadAlgorithm.ops, n, Direction.BOTH)){
             DFS(l, compName);
 
+        }
+
+        */
+
+        if(StartComparison.getResultCounterforId(n).intValue()==compName){
+            return;// Already visited
+        }
+        BFS bfs = new BFS();
+        Set<Long> reachableIDs = bfs.goParallel(n, Direction.BOTH);
+        for(Long l:reachableIDs){
+            StartComparison.putIntoResultCounter(l, new AtomicInteger(compName));
+            allNodes.remove(l); // correct?   notwendig?!
         }
 
     }

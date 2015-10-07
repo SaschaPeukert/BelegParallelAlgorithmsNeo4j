@@ -60,7 +60,7 @@ class DFS {
         ConnectedComponentsSingleThreadAlgorithm.allNodes.remove(currentNodeID); //  notwendig?!
 
         int barrier_new = barrier-1;
-        for(Long l: DBUtils.getConnectedNodeIDs(ConnectedComponentsSingleThreadAlgorithm.ops, currentNodeID, Direction.BOTH)){
+        for(Long l: DBUtils.getConnectedNodeIDs(DBUtils.getReadOperations(), currentNodeID, Direction.BOTH)){
             currentNodeID = l;
             go(barrier_new);
         }
