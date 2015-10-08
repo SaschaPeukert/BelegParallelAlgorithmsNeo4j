@@ -17,7 +17,7 @@ public class BFS {
 
     public static Queue<Long> queue;
     public static final List<Long> frontierList= new LinkedList<Long>();  // do not assign more than once
-    public static SortedMap<Integer,Queue<Long>> MapOfQueues;
+    public static volatile SortedMap<Integer,Queue<Long>> MapOfQueues;
     private ExecutorService executor;
     public BFS(){
         queue = new ConcurrentLinkedQueue<Long>();
@@ -69,49 +69,54 @@ public class BFS {
         frontierList.add(nodeID);
         visitedIDs.add(nodeID);
 
+        // start fixed Number of BFSLevelRunnable Threads
         List<BFSLevelRunnable> list = new ArrayList<>(StartComparison.NUMBER_OF_THREADS);
         for(int i=0;i<StartComparison.NUMBER_OF_THREADS;i++){
-            BFSLevelRunnable runnable = new BFSLevelRunnable(direction,  DBUtils.getGraphDb("",""),false);
+            BFSLevelRunnable runnable = new BFSLevelRunnable(i,direction,  DBUtils.getGraphDb("",""),false);
             list.add(runnable);
             executor.execute(runnable);
         }
 
+        MapOfQueues = new TreeMap<Integer, Queue<Long>>();
+        while(!frontierList.isEmpty()){
 
-        while(!queue.isEmpty())
-        {
-            //List<BFSLevelRunnable> list = new ArrayList<>();
-            int t=0;
-            while(!frontierList.isEmpty()){
-                Long n=frontierList.remove(0);
-                n.wait();
+            int size= frontierList.size();
 
-                BFSLevelRunnable workOne = list.get(t);
-                while (!workOne.hasFinished){
-                    try {
-                        Thread.sleep(5);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+            for(BFSLevelRunnable runnable:list){
+                runnable.ignoreIDs = visitedIDs;
+            }
+            synchronized (frontierList){
+                frontierList.notifyAll();
+            }
+
+            // awaiting results (polling)
+            boolean check=false;
+            while(!check){
+                check = true;
+                for(int i=0;i<size;i++){
+                    if(MapOfQueues.get(i)==null){
+                        check = false;
                     }
                 }
-                workOne.parentID=
-                //BFSLevelRunnable runnable = new BFSLevelRunnable(n,direction, visitedIDs, DBUtils.getGraphDb("",""),false);
-                //list.add(runnable);
-                //executor.execute(runnable);
-
-            }
-            StartComparison.waitForExecutorToFinishAll(executor);
-            executor = Executors.newFixedThreadPool(StartComparison.NUMBER_OF_THREADS);
-
-            // Synchronize on level basis
-            for(BFSLevelRunnable runnable:list){
-                Queue<Long> q = runnable.getQueue();
-                frontierList.addAll(q);
-
-                visitedIDs.addAll(q);
-                runnable = null;
             }
 
+            // threads finished, collecting results
+            frontierList.clear();
+
+            for(int i=0;i<size;i++){  // build new frontier in the right order
+                frontierList.addAll(MapOfQueues.get(i));
+            }
+            visitedIDs.addAll(frontierList);
+            MapOfQueues.clear();
         }
+
+        // close down threads
+        for(BFSLevelRunnable runnable:list){
+            runnable.isAlive = false;
+        }
+        frontierList.notifyAll();
+
+        StartComparison.waitForExecutorToFinishAll(executor);
 
         return visitedIDs;
     }

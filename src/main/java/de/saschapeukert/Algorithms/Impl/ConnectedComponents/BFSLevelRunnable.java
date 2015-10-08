@@ -32,13 +32,15 @@ public class BFSLevelRunnable extends MyAlgorithmBaseRunnable {
     @Override
     protected void compute() {
         ops = DBUtils.getReadOperations();
-        while(isAlive){
-            synchronized (BFS.list){
+        while(true){
+            synchronized (BFS.frontierList){
                 try {
-                    BFS.list.wait();
+                    BFS.frontierList.wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+
+                if(!isAlive) return;
 
                 int i=1; //counter
                 boolean nullFound=false;
@@ -46,7 +48,7 @@ public class BFSLevelRunnable extends MyAlgorithmBaseRunnable {
                 while(!nullFound){
 
                     try{
-                        parentID = BFS.list.get(i*posInList);
+                        parentID = BFS.frontierList.get(i*posInList);
                         BFS.MapOfQueues.put(i*posInList,expandNode(parentID));
 
                     } catch (IndexOutOfBoundsException e){
