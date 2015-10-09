@@ -16,7 +16,7 @@ import java.util.concurrent.Executors;
 public class BFS {
 
     public static Queue<Long> queue;
-    public static final List<Long> frontierList= new LinkedList<Long>();  // do not assign more than once
+    public static volatile List<Long> frontierList= new LinkedList<Long>();  // do not assign more than once
     public static volatile SortedMap<Integer,Queue<Long>> MapOfQueues;
     private ExecutorService executor;
     public BFS(){
@@ -72,9 +72,15 @@ public class BFS {
         // start fixed Number of BFSLevelRunnable Threads
         List<BFSLevelRunnable> list = new ArrayList<>(StartComparison.NUMBER_OF_THREADS);
         for(int i=0;i<StartComparison.NUMBER_OF_THREADS;i++){
-            BFSLevelRunnable runnable = new BFSLevelRunnable(i,direction,  DBUtils.getGraphDb("",""),false);
+            BFSLevelRunnable runnable = new BFSLevelRunnable(i+1,direction,  DBUtils.getGraphDb("",""),false);
             list.add(runnable);
             executor.execute(runnable);
+        }
+
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
         MapOfQueues = new TreeMap<Integer, Queue<Long>>();
@@ -85,7 +91,9 @@ public class BFS {
             for(BFSLevelRunnable runnable:list){
                 runnable.ignoreIDs = visitedIDs;
             }
+
             synchronized (frontierList){
+
                 frontierList.notifyAll();
             }
 
@@ -100,6 +108,10 @@ public class BFS {
                 }
             }
 
+            for(BFSLevelRunnable runnable:list){
+                while(!runnable.isWaiting()){};
+            }
+
             // threads finished, collecting results
             frontierList.clear();
 
@@ -108,13 +120,26 @@ public class BFS {
             }
             visitedIDs.addAll(frontierList);
             MapOfQueues.clear();
+            System.out.println("Done 1 Step");
         }
+
+        System.out.println("close down");
 
         // close down threads
         for(BFSLevelRunnable runnable:list){
             runnable.isAlive = false;
         }
-        frontierList.notifyAll();
+
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        synchronized (frontierList){
+            frontierList.notifyAll();
+        }
+
 
         StartComparison.waitForExecutorToFinishAll(executor);
 
