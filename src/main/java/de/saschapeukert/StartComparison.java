@@ -1,6 +1,7 @@
 package de.saschapeukert;
 
 import com.google.common.base.Stopwatch;
+import de.saschapeukert.Algorithms.Impl.ConnectedComponents.CCAlgorithmType;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.ConnectedComponentsSingleThreadAlgorithm;
 import de.saschapeukert.Algorithms.Impl.RandomWalk.RandomWalkAlgorithmRunnable;
 import de.saschapeukert.Algorithms.Impl.RandomWalk.RandomWalkAlgorithmRunnableNewSPI;
@@ -111,12 +112,12 @@ public class StartComparison {
             case "WCC":
                 calculateConnectedComponents(graphDb,
                          NUMBER_OF_RUNS,
-                        ConnectedComponentsSingleThreadAlgorithm.AlgorithmType.WEAK, true);
+                        CCAlgorithmType.WEAK, true);
                 break;
             case "SCC":
                 calculateConnectedComponents(graphDb,
                         NUMBER_OF_RUNS,
-                        ConnectedComponentsSingleThreadAlgorithm.AlgorithmType.STRONG, true);
+                        CCAlgorithmType.STRONG, true);
                 break;
             default:
 
@@ -184,7 +185,7 @@ public class StartComparison {
 
     private static void calculateConnectedComponents
             (GraphDatabaseService graphDb, int runs,
-             ConnectedComponentsSingleThreadAlgorithm.AlgorithmType type, boolean output){
+             CCAlgorithmType type, boolean output){
 
         for(int i=0;i<runs;i++){
             System.out.println("Now doing run " + (i + 1));
@@ -228,7 +229,7 @@ public class StartComparison {
      */
 
     private static long doConnectedComponentsRun(GraphDatabaseService graphDb,
-                                                 ConnectedComponentsSingleThreadAlgorithm.AlgorithmType type, boolean output){
+                                                 CCAlgorithmType type, boolean output){
 
         ConnectedComponentsSingleThreadAlgorithm ConnectedSingle = new ConnectedComponentsSingleThreadAlgorithm(
                 graphDb,type, output);

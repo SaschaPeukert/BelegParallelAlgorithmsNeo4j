@@ -23,14 +23,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 @SuppressWarnings("deprecation")
 public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRunnable {
 
-    public enum AlgorithmType{
-        WEAK,
-        STRONG
-    }
-
 
     private int componentID=1;
-    private final AlgorithmType myType;
+    private final CCAlgorithmType myType;
 
     private Map<Long,TarjanNode> nodeDictionary;
     private Stack<Long> stack;
@@ -39,43 +34,18 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
     public static Set<Long> allNodes; // except the trivial CCs
 
 
-    public ConnectedComponentsSingleThreadAlgorithm(GraphDatabaseService gdb, AlgorithmType type, boolean output){
+    public ConnectedComponentsSingleThreadAlgorithm(GraphDatabaseService gdb, CCAlgorithmType type, boolean output){
         super(gdb, output);
 
         this.myType = type;
 
-        allNodes = new HashSet<>(DBUtils.highestNodeKey);
-
-        if(myType==AlgorithmType.STRONG) {
+        if(myType== CCAlgorithmType.STRONG) {
             // initialize nodeDictionary for tarjans algo
             this.stack = new Stack<>();
             this.nodeDictionary = new HashMap<>(DBUtils.highestNodeKey);
         }
 
-        tx = DBUtils.openTransaction(graphDb);
-        GlobalGraphOperations ggop = GlobalGraphOperations.at(gdb);
-        ggop.getAllNodes().iterator();
-
-        ResourceIterator<Node> it = ggop.getAllNodes().iterator();
-        while(it.hasNext()){
-            Node n = it.next();
-
-            // Trimming
-            if(n.getDegree()==0){
-                StartComparison.putIntoResultCounter(n.getId(), new AtomicInteger(componentID));
-                componentID++;
-
-            } else{
-                allNodes.add(n.getId());
-            }
-
-            if(myType==AlgorithmType.STRONG)
-                nodeDictionary.put(n.getId(),new TarjanNode());
-
-        }
-
-        it.close();
-        DBUtils.closeTransactionWithSuccess(tx);
+        prepareAllNodes(gdb);
     }
 
 
@@ -91,7 +61,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
 
             try {
                 Long n = it.next();
-                if(myType==AlgorithmType.WEAK){
+                if(myType== CCAlgorithmType.WEAK){
 
                     weakly(n, componentID);
                     componentID++;
@@ -172,6 +142,41 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
 
     }
 
+    private void prepareAllNodes(GraphDatabaseService gdb){
+        allNodes = new HashSet<>(DBUtils.highestNodeKey);
+
+        tx = DBUtils.openTransaction(graphDb);
+
+        GlobalGraphOperations ggop = GlobalGraphOperations.at(gdb);
+        ggop.getAllNodes().iterator();
+
+        ResourceIterator<Node> it = ggop.getAllNodes().iterator();
+        while(it.hasNext()){
+            Node n = it.next();
+
+            trimOrAddToAllNodes(n);
+
+            if(myType== CCAlgorithmType.STRONG)
+                nodeDictionary.put(n.getId(),new TarjanNode());
+
+        }
+
+        it.close();
+        DBUtils.closeTransactionWithSuccess(tx);
+    }
+
+    private void trimOrAddToAllNodes(Node n){
+        if(n.getDegree()==0){
+            // trivial CC
+            StartComparison.putIntoResultCounter(n.getId(), new AtomicInteger(componentID));
+            componentID++;
+
+        } else{
+            allNodes.add(n.getId());
+        }
+    }
+
+
     public static Map<Integer, List<Long>> getMapofComponentToIDs(){
 
         Map<Integer, List<Long>> myResults = new TreeMap<>();
@@ -194,7 +199,6 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
 
         return myResults;
     }
-
 
     public String getResults(){
 
