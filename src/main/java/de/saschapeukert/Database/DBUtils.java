@@ -36,6 +36,8 @@ public class DBUtils {
     private static GraphDatabaseService graphDb;
     public static int highestNodeKey;
 
+    //private static ReadOperations ops;
+
     public static Node getSomeRandomNode(GraphDatabaseService graphDb, ThreadLocalRandom random){
         long r;
         while(true) {
@@ -54,10 +56,16 @@ public class DBUtils {
             }
 
         }
-
     }
 
     public static ReadOperations getReadOperations(){
+
+//        if(ops==null){
+//            ThreadToStatementContextBridge ctx = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
+//            ops = ctx.get().readOperations();
+//        }
+//        return ops;
+
         ThreadToStatementContextBridge ctx = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
         return ctx.get().readOperations();
 

@@ -1,5 +1,6 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents;
 
+import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.BFS;
 import de.saschapeukert.Algorithms.MyAlgorithmBaseRunnable;
 import de.saschapeukert.Database.DBUtils;
 import de.saschapeukert.Datastructures.TarjanNode;
@@ -8,7 +9,6 @@ import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.ResourceIterator;
-import org.neo4j.kernel.api.ReadOperations;
 import org.neo4j.tooling.GlobalGraphOperations;
 
 import java.util.*;
@@ -36,8 +36,6 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
     private Stack<Long> stack;
     private int maxdfs=0;
 
-    public static ReadOperations ops;
-
     public static Set<Long> allNodes; // except the trivial CCs
 
 
@@ -53,6 +51,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
             this.stack = new Stack<>();
             this.nodeDictionary = new HashMap<>(DBUtils.highestNodeKey);
         }
+
         tx = DBUtils.openTransaction(graphDb);
         GlobalGraphOperations ggop = GlobalGraphOperations.at(gdb);
         ggop.getAllNodes().iterator();
@@ -84,9 +83,8 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
     public void compute() {
 
         timer.start();
-        ops = DBUtils.getReadOperations();
         Iterator<Long> it = allNodes.iterator();
-        //DFS dfs = new DFS(this.highestNodeId);
+
         while(it.hasNext()){
             // Every node has to be marked as (part of) a component
             it = allNodes.iterator();
@@ -95,16 +93,10 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
                 Long n = it.next();
                 if(myType==AlgorithmType.WEAK){
 
-                    //dfs.setCurrentNodeID(n);
-                    //dfs.setId(componentID);
-                    //dfs.resetList();
-                    //dfs.go(100);  // just to try it
-                    DFS(n,componentID);
+                    weakly(n, componentID);
                     componentID++;
-                    //System.out.println(allNodes.size());
 
                 } else{
-                    //System.out.println(allNodes.size());  // just for me TODO Remove!
                     tarjan(n);
                 }
 
@@ -115,6 +107,9 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
         }
 
         timer.stop();
+        //if(myType==AlgorithmType.WEAK){
+        //    MyBFS.createInstance().closeDownThreads();
+        //}
     }
 
     private void tarjan(Long currentNode){
@@ -127,12 +122,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
         v.onStack = true;           // This should be atomic
         stack.push(currentNode);        // !
 
-        //itN.remove();
         allNodes.remove(currentNode);
-
-        //Iterable<Relationship> it = currentNode.getRelationships(Direction.OUTGOING);
-        //for(Relationship r: it){
-        //   Node n_new = r.getOtherNode(currentNode);
 
         Iterable<Long> it = DBUtils.getConnectedNodeIDs(DBUtils.getReadOperations(), currentNode, Direction.OUTGOING);
         for(Long l:it){
@@ -170,31 +160,14 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
 
     }
 
-    private void DFS(Long n, int compName){
-        /*
-        if(StartComparison.getResultCounterforId(n).intValue()==compName){
-            return;// Already visited
-        }
+    private void weakly(Long n, int compName){
+        //MyBFS bfs = MyBFS.createInstance();
 
-        // NOW IT HAS TO BE NULL
-        StartComparison.putIntoResultCounter(n, new AtomicInteger(compName));
-        allNodes.remove(n); // correct?   notwendig?!
+        Set<Long> reachableIDs = BFS.go(n, Direction.BOTH);
 
-        for(Long l: DBUtils.getConnectedNodeIDs(ConnectedComponentsSingleThreadAlgorithm.ops, n, Direction.BOTH)){
-            DFS(l, compName);
-
-        }
-
-        */
-
-        if(StartComparison.getResultCounterforId(n).intValue()==compName){
-            return;// Already visited
-        }
-        BFS bfs = new BFS();
-        Set<Long> reachableIDs = bfs.goParallel(n, Direction.BOTH);
         for(Long l:reachableIDs){
             StartComparison.putIntoResultCounter(l, new AtomicInteger(compName));
-            allNodes.remove(l); // correct?   notwendig?!
+            allNodes.remove(l);
         }
 
     }

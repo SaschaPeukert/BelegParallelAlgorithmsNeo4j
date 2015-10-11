@@ -1,0 +1,45 @@
+package de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search;
+
+import de.saschapeukert.Database.DBUtils;
+import org.neo4j.graphdb.Direction;
+import org.neo4j.kernel.api.ReadOperations;
+
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
+/**
+ * Created by Sascha Peukert on 04.10.2015.
+ */
+public class BFS {
+
+    public static Set<Long> go(long nodeID, Direction direction){
+        ReadOperations ops =DBUtils.getReadOperations();
+
+        Set<Long> visitedIDs = new HashSet<>();
+        List<Long> frontierList= new LinkedList<Long>();
+
+        visitedIDs.clear();
+
+        frontierList.add(nodeID);
+
+        visitedIDs.add(nodeID);
+        while(!frontierList.isEmpty())
+        {
+            Long n = frontierList.remove(0);
+
+            for(Long child: DBUtils.getConnectedNodeIDs(ops, n, direction)){
+                if(visitedIDs.contains(child)){
+                    continue;
+                }
+                visitedIDs.add(child);
+                frontierList.add(child);
+
+            }
+
+        }
+        return visitedIDs;
+    }
+
+}
