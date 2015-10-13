@@ -2,6 +2,8 @@
 
 This is the Repo for my student research project  "Parallel Graphalgorithms in Neo4j"
 
+This is work in progress, so things (mostly this readme/docs) tend do be outdated and will be changed.
+
 # Quick Start
 
 **1. Build it:**
@@ -11,7 +13,7 @@ With this command maven will generate a jar file for you:
 
         mvn install
 
-**2. Start it with***
+**2. Start it with**
 
         java -jar <JAR> A B C D E F G H I J
         
