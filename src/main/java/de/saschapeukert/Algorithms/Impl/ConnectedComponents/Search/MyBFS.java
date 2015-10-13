@@ -23,6 +23,7 @@ public class MyBFS {
 
     private List<MyBFSLevelRunnable> list;
     private final int THRESHOLD=100000;
+    private DBUtils db;
 
     private ExecutorService executor;
 
@@ -41,18 +42,19 @@ public class MyBFS {
         // start fixed Number of MyBFSLevelRunnable Threads
         list = new ArrayList<>(StartComparison.NUMBER_OF_THREADS);
         for(int i=0;i<StartComparison.NUMBER_OF_THREADS;i++){
-            MyBFSLevelRunnable runnable = new MyBFSLevelRunnable(i, DBUtils.getGraphDb("",""),false);
+            MyBFSLevelRunnable runnable = new MyBFSLevelRunnable(i,false);
             list.add(runnable);
             executor.execute(runnable);
         }
 
         MapOfQueues = new ConcurrentSkipListMap<Integer, Queue<Long>>();
+        db = DBUtils.getInstance("","");
     }
 
 
     public Set<Long> work(long nodeID, Direction direction){
 
-        ReadOperations ops =DBUtils.getReadOperations();
+        ReadOperations ops = db.getReadOperations();
         //Set<Long> visitedIDs = new HashSet<>();
         visitedIDs.clear();
 
@@ -78,7 +80,7 @@ public class MyBFS {
     private void doSequentialLevel(long nodeID, Direction direction, ReadOperations ops){
         Long n = frontierList.remove(0);
 
-        for(Long child: DBUtils.getConnectedNodeIDs(ops, n, direction)) {
+        for(Long child: db.getConnectedNodeIDs(ops, n, direction)) {
             if (visitedIDs.contains(child)) {
                 continue;
             }

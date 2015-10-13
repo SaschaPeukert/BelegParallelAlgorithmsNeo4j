@@ -9,7 +9,6 @@ import de.saschapeukert.Algorithms.MyAlgorithmBaseRunnable;
 import de.saschapeukert.Database.DBUtils;
 import de.saschapeukert.Database.NeoWriter;
 import org.HdrHistogram.Histogram;
-import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 
@@ -58,7 +57,7 @@ public class StartComparison {
                " Thread(s).\n");
 
         // Open connection to DB
-        GraphDatabaseService graphDb = DBUtils.getGraphDb(DB_PATH,PAGECACHE);
+        DBUtils db = DBUtils.getInstance(DB_PATH, PAGECACHE);
 
         /*GraphDatabaseBuilder builder = new HighlyAvailableGraphDatabaseFactory()
                 .newHighlyAvailableDatabaseBuilder(DB_PATH);
@@ -72,7 +71,7 @@ public class StartComparison {
         GraphDatabaseService graphDb = builder.newGraphDatabase();
         */
 
-        if(DBUtils.highestNodeKey==0){
+        if(db.highestNodeKey==0){
             System.out.println("No Nodes/DB found at this Path:" + DB_PATH);
             System.out.println("Abort.");
             return;
@@ -80,16 +79,16 @@ public class StartComparison {
 
 
 
-        Transaction t = DBUtils.openTransaction(graphDb);
-            prepaireResultMapAndCounter(graphDb, DBUtils.highestNodeKey);
-        DBUtils.closeTransactionWithSuccess(t);
+        Transaction t = db.openTransaction();
+            prepaireResultMapAndCounter(db.highestNodeKey);
+        db.closeTransactionWithSuccess(t);
 
-        System.out.println("~ " + DBUtils.highestNodeKey + " Nodes");
+        System.out.println("~ " + db.highestNodeKey + " Nodes");
 
 
         if(WRITE.equals("Write")){
 
-            PROP_ID = DBUtils.GetPropertyID(PROP_NAME);
+            PROP_ID = db.GetPropertyID(PROP_NAME);
 
             if(PROP_ID==-1){
                 // ERROR Handling
@@ -98,7 +97,7 @@ public class StartComparison {
             }
         }
 
-        WarmUp(graphDb, WARMUPTIME);
+        WarmUp(WARMUPTIME);
 
         System.out.println("");
 
@@ -107,15 +106,15 @@ public class StartComparison {
 
         switch (ALGORITHM){
             case "RW":
-                calculateRandomWalk_new(graphDb,NUMBER_OF_RUNS, true);
+                calculateRandomWalk_new(NUMBER_OF_RUNS, true);
                 break;
             case "WCC":
-                calculateConnectedComponents(graphDb,
+                calculateConnectedComponents(
                          NUMBER_OF_RUNS,
                         CCAlgorithmType.WEAK, true);
                 break;
             case "SCC":
-                calculateConnectedComponents(graphDb,
+                calculateConnectedComponents(
                         NUMBER_OF_RUNS,
                         CCAlgorithmType.STRONG, true);
                 break;
@@ -130,7 +129,7 @@ public class StartComparison {
         System.out.println("\nWhole Comparison done in: " + timeOfComparision.elapsed(TimeUnit.SECONDS) + "s (+ WarmUp " + WARMUPTIME + "s)");
 
         if(WRITE.equals("Write"))
-            writeResultsOut(graphDb);
+            writeResultsOut();
 
         //java.awt.Toolkit.getDefaultToolkit().beep();
         System.out.println("End: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()));
@@ -164,16 +163,15 @@ public class StartComparison {
 
     /**
      * WarmUp
-     * @param graphDb
      * @param secs
      */
-    private static void WarmUp(GraphDatabaseService graphDb, int secs){
+    private static void WarmUp( int secs){
         System.out.println("Starting WarmUp.");
 
         Stopwatch timer = Stopwatch.createStarted();
 
         while (timer.elapsed(TimeUnit.SECONDS) < secs) {
-                doMultiThreadRandomWalk(graphDb,100, false);
+                doMultiThreadRandomWalk(100, false);
 
             }
 
@@ -183,14 +181,12 @@ public class StartComparison {
         timer = null;
     }
 
-    private static void calculateConnectedComponents
-            (GraphDatabaseService graphDb, int runs,
-             CCAlgorithmType type, boolean output){
+    private static void calculateConnectedComponents(int runs, CCAlgorithmType type, boolean output){
 
         for(int i=0;i<runs;i++){
             System.out.println("Now doing run " + (i + 1));
 
-            histogram.recordValue(doConnectedComponentsRun(graphDb, type, output));
+            histogram.recordValue(doConnectedComponentsRun( type, output));
 
         }
 
@@ -201,13 +197,12 @@ public class StartComparison {
     }
 
 
-    private static void calculateRandomWalk_new(GraphDatabaseService graphDb,
-                                                int numberOfRunsPerStep, boolean output){
+    private static void calculateRandomWalk_new(int numberOfRunsPerStep, boolean output){
 
         for(int i=0;i<numberOfRunsPerStep;i++){
             System.out.println("Now doing run " + (i + 1));
             // Run
-            long run = doMultiThreadRandomWalk(graphDb,OPERATIONS, output);
+            long run = doMultiThreadRandomWalk(OPERATIONS, output);
             //System.out.println(run);
             histogram.recordValue(run);
 
@@ -222,17 +217,15 @@ public class StartComparison {
 
     /**
      *
-     * @param graphDb
      * @param type
      * @param output
      * @return elapsed time as MILLISECONDS!
      */
 
-    private static long doConnectedComponentsRun(GraphDatabaseService graphDb,
-                                                 CCAlgorithmType type, boolean output){
+    private static long doConnectedComponentsRun(CCAlgorithmType type, boolean output){
 
         ConnectedComponentsSingleThreadAlgorithm ConnectedSingle = new ConnectedComponentsSingleThreadAlgorithm(
-                graphDb,type, output);
+                type, output);
         Thread t = new Thread(ConnectedSingle);
         t.setName("ConnectedComponentsSingleThreadAlgo");
 
@@ -251,7 +244,7 @@ public class StartComparison {
     }
 
 
-    private static long doMultiThreadRandomWalk(GraphDatabaseService graphDb, int noOfSteps, boolean output){
+    private static long doMultiThreadRandomWalk(int noOfSteps, boolean output){
 
         // INIT
         List<MyAlgorithmBaseRunnable> list = new ArrayList<>(NUMBER_OF_THREADS);
@@ -263,10 +256,10 @@ public class StartComparison {
             MyAlgorithmBaseRunnable rw;
             if(NEWSPI){
                 rw = new RandomWalkAlgorithmRunnableNewSPI(RANDOMWALKRANDOM,
-                        graphDb, noOfSteps/NUMBER_OF_THREADS, output);
+                        noOfSteps/NUMBER_OF_THREADS, output);
             } else{
                 rw = new RandomWalkAlgorithmRunnable(RANDOMWALKRANDOM,
-                        graphDb, noOfSteps/NUMBER_OF_THREADS, output);
+                        noOfSteps/NUMBER_OF_THREADS, output);
             }
             executor.execute(rw);
             list.add(rw);
@@ -292,7 +285,7 @@ public class StartComparison {
     }
 
 
-    private static boolean writeResultsOut(GraphDatabaseService graphDb){
+    private static boolean writeResultsOut(){
 
         int sizeKeySet = resultCounter.keySet().size();
         int partOfData = sizeKeySet/NUMBER_OF_THREADS;  // LAST ONE TAKES MORE!
@@ -304,7 +297,7 @@ public class StartComparison {
 
         for(int i=0;i<NUMBER_OF_THREADS;i++){
 
-            NeoWriter neoWriter = new NeoWriter(PROP_ID,graphDb,startIndex,endIndex);
+            NeoWriter neoWriter = new NeoWriter(PROP_ID,startIndex,endIndex);
             executor.execute(neoWriter);
 
             // new indexes for next round
@@ -323,9 +316,9 @@ public class StartComparison {
         return check;
     }
 
-    private static void prepaireResultMapAndCounter(GraphDatabaseService graphDb, int nodeIDhigh){
+    private static void prepaireResultMapAndCounter( int nodeIDhigh){
 
-        Iterator<Node> it = DBUtils.getIteratorForAllNodes(graphDb);
+        Iterator<Node> it = DBUtils.getInstance("", "").getIteratorForAllNodes();
 
         resultCounter = new HashMap<>(nodeIDhigh*2,1f);
 

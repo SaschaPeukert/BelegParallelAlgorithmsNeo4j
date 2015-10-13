@@ -2,7 +2,6 @@ package de.saschapeukert.Algorithms;
 
 import com.google.common.base.Stopwatch;
 import de.saschapeukert.Database.DBUtils;
-import org.neo4j.graphdb.GraphDatabaseService;
 
 /**
  * Created by Sascha Peukert on 06.08.2015.
@@ -10,7 +9,7 @@ import org.neo4j.graphdb.GraphDatabaseService;
 public abstract class MyAlgorithmBaseRunnable extends MyBaseRunnable {
 
     public final Stopwatch timer;
-    protected final GraphDatabaseService graphDb;
+    protected final DBUtils db;
     protected final boolean output;
 
     protected abstract void compute();
@@ -21,18 +20,18 @@ public abstract class MyAlgorithmBaseRunnable extends MyBaseRunnable {
      * It will automaticly open a TA
      */
     public void run() {
-        this.tx = DBUtils.openTransaction(graphDb);
+        this.tx = db.openTransaction();
         compute();
-        DBUtils.closeTransactionWithSuccess(this.tx);
+        db.closeTransactionWithSuccess(this.tx);
     }
 
 
     /*
         This will also initialize the timer but NOT start it!
      */
-    protected MyAlgorithmBaseRunnable(GraphDatabaseService gdb, boolean output){
+    protected MyAlgorithmBaseRunnable(boolean output){
         this.timer = Stopwatch.createUnstarted();
-        this.graphDb = gdb;
+        this.db = DBUtils.getInstance("","");
         this.output = output;
 
     }

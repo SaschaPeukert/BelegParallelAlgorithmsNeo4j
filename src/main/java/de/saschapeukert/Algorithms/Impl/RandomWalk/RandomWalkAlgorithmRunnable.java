@@ -1,9 +1,10 @@
 package de.saschapeukert.Algorithms.Impl.RandomWalk;
 
 import de.saschapeukert.Algorithms.MyAlgorithmBaseRunnable;
-import de.saschapeukert.Database.DBUtils;
 import de.saschapeukert.StartComparison;
-import org.neo4j.graphdb.*;
+import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 
 import java.util.Iterator;
 import java.util.concurrent.ThreadLocalRandom;
@@ -20,8 +21,8 @@ public class RandomWalkAlgorithmRunnable extends MyAlgorithmBaseRunnable {
 
 
     public RandomWalkAlgorithmRunnable(int randomChanceParameter,
-                                       GraphDatabaseService gdb, int NumberOfSteps, boolean output){
-        super(gdb, output);
+                                       int NumberOfSteps, boolean output){
+        super( output);
 
         this._RandomNodeParameter = randomChanceParameter;
         this.currentNode = null;
@@ -69,7 +70,7 @@ public class RandomWalkAlgorithmRunnable extends MyAlgorithmBaseRunnable {
 
             int w = random.nextInt(100) + 1;
             if (w <= _RandomNodeParameter) {
-                currentNode = DBUtils.getSomeRandomNode(graphDb, random);
+                currentNode = db.getSomeRandomNode(random);
             } else {
                 currentNode = getNextNode(currentNode);
             }
@@ -110,7 +111,7 @@ public class RandomWalkAlgorithmRunnable extends MyAlgorithmBaseRunnable {
             }
 
         }
-        return DBUtils.getSomeRandomNode(graphDb, random);  // Node has no outgoing relationships or is start "node"
+        return db.getSomeRandomNode( random);  // Node has no outgoing relationships or is start "node"
     }
 
 }

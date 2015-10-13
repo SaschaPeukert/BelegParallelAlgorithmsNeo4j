@@ -13,11 +13,13 @@ import java.util.Set;
 public class DFS {
 
     private static Set<Long> visitedIDs = new HashSet<>();
+    private static DBUtils db;
     private static ReadOperations ops;
     public static Set<Long> go(Long n, Direction direction) {
 
+        db = DBUtils.getInstance("","");
         visitedIDs = new HashSet<>();
-        ops =DBUtils.getReadOperations();
+        ops =db.getReadOperations();
 
         doDFS(n, direction);
 
@@ -31,7 +33,7 @@ public class DFS {
 
         visitedIDs.add(n);
 
-        for (Long l : DBUtils.getConnectedNodeIDs(ops, n, direction)) {
+        for (Long l : db.getConnectedNodeIDs(ops, n, direction)) {
             doDFS(l,direction);
         }
     }

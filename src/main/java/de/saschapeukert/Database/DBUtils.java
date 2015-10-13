@@ -10,6 +10,7 @@ import org.neo4j.kernel.api.DataWriteOperations;
 import org.neo4j.kernel.api.ReadOperations;
 import org.neo4j.kernel.api.cursor.RelationshipItem;
 import org.neo4j.kernel.api.exceptions.EntityNotFoundException;
+import org.neo4j.kernel.api.exceptions.InvalidTransactionTypeKernelException;
 import org.neo4j.kernel.api.exceptions.schema.ConstraintValidationKernelException;
 import org.neo4j.kernel.api.properties.Property;
 import org.neo4j.kernel.impl.api.store.RelationshipIterator;
@@ -34,11 +35,12 @@ public class DBUtils {
 
     private static StoreAccess neoStore;
     private static GraphDatabaseService graphDb;
-    public static int highestNodeKey;
+    public int highestNodeKey;
 
+    private static DBUtils instance;
     //private static ReadOperations ops;
 
-    public static Node getSomeRandomNode(GraphDatabaseService graphDb, ThreadLocalRandom random){
+    public Node getSomeRandomNode( ThreadLocalRandom random){
         long r;
         while(true) {
 
@@ -58,7 +60,13 @@ public class DBUtils {
         }
     }
 
-    public static ReadOperations getReadOperations(){
+    public ResourceIterator<Node> getResourceIteratorOfAllNodes(){
+        GlobalGraphOperations ggop = GlobalGraphOperations.at(graphDb);
+        return ggop.getAllNodes().iterator();
+    }
+
+
+    public ReadOperations getReadOperations(){
 
 //        if(ops==null){
 //            ThreadToStatementContextBridge ctx = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
@@ -71,7 +79,17 @@ public class DBUtils {
 
     }
 
-    public static long getSomeRandomNodeId(ThreadLocalRandom random){
+    public DataWriteOperations getDataWriteOperations(){
+        ThreadToStatementContextBridge ctx =((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class); // TODO MOVE
+        try {
+            return ctx.get().dataWriteOperations();
+        } catch (InvalidTransactionTypeKernelException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public long getSomeRandomNodeId(ThreadLocalRandom random){
         long r;
         while(true) {
 
@@ -85,7 +103,7 @@ public class DBUtils {
 
     }
 
-    public static Relationship getSomeRandomRelationship(GraphDatabaseService graphDb, ThreadLocalRandom random, int highestNodeId){
+    public Relationship getSomeRandomRelationship(ThreadLocalRandom random, int highestNodeId){
         long r;
         while(true) {
 
@@ -101,9 +119,9 @@ public class DBUtils {
 
     }
 
-    public static boolean removePropertyFromAllNodes(int PropertyID, DataWriteOperations ops, GraphDatabaseService gdb){
+    public boolean removePropertyFromAllNodes(int PropertyID, DataWriteOperations ops){
         //int i=0;
-        Iterator<Node> it = getIteratorForAllNodes(gdb);
+        Iterator<Node> it = getIteratorForAllNodes();
         try {
             while(it.hasNext()){
                 ops.nodeRemoveProperty(it.next().getId(),PropertyID);
@@ -127,12 +145,12 @@ public class DBUtils {
      * @param propertyID
      * @param ops
      */
-    public static void removePropertyKey(int propertyID, DataWriteOperations ops){
+    public void removePropertyKey(int propertyID, DataWriteOperations ops){
         ops.graphRemoveProperty(propertyID);
 
     }
 
-    public static boolean createStringPropertyAtNode(long nodeID, String value, int PropertyID, DataWriteOperations ops){
+    public boolean createStringPropertyAtNode(long nodeID, String value, int PropertyID, DataWriteOperations ops){
 
         try {
             ops.nodeSetProperty(nodeID, Property.stringProperty(PropertyID, value));
@@ -144,7 +162,7 @@ public class DBUtils {
         return true;
     }
 
-    public static boolean createIntPropertyAtNode(long nodeID, int value, int PropertyID, DataWriteOperations ops){
+    public boolean createIntPropertyAtNode(long nodeID, int value, int PropertyID, DataWriteOperations ops){
 
         try {
             ops.nodeSetProperty(nodeID, Property.intProperty(PropertyID, value));
@@ -156,24 +174,24 @@ public class DBUtils {
         return true;
     }
 
-    private static int getHighestNodeID(GraphDatabaseService graphDb ){
+    private int getHighestNodeID(){
 
-        return (int) getStoreAcess(graphDb).getNodeStore().getHighId();
+        return (int) getStoreAcess().getNodeStore().getHighId();
 
     }
 
-    private static long getNextPropertyID(GraphDatabaseService graphDb){
-        return getStoreAcess(graphDb).getPropertyStore().nextId();
+    private long getNextPropertyID(){
+        return getStoreAcess().getPropertyStore().nextId();
     }
 
-    private static StoreAccess getStoreAcess(GraphDatabaseService graphDb){
+    private StoreAccess getStoreAcess(){
         if(neoStore==null)
             neoStore = new StoreAccess(((GraphDatabaseAPI)graphDb).getDependencyResolver().resolveDependency( NeoStore.class ));
         return neoStore;
     }
 
-    public static ResourceIterator<Node> getIteratorForAllNodes( GraphDatabaseService gdb) {
-        GlobalGraphOperations ggo = GlobalGraphOperations.at(gdb);
+    public  ResourceIterator<Node> getIteratorForAllNodes( ) {
+        GlobalGraphOperations ggo = GlobalGraphOperations.at(graphDb);
 
         ResourceIterable<Node> allNodes = ggo.getAllNodes();
         return allNodes.iterator();
@@ -185,7 +203,7 @@ public class DBUtils {
      * @param propertyName HAS TO BE UNIQUE
      * @return -1 if error happend
      */
-    public static int GetPropertyID(String propertyName){
+    public int GetPropertyID(String propertyName){
         try(Transaction tx = graphDb.beginTx()) {
 
             ThreadToStatementContextBridge ctx = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
@@ -202,7 +220,7 @@ public class DBUtils {
     }
 
 
-    public static Set<Long> getConnectedNodeIDs(ReadOperations ops, long nodeID, Direction dir){
+    public Set<Long> getConnectedNodeIDs(ReadOperations ops, long nodeID, Direction dir){
         Set<Long> it = new HashSet<>();
         try {
             RelationshipIterator itR = ops.nodeGetRelationships(nodeID, dir);
@@ -227,36 +245,50 @@ public class DBUtils {
         return it;
     }
 
-    public static Transaction openTransaction(GraphDatabaseService graphDb){
+    public Transaction openTransaction(){
         return graphDb.beginTx();
 
     }
 
-    public static void closeTransactionWithSuccess(Transaction tx){
+    public void closeTransactionWithSuccess(Transaction tx){
         tx.success();
         tx.close();
     }
 
-    public static GraphDatabaseService getGraphDb(String path, String pagecache) {
-        if(graphDb==null){
-            graphDb = new GraphDatabaseFactory()
-                    .newEmbeddedDatabaseBuilder(new File(path))
-                    .setConfig(GraphDatabaseSettings.pagecache_memory, pagecache)
-                    .setConfig(GraphDatabaseSettings.keep_logical_logs, "false")  // to get rid of all those neostore.trasaction.db ... files
-                    .setConfig(GraphDatabaseSettings.allow_store_upgrade, "true")
-                    .newGraphDatabase();
+    /**
+     *  The constructor
+     * @param path
+     * @param pagecache
+     */
+    private DBUtils(String path, String pagecache){
+        graphDb = new GraphDatabaseFactory()
+                .newEmbeddedDatabaseBuilder(new File(path))
+                .setConfig(GraphDatabaseSettings.pagecache_memory, pagecache)
+                .setConfig(GraphDatabaseSettings.keep_logical_logs, "false")  // to get rid of all those neostore.trasaction.db ... files
+                .setConfig(GraphDatabaseSettings.allow_store_upgrade, "true")
+                .newGraphDatabase();
 
-            registerShutdownHook(graphDb);
+        registerShutdownHook();
 
-            highestNodeKey = getHighestNodeID(graphDb);
+        highestNodeKey = getHighestNodeID();
+    }
+
+    /**
+     * This will get you an instance of DBUtils. Only the first call has to be with usefull parameters
+     * @param path
+     * @param pagecache
+     * @return
+     */
+    public static DBUtils getInstance(String path, String pagecache) {
+        if(instance==null){
+             instance = new DBUtils(path, pagecache);
         }
 
-
-        return graphDb;
+        return instance;
 
     }
 
-    private static void registerShutdownHook( final GraphDatabaseService graphDb )
+    private void registerShutdownHook( )
     {
         // Registers a shutdown hook for the Neo4j instance so that it
         // shuts down nicely when the VM exits (even if you "Ctrl-C" the
@@ -278,4 +310,7 @@ public class DBUtils {
         });
     }
 
+    public Result executeQuery(String query){
+        return graphDb.execute(query);
+    }
 }

@@ -14,8 +14,12 @@ import java.util.Set;
  */
 public class BFS {
 
+    private static DBUtils db;
+
     public static Set<Long> go(long nodeID, Direction direction){
-        ReadOperations ops =DBUtils.getReadOperations();
+
+        db = DBUtils.getInstance("","");
+        ReadOperations ops =db.getReadOperations();
 
         Set<Long> visitedIDs = new HashSet<>();
         List<Long> frontierList= new LinkedList<Long>();
@@ -29,7 +33,7 @@ public class BFS {
         {
             Long n = frontierList.remove(0);
 
-            for(Long child: DBUtils.getConnectedNodeIDs(ops, n, direction)){
+            for(Long child: db.getConnectedNodeIDs(ops, n, direction)){
                 if(visitedIDs.contains(child)){
                     continue;
                 }

@@ -18,3 +18,4 @@ hs_err_pid*
 
 *.log
 neostore.transaction.*
+testDB/graph.db/store_lock

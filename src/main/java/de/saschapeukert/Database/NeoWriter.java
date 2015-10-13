@@ -2,11 +2,7 @@ package de.saschapeukert.Database;
 
 import de.saschapeukert.Algorithms.MyBaseRunnable;
 import de.saschapeukert.StartComparison;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.kernel.GraphDatabaseAPI;
 import org.neo4j.kernel.api.DataWriteOperations;
-import org.neo4j.kernel.api.exceptions.InvalidTransactionTypeKernelException;
-import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
 
 /**
  * Created by Sascha Peukert on 05.09.2015.
@@ -15,14 +11,14 @@ import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
 public class NeoWriter extends MyBaseRunnable {
 
 
-    private final GraphDatabaseService graphDb;
+    private final DBUtils db;
     private final int propID;
     private final int startIndex; // inclusive
     private final int endIndex; // exclusive
 
-    public NeoWriter( int propID, GraphDatabaseService graphDb, int startIndex, int endIndex){
+    public NeoWriter( int propID, int startIndex, int endIndex){
 
-        this.graphDb = graphDb;
+        this.db = DBUtils.getInstance("","");
         this.propID = propID;
         this.startIndex = startIndex;
         this.endIndex = endIndex;
@@ -31,40 +27,32 @@ public class NeoWriter extends MyBaseRunnable {
     @Override
     public void run() {
 
-        try {
-            tx = DBUtils.openTransaction(graphDb);
+            tx = db.openTransaction();
 
-            ThreadToStatementContextBridge ctx =((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
-            DataWriteOperations ops = ctx.get().dataWriteOperations();
+            DataWriteOperations ops = db.getDataWriteOperations();
 
             int count =0;
             for(int i = startIndex;i<endIndex;i++){
 
                 if(count==100){
 
-                    DBUtils.closeTransactionWithSuccess(tx);
+                    db.closeTransactionWithSuccess(tx);
 
-                    tx = DBUtils.openTransaction(graphDb);
+                    tx = db.openTransaction();
 
-                    //ctx =((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
-                    ops = ctx.get().dataWriteOperations();
+                    ops = db.getDataWriteOperations();
 
                     count =0;
                 }
 
                 Long l = (Long) StartComparison.getObjInResultCounterKeySet(i);
-                DBUtils.createIntPropertyAtNode(l, StartComparison.getResultCounterforId(l).intValue(), propID, ops);
+                db.createIntPropertyAtNode(l, StartComparison.getResultCounterforId(l).intValue(), propID, ops);
                 count++;
 
             }
 
-            DBUtils.closeTransactionWithSuccess(tx);
+            db.closeTransactionWithSuccess(tx);
 
-
-        } catch (InvalidTransactionTypeKernelException e) {
-            e.printStackTrace(); // TODO remove
-
-        }
 
     }
 

@@ -51,25 +51,23 @@ public class OutputTop20 {
                 .newGraphDatabase();
 
 
-        tx = DBUtils.openTransaction(graphDb);
+        tx = DBUtils.getInstance("", "").openTransaction();
 
 
 
         System.out.println(
                 printOutput(
-                        getTop20(PROP_NAME,graphDb)));
+                        getTop20(PROP_NAME)));
 
-        DBUtils.closeTransactionWithSuccess(tx);
+        DBUtils.getInstance("", "").closeTransactionWithSuccess(tx);
 
         graphDb.shutdown();
     }
 
-    public static List<Object[]> getTop20(String propName, GraphDatabaseService graphDb){
+    public static List<Object[]> getTop20(String propName){
         String query = "MATCH (n) WHERE n." + propName
                 + ">0 RETURN id(n),n." + propName + " ORDER BY n." + propName + " DESC LIMIT 20";
-        Result result = graphDb.execute(
-                query);
-
+        Result result = DBUtils.getInstance("","").executeQuery(query);
         List<Object[]> resultList = new ArrayList<>();
 
         while (result.hasNext()) {

@@ -2,14 +2,11 @@ package de.saschapeukert.Algorithms.Impl.ConnectedComponents;
 
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.BFS;
 import de.saschapeukert.Algorithms.MyAlgorithmBaseRunnable;
-import de.saschapeukert.Database.DBUtils;
 import de.saschapeukert.Datastructures.TarjanNode;
 import de.saschapeukert.StartComparison;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.ResourceIterator;
-import org.neo4j.tooling.GlobalGraphOperations;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -34,18 +31,18 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
     public static Set<Long> allNodes; // except the trivial CCs
 
 
-    public ConnectedComponentsSingleThreadAlgorithm(GraphDatabaseService gdb, CCAlgorithmType type, boolean output){
-        super(gdb, output);
+    public ConnectedComponentsSingleThreadAlgorithm(CCAlgorithmType type, boolean output){
+        super( output);
 
         this.myType = type;
 
         if(myType== CCAlgorithmType.STRONG) {
             // initialize nodeDictionary for tarjans algo
             this.stack = new Stack<>();
-            this.nodeDictionary = new HashMap<>(DBUtils.highestNodeKey);
+            this.nodeDictionary = new HashMap<>(db.highestNodeKey);
         }
 
-        prepareAllNodes(gdb);
+        prepareAllNodes();
     }
 
 
@@ -94,7 +91,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
 
         allNodes.remove(currentNode);
 
-        Iterable<Long> it = DBUtils.getConnectedNodeIDs(DBUtils.getReadOperations(), currentNode, Direction.OUTGOING);
+        Iterable<Long> it = db.getConnectedNodeIDs(db.getReadOperations(), currentNode, Direction.OUTGOING);
         for(Long l:it){
 
             TarjanNode v_new = nodeDictionary.get(l);
@@ -142,15 +139,12 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
 
     }
 
-    private void prepareAllNodes(GraphDatabaseService gdb){
-        allNodes = new HashSet<>(DBUtils.highestNodeKey);
+    private void prepareAllNodes(){
+        allNodes = new HashSet<>(db.highestNodeKey);
 
-        tx = DBUtils.openTransaction(graphDb);
+        tx = db.openTransaction();
 
-        GlobalGraphOperations ggop = GlobalGraphOperations.at(gdb);
-        ggop.getAllNodes().iterator();
-
-        ResourceIterator<Node> it = ggop.getAllNodes().iterator();
+        ResourceIterator<Node> it = db.getIteratorForAllNodes();
         while(it.hasNext()){
             Node n = it.next();
 
@@ -162,7 +156,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
         }
 
         it.close();
-        DBUtils.closeTransactionWithSuccess(tx);
+        db.closeTransactionWithSuccess(tx);
     }
 
     private void trimOrAddToAllNodes(Node n){

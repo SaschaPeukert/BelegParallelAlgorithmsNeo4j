@@ -57,11 +57,11 @@ public class RandomWalkTest {
 
         StartComparison.main(args);
 
-        GraphDatabaseService graphDb = DBUtils.getGraphDb(args[8],args[7]);
+        DBUtils db = DBUtils.getInstance(args[8], args[7]);
 
-        Transaction tx = DBUtils.openTransaction(graphDb);  // NOPE
+        Transaction tx = db.openTransaction();  // NOPE
 
-        List<Object[]> resultList= OutputTop20.getTop20(args[6], graphDb);
+        List<Object[]> resultList= OutputTop20.getTop20(args[6]);
 
         assertEquals((resultList.get(0)[0]),14L);
         assertEquals((resultList.get(1)[0]),7L);
@@ -95,7 +95,7 @@ public class RandomWalkTest {
 
         assertEquals(checkListTop3_7.size(),5);
 
-        DBUtils.closeTransactionWithSuccess(tx);
+        db.closeTransactionWithSuccess(tx);
 
     }
 

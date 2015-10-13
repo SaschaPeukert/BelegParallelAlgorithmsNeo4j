@@ -1,10 +1,8 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search;
 
 import de.saschapeukert.Algorithms.MyAlgorithmBaseRunnable;
-import de.saschapeukert.Database.DBUtils;
 import de.saschapeukert.StartComparison;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.kernel.api.ReadOperations;
 
 import java.util.LinkedList;
@@ -25,15 +23,15 @@ public class MyBFSLevelRunnable extends MyAlgorithmBaseRunnable {
     public AtomicBoolean isAlive = new AtomicBoolean(true);
     public AtomicBoolean isIdle = new AtomicBoolean(true);
 
-    public MyBFSLevelRunnable(int pos, GraphDatabaseService gdb, boolean output){
-        super(gdb,output);
+    public MyBFSLevelRunnable(int pos, boolean output){
+        super(output);
         //this.direction = direction;
         posInList = pos;
     }
 
     @Override
     protected void compute() {
-        ops = DBUtils.getReadOperations();
+        ops = db.getReadOperations();
         //System.out.println("Thread " + posInList + " alive");
         while (isAlive.get()) {
 
@@ -83,7 +81,7 @@ public class MyBFSLevelRunnable extends MyAlgorithmBaseRunnable {
     private Queue<Long> expandNode(Long id){
         Queue<Long> resultQueue = new LinkedList<Long>();
 
-        for(Long child: DBUtils.getConnectedNodeIDs(ops, parentID, direction)){
+        for(Long child: db.getConnectedNodeIDs(ops, parentID, direction)){
             if(MyBFS.visitedIDs.contains(child)) continue;
 
             resultQueue.add(child);

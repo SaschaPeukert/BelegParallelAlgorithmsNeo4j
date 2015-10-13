@@ -1,17 +1,13 @@
 package de.saschapeukert.Algorithms.Impl.RandomWalk;
 
 import de.saschapeukert.Algorithms.MyAlgorithmBaseRunnable;
-import de.saschapeukert.Database.DBUtils;
 import de.saschapeukert.StartComparison;
 import org.neo4j.cursor.Cursor;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.kernel.GraphDatabaseAPI;
 import org.neo4j.kernel.api.ReadOperations;
 import org.neo4j.kernel.api.cursor.RelationshipItem;
 import org.neo4j.kernel.api.exceptions.EntityNotFoundException;
 import org.neo4j.kernel.impl.api.store.RelationshipIterator;
-import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -29,20 +25,16 @@ public class RandomWalkAlgorithmRunnableNewSPI extends MyAlgorithmBaseRunnable {
     private long currentNodeId;
     private int NUMBER_OF_STEPS;
     private final ThreadLocalRandom random;
-    private final ThreadToStatementContextBridge ctx;
     private ReadOperations ops;
 
     public RandomWalkAlgorithmRunnableNewSPI(int randomChanceParameter,
-                                             GraphDatabaseService gdb,int NumberOfSteps, boolean output){
-        super(gdb, output);
+                                             int NumberOfSteps, boolean output){
+        super( output);
 
         this._RandomNodeParameter = randomChanceParameter;
         this.currentNodeId = -1;
         this.NUMBER_OF_STEPS = NumberOfSteps;
         this.random = ThreadLocalRandom.current();
-        GraphDatabaseAPI api = (GraphDatabaseAPI) gdb;
-
-        this.ctx = api.getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
 
     }
     @Override
@@ -50,13 +42,13 @@ public class RandomWalkAlgorithmRunnableNewSPI extends MyAlgorithmBaseRunnable {
 
         timer.start();
 
-            this.ops = ctx.get().readOperations();
+            this.ops = db.getReadOperations();
 
             while (this.NUMBER_OF_STEPS > 0) {
 
                 int w = random.nextInt(100) + 1;
                 if (w <= _RandomNodeParameter) {
-                    currentNodeId = DBUtils.getSomeRandomNodeId(random);
+                    currentNodeId = db.getSomeRandomNodeId(random);
                 } else{
                     currentNodeId = getNextNode(currentNodeId);
                 }
@@ -111,7 +103,7 @@ public class RandomWalkAlgorithmRunnableNewSPI extends MyAlgorithmBaseRunnable {
             }
 
         }
-        return DBUtils.getSomeRandomNodeId(random);  // Node has no outgoing relationships or is start "node"
+        return db.getSomeRandomNodeId(random);  // Node has no outgoing relationships or is start "node"
     }
 
 
