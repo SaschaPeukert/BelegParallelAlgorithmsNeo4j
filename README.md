@@ -6,10 +6,13 @@ This is the Repo for my student research project  "Parallel Graphalgorithms in N
 
 **1. Build it:**
 
+This Java project is built with [Maven](http://maven.apache.org).
+With this command maven will generate a jar file for you:
+
         mvn install
 
 **2. Start it with***
-        
+
         java -jar <JAR> A B C D E F G H I J
         
          A = Name of the Algorithmus (RW, SCC, WCC)
