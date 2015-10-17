@@ -2,6 +2,8 @@ package de.saschapeukert;
 
 import com.google.common.base.Stopwatch;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.CCAlgorithmType;
+import de.saschapeukert.Algorithms.Impl.ConnectedComponents.AbstractConnectedComponents;
+import de.saschapeukert.Algorithms.Impl.ConnectedComponents.ConnectedComponentsMultiThreadAlgorithm;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.ConnectedComponentsSingleThreadAlgorithm;
 import de.saschapeukert.Algorithms.Impl.RandomWalk.RandomWalkAlgorithmRunnable;
 import de.saschapeukert.Algorithms.Impl.RandomWalk.RandomWalkAlgorithmRunnableNewSPI;
@@ -224,10 +226,19 @@ public class StartComparison {
 
     private static long doConnectedComponentsRun(CCAlgorithmType type, boolean output){
 
-        ConnectedComponentsSingleThreadAlgorithm ConnectedSingle = new ConnectedComponentsSingleThreadAlgorithm(
-                type, output);
-        Thread t = new Thread(ConnectedSingle);
-        t.setName("ConnectedComponentsSingleThreadAlgo");
+        AbstractConnectedComponents runnable;
+
+        if(NUMBER_OF_THREADS>1) {
+            runnable = new ConnectedComponentsMultiThreadAlgorithm(
+                    type, output);
+        } else{
+            runnable = new ConnectedComponentsSingleThreadAlgorithm(
+                    type, output);
+
+        }
+        Thread t = new Thread(runnable);
+
+        t.setName("ConnectedComponentsAlgo");
 
         t.start();
         try {
@@ -237,9 +248,9 @@ public class StartComparison {
             e.printStackTrace();
         }
 
-        //System.out.println(ConnectedSingle.getResults());    //TODO REMOVE, JUST FOR DEBUG
+        //System.out.println(runnable.getResults());    //TODO REMOVE, JUST FOR DEBUG
 
-        return ConnectedSingle.timer.elapsed(TimeUnit.MILLISECONDS);
+        return runnable.timer.elapsed(TimeUnit.MILLISECONDS);
 
     }
 
