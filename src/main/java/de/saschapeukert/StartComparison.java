@@ -7,7 +7,7 @@ import de.saschapeukert.Algorithms.Impl.ConnectedComponents.ConnectedComponentsM
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.ConnectedComponentsSingleThreadAlgorithm;
 import de.saschapeukert.Algorithms.Impl.RandomWalk.RandomWalkAlgorithmRunnable;
 import de.saschapeukert.Algorithms.Impl.RandomWalk.RandomWalkAlgorithmRunnableNewSPI;
-import de.saschapeukert.Algorithms.MyAlgorithmBaseRunnable;
+import de.saschapeukert.Algorithms.Abst.MyAlgorithmBaseRunnable;
 import de.saschapeukert.Database.DBUtils;
 import de.saschapeukert.Database.NeoWriter;
 import org.HdrHistogram.Histogram;

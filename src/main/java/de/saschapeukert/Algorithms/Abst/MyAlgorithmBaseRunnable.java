@@ -1,4 +1,4 @@
-package de.saschapeukert.Algorithms;
+package de.saschapeukert.Algorithms.Abst;
 
 import com.google.common.base.Stopwatch;
 import de.saschapeukert.Database.DBUtils;

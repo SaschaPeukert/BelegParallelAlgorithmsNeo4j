@@ -1,6 +1,6 @@
 package de.saschapeukert.Database;
 
-import de.saschapeukert.Algorithms.MyBaseRunnable;
+import de.saschapeukert.Algorithms.Abst.MyBaseRunnable;
 import de.saschapeukert.StartComparison;
 import org.neo4j.kernel.api.DataWriteOperations;
 
