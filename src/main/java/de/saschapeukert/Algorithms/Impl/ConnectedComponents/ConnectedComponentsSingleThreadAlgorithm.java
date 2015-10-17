@@ -1,6 +1,7 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents;
 
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.BFS;
+import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.MyBFS;
 import de.saschapeukert.Algorithms.MyAlgorithmBaseRunnable;
 import de.saschapeukert.Datastructures.TarjanNode;
 import de.saschapeukert.StartComparison;
@@ -27,6 +28,7 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
     private Map<Long,TarjanNode> nodeDictionary;
     private Stack<Long> stack;
     private int maxdfs=0;
+    private final boolean myBFS=true;
 
     public static Set<Long> allNodes; // except the trivial CCs
 
@@ -129,8 +131,13 @@ public class ConnectedComponentsSingleThreadAlgorithm extends MyAlgorithmBaseRun
 
     private void weakly(Long n, int compName){
         //MyBFS bfs = MyBFS.createInstance();
-
-        Set<Long> reachableIDs = BFS.go(n, Direction.BOTH);
+        Set<Long> reachableIDs;
+        if(myBFS){
+            MyBFS bfs = MyBFS.createInstance();
+            reachableIDs = bfs.work(n, Direction.BOTH);
+        } else{
+            reachableIDs = BFS.go(n, Direction.BOTH);
+        }
 
         for(Long l:reachableIDs){
             StartComparison.putIntoResultCounter(l, new AtomicInteger(compName));
