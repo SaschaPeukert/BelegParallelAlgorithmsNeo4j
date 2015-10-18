@@ -50,6 +50,13 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
 
 
     }
+
+    /**
+     *  Using the <b>Multistep Algorithm</b> described in the Paper  "BFS and Coloring-based Parallel Algorithms for
+     *  Strongly Connected Components and Related Problems":
+     *  <br><br>
+     *  http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=6877288
+     */
     @Override
     protected void strongly(){
         // NOT YET IMPLEMENTED

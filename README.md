@@ -20,13 +20,16 @@ With this command maven will generate a jar file for you:
          A = Name of the Algorithmus (RW, SCC, WCC)
          B = OperationNumber (for RW) [for the other algorithms this parameter is irrelevant, but some value still needs to be present]
          C = Number of Runs
-         D = Number of Threads
+         D = Number of Threads *
          E = WarmUp Time in S
          F = New SPI (true or false) (for RW) [for the other algorithms this parameter is irrelevant, but some value still needs to be present]
          G = PropertyName, under which the results will be saved at the nodes
          H = PageCache (String ala "6G")
          I = Path to DB
          J = Write or NoWrite
+         
+         
+         * If D is greater than one, the corresponding multithread algorithm will automatically be used 
          
 *Example:*
            
