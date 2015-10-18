@@ -1,13 +1,12 @@
 package de.saschapeukert;
 
 import com.google.common.base.Stopwatch;
+import de.saschapeukert.Algorithms.Abst.MyAlgorithmBaseRunnable;
+import de.saschapeukert.Algorithms.Impl.ConnectedComponents.STConnectedComponentsAlgo;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.CCAlgorithmType;
-import de.saschapeukert.Algorithms.Impl.ConnectedComponents.AbstractConnectedComponents;
-import de.saschapeukert.Algorithms.Impl.ConnectedComponents.ConnectedComponentsMultiThreadAlgorithm;
-import de.saschapeukert.Algorithms.Impl.ConnectedComponents.ConnectedComponentsSingleThreadAlgorithm;
+import de.saschapeukert.Algorithms.Impl.ConnectedComponents.MTConnectedComponentsAlgo;
 import de.saschapeukert.Algorithms.Impl.RandomWalk.RandomWalkAlgorithmRunnable;
 import de.saschapeukert.Algorithms.Impl.RandomWalk.RandomWalkAlgorithmRunnableNewSPI;
-import de.saschapeukert.Algorithms.Abst.MyAlgorithmBaseRunnable;
 import de.saschapeukert.Database.DBUtils;
 import de.saschapeukert.Database.NeoWriter;
 import org.HdrHistogram.Histogram;
@@ -226,13 +225,13 @@ public class StartComparison {
 
     private static long doConnectedComponentsRun(CCAlgorithmType type, boolean output){
 
-        AbstractConnectedComponents runnable;
+        STConnectedComponentsAlgo runnable;
 
         if(NUMBER_OF_THREADS>1) {
-            runnable = new ConnectedComponentsMultiThreadAlgorithm(
+            runnable = new MTConnectedComponentsAlgo(
                     type, output);
         } else{
-            runnable = new ConnectedComponentsSingleThreadAlgorithm(
+            runnable = new STConnectedComponentsAlgo(
                     type, output);
 
         }

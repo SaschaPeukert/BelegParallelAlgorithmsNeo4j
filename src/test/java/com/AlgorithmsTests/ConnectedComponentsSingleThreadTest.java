@@ -1,11 +1,12 @@
 package com.AlgorithmsTests;
 
-import de.saschapeukert.Algorithms.Impl.ConnectedComponents.ConnectedComponentsSingleThreadAlgorithm;
+import de.saschapeukert.Algorithms.Impl.ConnectedComponents.STConnectedComponentsAlgo;
 import de.saschapeukert.StartComparison;
 import org.apache.commons.lang3.SystemUtils;
 import org.junit.*;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Sascha Peukert on 27.09.2015.
@@ -53,7 +54,7 @@ public class ConnectedComponentsSingleThreadTest {
 
         // Do the Run, get results
         StartComparison.main(argsWCC);
-        Map<Integer,List<Long>> resultOfRun = ConnectedComponentsSingleThreadAlgorithm.getMapofComponentToIDs();
+        Map<Integer,List<Long>> resultOfRun = STConnectedComponentsAlgo.getMapofComponentToIDs();
 
         // Check the result
         Assert.assertNull("There should not be an Component with ID 0", resultOfRun.get(0));
@@ -71,7 +72,7 @@ public class ConnectedComponentsSingleThreadTest {
 
         // Do the Run, get results
         StartComparison.main(argsSCC);
-        Map<Integer,List<Long>> resultOfRun = ConnectedComponentsSingleThreadAlgorithm.getMapofComponentToIDs();
+        Map<Integer,List<Long>> resultOfRun = STConnectedComponentsAlgo.getMapofComponentToIDs();
 
         // Check the result
         Assert.assertNull("There should not be an Component with ID 0", resultOfRun.get(0));

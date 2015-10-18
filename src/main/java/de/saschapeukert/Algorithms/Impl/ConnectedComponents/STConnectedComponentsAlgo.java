@@ -1,8 +1,10 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents;
 
 import de.saschapeukert.Algorithms.Abst.MyAlgorithmBaseRunnable;
+import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.BFS;
 import de.saschapeukert.Datastructures.TarjanNode;
 import de.saschapeukert.StartComparison;
+import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.ResourceIterator;
 
@@ -13,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Created by Sascha Peukert on 17.10.2015.
  */
-public abstract class AbstractConnectedComponents extends MyAlgorithmBaseRunnable {
+public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
 
     protected int componentID=1;
     protected final CCAlgorithmType myType;
@@ -24,7 +26,7 @@ public abstract class AbstractConnectedComponents extends MyAlgorithmBaseRunnabl
 
     public static Set<Long> allNodes; // except the trivial CCs
 
-    protected AbstractConnectedComponents(CCAlgorithmType type, boolean output) {
+    public STConnectedComponentsAlgo(CCAlgorithmType type, boolean output) {
         super(output);
         this.myType = type;
 
@@ -41,6 +43,42 @@ public abstract class AbstractConnectedComponents extends MyAlgorithmBaseRunnabl
     public void compute() {
 
         timer.start();
+
+        if(myType== CCAlgorithmType.WEAK) {
+            weakly();
+        } else{
+            strongly();
+        }
+
+
+
+        timer.stop();
+
+    }
+
+    protected void strongly(){
+
+        Iterator<Long> it = allNodes.iterator();
+
+        while(it.hasNext()) {
+            // Every node has to be marked as (part of) a component
+            it = allNodes.iterator();
+
+            try {
+                Long n = it.next();
+
+                tarjan(n);
+
+            } catch (NoSuchElementException e) {
+                break;
+            }
+
+        }
+    }
+
+
+    protected void weakly(){
+
         Iterator<Long> it = allNodes.iterator();
 
         while(it.hasNext()){
@@ -49,14 +87,11 @@ public abstract class AbstractConnectedComponents extends MyAlgorithmBaseRunnabl
 
             try {
                 Long n = it.next();
-                if(myType== CCAlgorithmType.WEAK){
 
-                    weakly(n, componentID);
-                    componentID++;
+                searchForWeakly(n);
+                componentID++;
 
-                } else{
-                    strongly(n);
-                }
+
 
             }catch (NoSuchElementException e){
                 break;
@@ -64,13 +99,16 @@ public abstract class AbstractConnectedComponents extends MyAlgorithmBaseRunnabl
 
         }
 
-        timer.stop();
-
     }
 
-    protected abstract void weakly(Long n, int id);
-    protected abstract void strongly(Long n);
+    protected void searchForWeakly(long n){
+        Set<Long> reachableIDs = BFS.go(n, Direction.BOTH);
 
+        for(Long l:reachableIDs){
+            StartComparison.putIntoResultCounter(l, new AtomicInteger(componentID));
+            allNodes.remove(l);
+        }
+    }
 
     private void prepareAllNodes(){
         allNodes = new HashSet<>(db.highestNodeKey);
@@ -160,4 +198,52 @@ public abstract class AbstractConnectedComponents extends MyAlgorithmBaseRunnabl
         return returnString.toString();
     }
 
+
+    protected void tarjan(Long currentNode){
+
+        TarjanNode v = nodeDictionary.get(currentNode);
+        v.dfs = maxdfs;
+        v.lowlink = maxdfs;
+        maxdfs++;
+
+        v.onStack = true;           // This should be atomic
+        stack.push(currentNode);        // !
+
+        allNodes.remove(currentNode);
+
+        Iterable<Long> it = db.getConnectedNodeIDs(db.getReadOperations(), currentNode, Direction.OUTGOING);
+        for(Long l:it){
+
+            TarjanNode v_new = nodeDictionary.get(l);
+
+            if(allNodes.contains(l)){
+                tarjan(l);
+
+                v.lowlink = Math.min(v.lowlink,v_new.lowlink);
+
+            } else if(v_new.onStack){       // O(1)
+
+                v.lowlink = Math.min(v.lowlink,v_new.dfs);
+            }
+
+        }
+
+        if(v.lowlink == v.dfs){
+            // Root of a SCC
+
+            while(true){
+                Long node_v = stack.pop();                      // This should be atomic
+                TarjanNode v_new = nodeDictionary.get(node_v);  // !
+                v_new.onStack= false;                           // !
+
+                StartComparison.putIntoResultCounter(node_v, new AtomicInteger(componentID));
+                if(Objects.equals(node_v, currentNode)){
+                    componentID++;
+                    break;
+                }
+
+            }
+        }
+
+    }
 }
