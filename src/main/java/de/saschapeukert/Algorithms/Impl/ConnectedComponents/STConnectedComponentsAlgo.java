@@ -138,9 +138,13 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
 
         } else{
             allNodes.add(n.getId());
+            furtherInspectNodeWhileTrim(n);
         }
     }
 
+    protected void furtherInspectNodeWhileTrim(Node n){
+        // Overwrite this method to add code for trim()
+    }
 
     public static Map<Integer, List<Long>> getMapofComponentToIDs(){
 
