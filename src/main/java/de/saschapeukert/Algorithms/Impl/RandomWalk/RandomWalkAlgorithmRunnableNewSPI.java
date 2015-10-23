@@ -27,11 +27,10 @@ public class RandomWalkAlgorithmRunnableNewSPI extends MyAlgorithmBaseRunnable {
     private final ThreadLocalRandom random;
     private ReadOperations ops;
 
-    public RandomWalkAlgorithmRunnableNewSPI(int randomChanceParameter,
-                                             int NumberOfSteps, boolean output){
+    public RandomWalkAlgorithmRunnableNewSPI(int NumberOfSteps, boolean output){
         super( output);
 
-        this._RandomNodeParameter = randomChanceParameter;
+        this._RandomNodeParameter = StartComparison.RANDOMWALKRANDOM;
         this.currentNodeId = -1;
         this.NUMBER_OF_STEPS = NumberOfSteps;
         this.random = ThreadLocalRandom.current();

@@ -20,11 +20,10 @@ public class RandomWalkAlgorithmRunnable extends MyAlgorithmBaseRunnable {
     private final ThreadLocalRandom random;
 
 
-    public RandomWalkAlgorithmRunnable(int randomChanceParameter,
-                                       int NumberOfSteps, boolean output){
+    public RandomWalkAlgorithmRunnable(int NumberOfSteps, boolean output){
         super( output);
 
-        this._RandomNodeParameter = randomChanceParameter;
+        this._RandomNodeParameter = StartComparison.RANDOMWALKRANDOM;
         this.currentNode = null;
         this.NUMBER_OF_STEPS = NumberOfSteps;
         this.random = ThreadLocalRandom.current();

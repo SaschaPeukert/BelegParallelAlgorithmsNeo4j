@@ -22,7 +22,7 @@ public class BFS {
         ReadOperations ops =db.getReadOperations();
 
         Set<Long> visitedIDs = new HashSet<>();
-        List<Long> frontierList= new LinkedList<Long>();
+        List<Long> frontierList= new LinkedList<>();
 
         visitedIDs.clear();
 
@@ -61,7 +61,7 @@ public class BFS {
         ReadOperations ops =db.getReadOperations();
 
         Set<Long> visitedIDs = new HashSet<>();
-        List<Long> frontierList= new LinkedList<Long>();
+        List<Long> frontierList= new LinkedList<>();
 
         visitedIDs.clear();
 

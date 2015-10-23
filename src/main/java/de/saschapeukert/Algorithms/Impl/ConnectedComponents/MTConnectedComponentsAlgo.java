@@ -31,7 +31,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     private static boolean coloringDone;
     public static Set<Long> Q;
 
-    public static final ConcurrentHashMap<Long, Long> mapOfColors = new ConcurrentHashMap<>();;
+    public static final ConcurrentHashMap<Long, Long> mapOfColors = new ConcurrentHashMap<>();
     public static final ConcurrentHashMap<Long, Boolean> mapOfVisitedNodes = new ConcurrentHashMap<>();
 
     public MTConnectedComponentsAlgo(CCAlgorithmType type, boolean output){
@@ -45,7 +45,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         super.compute();
 
         if(myType==CCAlgorithmType.WEAK){
-            MyBFS.createInstance().closeDownThreads();
+            MyBFS.getInstance().closeDownThreads();
         }
     }
 
@@ -53,7 +53,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     @Override
     protected void searchForWeakly(long n){
 
-        MyBFS bfs = MyBFS.createInstance();
+        MyBFS bfs = MyBFS.getInstance();
         Set<Long> reachableIDs = bfs.work(n, Direction.BOTH);
 
         for(Long l:reachableIDs){
@@ -72,13 +72,13 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
      */
     @Override
     protected void strongly(){
-        // NOT YET IMPLEMENTED
+            // NOT YET IMPLEMENTED
         //throw new NotImplementedException();
-        // TODO: check/fix what happens if maxDegreeID is still on default value
+            // TODO: check/fix what happens if maxDegreeID is still on default value
 
         // PHASE 1
 
-        // TODO: MyBFS should be used here
+            // TODO: MyBFS should be used here
         Set<Long> D = BFS.go(maxDegreeID, Direction.OUTGOING);
         D.retainAll(BFS.go(maxDegreeID, Direction.INCOMING, D)); // D = S from Paper from here on
 
@@ -88,17 +88,17 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         }
         componentID++;
 
-        // TODO: Don't forget to close down threads
+            // TODO: Don't forget to close down threads
 
         // PHASE 2
 
         Q = new HashSet<>(allNodes);
 
-        // Start Threads
+            // Start Threads
 
         ExecutorService executor = Executors.newFixedThreadPool(StartComparison.NUMBER_OF_THREADS);
 
-        // start fixed Number of ColoringRunnable Threads
+            // start fixed Number of ColoringRunnable Threads
         ArrayList<ColoringRunnable> list = new ArrayList<>(StartComparison.NUMBER_OF_THREADS);
         for(int i=0;i<StartComparison.NUMBER_OF_THREADS;i++){
             ColoringRunnable runnable = new ColoringRunnable(false);
@@ -106,29 +106,29 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
             executor.execute(runnable);
         }
 
-        while(Q.size()!=0){
+        while(Q.size()!=0) {
 
-            coloringDone=false;
+            coloringDone = false;
             it = Q.iterator();
 
             // wake up threads
-            for(ColoringRunnable cRunnable:list){
+            for (ColoringRunnable cRunnable : list) {
                 cRunnable.isIdle.set(false);
             }
             // wait
-            while(true){
+            while (true) {
 
-                if(coloringDone){
+                if (coloringDone) {
                     // coloring done indicates that all nodes are given to the thread,
                     // but it dosn't mean that they finished yet!
 
-                    boolean check=true;
-                    for(ColoringRunnable runnable:list){
-                        if(runnable.isIdle.get()==false){
-                            check =false;
+                    boolean check = true;
+                    for (ColoringRunnable runnable : list) {
+                        if (runnable.isIdle.get() == false) {
+                            check = false;
                         }
                     }
-                    if(check) break;
+                    if (check) break;
                 }
 
                 try {
@@ -141,16 +141,19 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
 
             Q.clear();
             // Barrier synchronization
-            for(ColoringRunnable runnable:list){
+            for (ColoringRunnable runnable : list) {
                 Q.addAll(runnable.resultQueue);
             }
 
+        }   // is this right?!?
+
+            // TODO: Implementation and testing needed here
 
              new HashSet<>(mapOfColors.values()).toArray(); // all unique colors as array for the threads
 
             // BFS threads work
             // check for Ncutoff?
-        }
+
 
         // PHASE 3
 

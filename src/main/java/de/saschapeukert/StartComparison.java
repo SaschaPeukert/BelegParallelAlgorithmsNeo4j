@@ -33,7 +33,7 @@ public class StartComparison {
     private static int OPERATIONS;
     public static int NUMBER_OF_THREADS;
     private static int NUMBER_OF_RUNS; //Minimum: 1
-    private static final int RANDOMWALKRANDOM = 20;  // Minimum: 1
+    public static final int RANDOMWALKRANDOM = 20;  // Minimum: 1
     private static  int WARMUPTIME; // in seconds
     private static  boolean NEWSPI;
     private static  String PROP_NAME;
@@ -265,10 +265,10 @@ public class StartComparison {
 
             MyAlgorithmBaseRunnable rw;
             if(NEWSPI){
-                rw = new RandomWalkAlgorithmRunnableNewSPI(RANDOMWALKRANDOM,
+                rw = new RandomWalkAlgorithmRunnableNewSPI(
                         noOfSteps/NUMBER_OF_THREADS, output);
             } else{
-                rw = new RandomWalkAlgorithmRunnable(RANDOMWALKRANDOM,
+                rw = new RandomWalkAlgorithmRunnable(
                         noOfSteps/NUMBER_OF_THREADS, output);
             }
             executor.execute(rw);

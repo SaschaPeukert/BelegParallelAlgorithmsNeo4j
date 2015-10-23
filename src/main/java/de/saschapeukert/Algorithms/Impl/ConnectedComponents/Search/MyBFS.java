@@ -16,20 +16,20 @@ import java.util.concurrent.Executors;
  */
 public class MyBFS {
 
-    public static volatile List<Long> frontierList= new LinkedList<Long>();  // do not assign more than once
+    public static volatile List<Long> frontierList= new LinkedList<>();  // do not assign more than once
     public static volatile SortedMap<Integer,Queue<Long>> MapOfQueues;
     private static volatile List<Boolean> ThreadCheckList = new LinkedList<>();
     public static Set<Long> visitedIDs = Sets.newConcurrentHashSet();
 
     private List<MyBFSLevelRunnable> list;
     private final int THRESHOLD=100000;
-    private DBUtils db;
+    private final DBUtils db;
 
-    private ExecutorService executor;
+    private final ExecutorService executor;
 
     private static MyBFS instance;
 
-    public static MyBFS createInstance(){
+    public static MyBFS getInstance(){
         if(instance==null){
             instance = new MyBFS();
         }
@@ -47,7 +47,7 @@ public class MyBFS {
             executor.execute(runnable);
         }
 
-        MapOfQueues = new ConcurrentSkipListMap<Integer, Queue<Long>>();
+        MapOfQueues = new ConcurrentSkipListMap<>();
         db = DBUtils.getInstance("","");
     }
 
@@ -66,10 +66,10 @@ public class MyBFS {
             int size = frontierList.size();
             if(size>THRESHOLD){
                 // parallel
-                doParallelLevel(nodeID,direction,size);
+                doParallelLevel(direction,size);
             } else{
                 // sequential
-                doSequentialLevel(nodeID,direction,ops);
+                doSequentialLevel(direction,ops);
 
             }
 
@@ -77,7 +77,7 @@ public class MyBFS {
         return visitedIDs;
     }
 
-    private void doSequentialLevel(long nodeID, Direction direction, ReadOperations ops){
+    private void doSequentialLevel(Direction direction, ReadOperations ops){
         Long n = frontierList.remove(0);
 
         for(Long child: db.getConnectedNodeIDs(ops, n, direction)) {
@@ -90,7 +90,7 @@ public class MyBFS {
 
     }
 
-    private void doParallelLevel(long nodeID, Direction direction, int size){
+    private void doParallelLevel(Direction direction, int size){
 
         ThreadCheckList.clear();
         for(int i=0;i<StartComparison.NUMBER_OF_THREADS;i++){
@@ -113,7 +113,7 @@ public class MyBFS {
                     check=false;
                 }
             }
-            if(check==false){
+            if(!check){
                 try {
                     Thread.sleep(10);
                 } catch (InterruptedException e) {
@@ -152,7 +152,7 @@ public class MyBFS {
         return ThreadCheckList.get(i);
     }
 
-    public static synchronized void setCheckThreadList(int i, boolean b){
-        ThreadCheckList.set(i,b);
+    public static synchronized void setCheckThreadList(int i){
+        ThreadCheckList.set(i,true);
     }
 }

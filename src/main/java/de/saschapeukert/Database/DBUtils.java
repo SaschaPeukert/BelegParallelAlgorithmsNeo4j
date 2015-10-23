@@ -35,7 +35,7 @@ public class DBUtils {
 
     private static StoreAccess neoStore;
     private static GraphDatabaseService graphDb;
-    public int highestNodeKey;
+    public final int highestNodeKey;
 
     private static DBUtils instance;
     //private static ReadOperations ops;

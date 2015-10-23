@@ -7,7 +7,7 @@ import java.util.Map;
 /**
  * Created by Sascha Peukert on 17.10.2015.
  */
-public class CompareLists {
+class CompareLists {
 
     public static boolean compareValues(Map<Integer,List<Long>> map, int sizeOfList, Long[] valuesOfList){
 

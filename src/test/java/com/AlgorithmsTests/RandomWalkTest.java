@@ -5,7 +5,6 @@ import de.saschapeukert.OutputTop20;
 import de.saschapeukert.StartComparison;
 import org.apache.commons.lang3.SystemUtils;
 import org.junit.*;
-import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
 
 import java.util.ArrayList;
