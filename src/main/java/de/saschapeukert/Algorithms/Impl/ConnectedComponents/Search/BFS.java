@@ -4,10 +4,7 @@ import de.saschapeukert.Database.DBUtils;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.kernel.api.ReadOperations;
 
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by Sascha Peukert on 04.10.2015.
@@ -55,7 +52,7 @@ public class BFS {
      * @param nodeIDSet
      * @return
      */
-    public static Set<Long> go(long nodeID, Direction direction, Set<Long> nodeIDSet){
+    public static Set<Long> go(long nodeID, Direction direction, Collection<Long> nodeIDSet){
 
         db = DBUtils.getInstance("","");
         ReadOperations ops =db.getReadOperations();

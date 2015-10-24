@@ -1,6 +1,7 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search;
 
 import com.google.common.collect.Sets;
+import de.saschapeukert.Algorithms.Abst.WorkerRunnableTemplate;
 import de.saschapeukert.Database.DBUtils;
 import de.saschapeukert.StartComparison;
 import org.neo4j.graphdb.Direction;
@@ -139,13 +140,12 @@ public class MyBFS {
 
     public void closeDownThreads(){
 
-        for(MyBFSLevelRunnable runnable:list){
+        for(WorkerRunnableTemplate runnable:list){
             runnable.isAlive.set(false);
             runnable.isIdle.set(false);
         }
 
         StartComparison.waitForExecutorToFinishAll(executor);
-
     }
 
     private synchronized boolean checkThreadList(int i){

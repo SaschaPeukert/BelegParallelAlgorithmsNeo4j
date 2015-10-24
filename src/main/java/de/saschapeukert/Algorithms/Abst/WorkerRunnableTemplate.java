@@ -11,8 +11,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by Sascha Peukert on 23.10.2015.
  */
-public abstract class WorkerRunnable extends MyAlgorithmBaseRunnable {
-    protected WorkerRunnable(boolean output) {
+public abstract class WorkerRunnableTemplate extends MyAlgorithmBaseRunnable {
+    protected WorkerRunnableTemplate(boolean output) {
         super(output);
     }
 
@@ -50,7 +50,7 @@ public abstract class WorkerRunnable extends MyAlgorithmBaseRunnable {
             }
 
             cleanUpOperation();
-            isIdle.set(true);
+
             //System.out.println("Thread " + posInList + " done");
         }
     }
@@ -70,7 +70,9 @@ public abstract class WorkerRunnable extends MyAlgorithmBaseRunnable {
         return resultQueue;
     }
 
-    protected abstract void cleanUpOperation();
+    protected void cleanUpOperation(){
+        isIdle.set(true); // now it waits after one operation and can be used again
+    }
     protected abstract boolean operation();
 
 }

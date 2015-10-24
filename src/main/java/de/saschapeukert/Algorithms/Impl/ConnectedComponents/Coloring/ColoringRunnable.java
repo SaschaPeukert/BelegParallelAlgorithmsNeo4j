@@ -1,6 +1,6 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring;
 
-import de.saschapeukert.Algorithms.Abst.WorkerRunnable;
+import de.saschapeukert.Algorithms.Abst.WorkerRunnableTemplate;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.MTConnectedComponentsAlgo;
 import org.neo4j.graphdb.Direction;
 
@@ -10,7 +10,7 @@ import java.util.Queue;
 /**
  * Created by Sascha Peukert on 04.10.2015.
  */
-public class ColoringRunnable extends WorkerRunnable {
+public class ColoringRunnable extends WorkerRunnableTemplate {
 
     public final Queue<Long> resultQueue = new LinkedList<>();
 
@@ -58,9 +58,6 @@ public class ColoringRunnable extends WorkerRunnable {
 
         return true;
     }
-
-    @Override
-    protected void cleanUpOperation(){}
 
     private boolean colorIsGreaterThan(long a, long b){
         return MTConnectedComponentsAlgo.mapOfColors.get(a) > MTConnectedComponentsAlgo.mapOfColors.get(b);

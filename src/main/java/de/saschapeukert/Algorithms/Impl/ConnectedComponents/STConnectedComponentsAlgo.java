@@ -1,5 +1,6 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents;
 
+import com.google.common.collect.Sets;
 import de.saschapeukert.Algorithms.Abst.MyAlgorithmBaseRunnable;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.BFS;
 import de.saschapeukert.Datastructures.TarjanNode;
@@ -104,14 +105,14 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
     protected void searchForWeakly(long n){
         Set<Long> reachableIDs = BFS.go(n, Direction.BOTH);
 
-        for(Long l:reachableIDs){
-            StartComparison.putIntoResultCounter(l, new AtomicInteger(componentID));
-            allNodes.remove(l);
-        }
+        registerSCCandRemoveFromAllNodes(reachableIDs,componentID);
+
     }
 
     private void prepareAllNodes(){
-        allNodes = new HashSet<>(db.highestNodeKey);
+        allNodes = Sets.newConcurrentHashSet();
+
+        //        ;(db.highestNodeKey);
 
         tx = db.openTransaction();
 
@@ -249,5 +250,12 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
             }
         }
 
+    }
+
+    public static void registerSCCandRemoveFromAllNodes(Set<Long> reachableIDs,int sccID){
+        for(Long l:reachableIDs){
+            StartComparison.putIntoResultCounter(l, new AtomicInteger((sccID)));
+        }
+        allNodes.remove(reachableIDs);
     }
 }

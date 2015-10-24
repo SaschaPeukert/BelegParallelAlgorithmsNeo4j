@@ -7,14 +7,10 @@ import de.saschapeukert.StartComparison;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by Sascha Peukert on 06.08.2015.
@@ -26,12 +22,16 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
 
     private long maxdDegreeINOUT=-1;
     private long maxDegreeID=-1;
-    private static Iterator<Long> it;   // TODO: Remove the static stuff
+    private static Iterator<Long> itQ;   // TODO: Remove the static stuff
+    private static Iterator<Long> colorIterator;
 
     private static boolean coloringDone;
     public static Set<Long> Q;
 
+    private static final long nCutoff=100000;
+
     public static final ConcurrentHashMap<Long, Long> mapOfColors = new ConcurrentHashMap<>();
+    public static final HashMap<Long, List<Long>> mapColorIDs = new HashMap<>();
     public static final ConcurrentHashMap<Long, Boolean> mapOfVisitedNodes = new ConcurrentHashMap<>();
 
     public MTConnectedComponentsAlgo(CCAlgorithmType type, boolean output){
@@ -56,11 +56,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         MyBFS bfs = MyBFS.getInstance();
         Set<Long> reachableIDs = bfs.work(n, Direction.BOTH);
 
-        for(Long l:reachableIDs){
-            StartComparison.putIntoResultCounter(l, new AtomicInteger(componentID));
-            allNodes.remove(l);
-        }
-
+        MTConnectedComponentsAlgo.registerSCCandRemoveFromAllNodes(reachableIDs,componentID);
 
     }
 
@@ -82,10 +78,8 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         Set<Long> D = BFS.go(maxDegreeID, Direction.OUTGOING);
         D.retainAll(BFS.go(maxDegreeID, Direction.INCOMING, D)); // D = S from Paper from here on
 
-        for(Long l:D){
-            StartComparison.putIntoResultCounter(l, new AtomicInteger(componentID));
-            allNodes.remove(l);
-        }
+        MTConnectedComponentsAlgo.registerSCCandRemoveFromAllNodes(D,componentID);
+
         componentID++;
 
             // TODO: Don't forget to close down threads
@@ -109,7 +103,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         while(Q.size()!=0) {
 
             coloringDone = false;
-            it = Q.iterator();
+            itQ = Q.iterator();
 
             // wake up threads
             for (ColoringRunnable cRunnable : list) {
@@ -146,19 +140,31 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
             }
 
         }   // is this right?!?
+        colorIterator = new HashSet<>(mapOfColors.values()).iterator();
 
-            // TODO: Implementation and testing needed here
+        // prepare mapColorIDs
+        for(Long id:mapOfColors.keySet()){
+            long color = mapOfColors.get(id);
+            if(mapColorIDs.containsKey(color)){
+                mapColorIDs.get(color).add(id);
+            } else{
+                List l = new ArrayList();
+                l.add(id);
+                mapColorIDs.put(id,l);
+            }
+        }
 
-             new HashSet<>(mapOfColors.values()).toArray(); // all unique colors as array for the threads
+        // start BackwardColoringStepRunnables
 
-            // BFS threads work
-            // check for Ncutoff?
+        // BFS threads work
 
 
         // PHASE 3
 
         super.strongly(); // call seq. tarjan
 
+
+        // finish executors
     }
 
     @Override
@@ -180,11 +186,20 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
      * @return an element of the Q or -1 if none is available
      */
     public static synchronized long getElementFromQ(){
-        if(it.hasNext()){
-            return it.next();
+        if(itQ.hasNext()){
+            return itQ.next();
         }
 
         coloringDone=true;
+        return -1;
+    }
+
+    public static synchronized long getColor(){
+        if(!(nCutoff>=allNodes.size())){
+            if(colorIterator.hasNext()){
+                return colorIterator.next();
+            }
+        }
         return -1;
     }
 }

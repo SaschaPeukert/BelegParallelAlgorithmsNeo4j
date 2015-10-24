@@ -1,6 +1,6 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search;
 
-import de.saschapeukert.Algorithms.Abst.WorkerRunnable;
+import de.saschapeukert.Algorithms.Abst.WorkerRunnableTemplate;
 import de.saschapeukert.StartComparison;
 import org.neo4j.graphdb.Direction;
 
@@ -9,7 +9,7 @@ import java.util.Queue;
 /**
  * Created by Sascha Peukert on 04.10.2015.
  */
-public class MyBFSLevelRunnable extends WorkerRunnable {
+public class MyBFSLevelRunnable extends WorkerRunnableTemplate {
 
 
     public Direction direction;
@@ -48,6 +48,7 @@ public class MyBFSLevelRunnable extends WorkerRunnable {
     @Override
     protected void cleanUpOperation(){
         MyBFS.setCheckThreadList(posInList);
+        isIdle.set(true);
     }
 
 
