@@ -256,6 +256,6 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
         for(Long l:reachableIDs){
             StartComparison.putIntoResultCounter(l, new AtomicInteger((sccID)));
         }
-        allNodes.remove(reachableIDs);
+        allNodes.removeAll(reachableIDs);
     }
 }
