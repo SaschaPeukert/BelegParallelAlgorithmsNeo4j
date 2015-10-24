@@ -365,7 +365,7 @@ public class StartComparison {
     public static boolean resultCounterContainsKey(long id){
         return resultCounter.containsKey(id);
     }
-    public static void putIntoResultCounter(long id, AtomicInteger value){
+    public static synchronized void putIntoResultCounter(long id, AtomicInteger value){
         resultCounter.put(id,value);
     }
 

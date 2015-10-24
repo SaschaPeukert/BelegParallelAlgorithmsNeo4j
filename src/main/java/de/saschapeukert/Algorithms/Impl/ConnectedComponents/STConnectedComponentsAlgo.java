@@ -1,6 +1,5 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents;
 
-import com.google.common.collect.Sets;
 import de.saschapeukert.Algorithms.Abst.MyAlgorithmBaseRunnable;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.BFS;
 import de.saschapeukert.Datastructures.TarjanNode;
@@ -110,8 +109,8 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
     }
 
     private void prepareAllNodes(){
-        allNodes = Sets.newConcurrentHashSet();
-
+        //allNodes = Sets.newConcurrentHashSet();
+        allNodes = new HashSet<>(db.highestNodeKey);
         //        ;(db.highestNodeKey);
 
         tx = db.openTransaction();
@@ -256,6 +255,10 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
         for(Long l:reachableIDs){
             StartComparison.putIntoResultCounter(l, new AtomicInteger((sccID)));
         }
-        allNodes.removeAll(reachableIDs);
+        removeFromAllNodes(reachableIDs);
+    }
+
+    private static synchronized void removeFromAllNodes(Collection c){
+        allNodes.removeAll(c);
     }
 }
