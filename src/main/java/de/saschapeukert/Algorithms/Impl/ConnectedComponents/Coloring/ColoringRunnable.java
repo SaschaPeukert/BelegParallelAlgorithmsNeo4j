@@ -24,7 +24,7 @@ public class ColoringRunnable extends WorkerRunnableTemplate {
 
         resultQueue.clear();
         parentID = MTConnectedComponentsAlgo.getElementFromQ();
-        // TODO alternative: working with offset and size than with synchronized method. maybe faster?
+
         if(parentID==-1){
             return false;
         }
@@ -42,7 +42,6 @@ public class ColoringRunnable extends WorkerRunnableTemplate {
                     resultQueue.add(u);
                 }
             }
-
         }
 
         if(changedAtLeastOneColor){

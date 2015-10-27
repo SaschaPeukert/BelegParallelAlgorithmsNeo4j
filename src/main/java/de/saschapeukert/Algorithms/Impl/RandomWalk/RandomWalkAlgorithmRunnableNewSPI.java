@@ -63,6 +63,11 @@ public class RandomWalkAlgorithmRunnableNewSPI extends MyAlgorithmBaseRunnable {
 
     }
 
+    @Override
+    protected void initialize() {
+
+    }
+
 
     private long getNextNode(long n){
         if (n != -1) {

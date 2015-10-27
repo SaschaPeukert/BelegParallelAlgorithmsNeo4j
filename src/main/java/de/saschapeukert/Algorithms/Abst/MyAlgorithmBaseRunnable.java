@@ -21,6 +21,7 @@ public abstract class MyAlgorithmBaseRunnable extends MyBaseRunnable {
      */
     public void run() {
         this.tx = db.openTransaction();
+        initialize();
         compute();
         db.closeTransactionWithSuccess(this.tx);
     }
@@ -35,5 +36,7 @@ public abstract class MyAlgorithmBaseRunnable extends MyBaseRunnable {
         this.output = output;
 
     }
+
+    protected abstract void initialize();
 
 }

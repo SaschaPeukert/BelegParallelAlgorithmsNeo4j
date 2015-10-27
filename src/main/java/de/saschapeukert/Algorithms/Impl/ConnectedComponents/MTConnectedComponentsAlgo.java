@@ -1,5 +1,7 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents;
 
+import de.saschapeukert.Algorithms.Abst.WorkerRunnableTemplate;
+import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring.BackwardColoringStepRunnable;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring.ColoringRunnable;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.BFS;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.MyBFS;
@@ -28,10 +30,10 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     private static boolean coloringDone;
     public static Set<Long> Q;
 
-    private static final long nCutoff=100000;
+    private static final long nCutoff=10000;
 
     public static final ConcurrentHashMap<Long, Long> mapOfColors = new ConcurrentHashMap<>();
-    public static final HashMap<Long, List<Long>> mapColorIDs = new HashMap<>();
+    public static final ConcurrentHashMap<Long, List<Long>> mapColorIDs = new ConcurrentHashMap<>();
     public static final ConcurrentHashMap<Long, Boolean> mapOfVisitedNodes = new ConcurrentHashMap<>();
 
     public MTConnectedComponentsAlgo(CCAlgorithmType type, boolean output){
@@ -68,8 +70,6 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
      */
     @Override
     protected void strongly(){
-            // NOT YET IMPLEMENTED
-        //throw new NotImplementedException();
             // TODO: check/fix what happens if maxDegreeID is still on default value
 
         // PHASE 1
@@ -79,92 +79,62 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         D.retainAll(BFS.go(maxDegreeID, Direction.INCOMING, D)); // D = S from Paper from here on
 
         MTConnectedComponentsAlgo.registerSCCandRemoveFromAllNodes(D,componentID);
+        for(Object o:D){
+            MTConnectedComponentsAlgo.mapOfColors.remove(o);
+        }
+
+       // System.out.println(componentID);
 
         componentID++;
 
-            // TODO: Don't forget to close down threads
-
         // PHASE 2
 
-        Q = new HashSet<>(allNodes);
-
-            // Start Threads
-
-        ExecutorService executor = Executors.newFixedThreadPool(StartComparison.NUMBER_OF_THREADS);
+        // Start Threads
+        ExecutorService executor = Executors.newFixedThreadPool(StartComparison.NUMBER_OF_THREADS*2);
 
             // start fixed Number of ColoringRunnable Threads
-        ArrayList<ColoringRunnable> list = new ArrayList<>(StartComparison.NUMBER_OF_THREADS);
+        List<ColoringRunnable> listA = new ArrayList<>(StartComparison.NUMBER_OF_THREADS);
+        List<BackwardColoringStepRunnable> listB = new ArrayList<>(StartComparison.NUMBER_OF_THREADS);
         for(int i=0;i<StartComparison.NUMBER_OF_THREADS;i++){
             ColoringRunnable runnable = new ColoringRunnable(false);
-            list.add(runnable);
+            BackwardColoringStepRunnable bwRunnable = new BackwardColoringStepRunnable(false);
+            listA.add(runnable);
+            listB.add(bwRunnable);
             executor.execute(runnable);
+            executor.execute(bwRunnable);
         }
 
-        while(Q.size()!=0) {
-
-            coloringDone = false;
-            itQ = Q.iterator();
-
-            // wake up threads
-            for (ColoringRunnable cRunnable : list) {
-                cRunnable.isIdle.set(false);
-            }
-            // wait
-            while (true) {
-
-                if (coloringDone) {
-                    // coloring done indicates that all nodes are given to the thread,
-                    // but it dosn't mean that they finished yet!
-
-                    boolean check = true;
-                    for (ColoringRunnable runnable : list) {
-                        if (runnable.isIdle.get() == false) {
-                            check = false;
-                        }
-                    }
-                    if (check) break;
+        System.out.println("Phase 2");
+        int i=0;
+        while(nCutoff<allNodes.size()) {
+            i++;
+            if(i!=1){
+                mapOfColors.clear();
+                for(Long lo:allNodes){
+                    mapOfColors.put(lo,lo);
                 }
-
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
             }
-
-            Q.clear();
-            // Barrier synchronization
-            for (ColoringRunnable runnable : list) {
-                Q.addAll(runnable.resultQueue);
-            }
-
-        }   // is this right?!?
-        colorIterator = new HashSet<>(mapOfColors.values()).iterator();
-
-        // prepare mapColorIDs
-        for(Long id:mapOfColors.keySet()){
-            long color = mapOfColors.get(id);
-            if(mapColorIDs.containsKey(color)){
-                mapColorIDs.get(color).add(id);
-            } else{
-                List l = new ArrayList();
-                l.add(id);
-                mapColorIDs.put(id,l);
-            }
+            Q = new HashSet<>(allNodes);
+            MSColoring(listA, listB);  // TODO: Problem is here!
+            System.out.println(allNodes.size());
         }
-
-        // start BackwardColoringStepRunnables
-
-        // BFS threads work
-
 
         // PHASE 3
-
+        System.out.println(i + " ,Phase 3");
+        //System.out.println(allNodes.size());
         super.strongly(); // call seq. tarjan
 
+        // finish threads and executor
+        for(WorkerRunnableTemplate runnable:listA){
+            runnable.isAlive.set(false);
+            runnable.isIdle.set(false);
+        }
+        for(WorkerRunnableTemplate runnable:listB){
+            runnable.isAlive.set(false);
+            runnable.isIdle.set(false);
+        }
 
-        // finish executors
+        StartComparison.waitForExecutorToFinishAll(executor);
     }
 
     @Override
@@ -195,12 +165,95 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     }
 
     public static synchronized long getColor(){
-        if(!(nCutoff>=allNodes.size())){
-            if(colorIterator.hasNext()){
-                return colorIterator.next();
-            }
+
+        if(colorIterator.hasNext()){
+           return colorIterator.next();
         }
+
         return -1;
     }
+
+    private void MSColoring(List<ColoringRunnable> listA, List<BackwardColoringStepRunnable> listB){
+        while(Q.size()!=0) {
+
+            coloringDone = false;
+            itQ = Q.iterator();
+
+            // wake up threads
+            for (ColoringRunnable cRunnable : listA) {
+                cRunnable.isIdle.set(false);
+            }
+            // wait for threads to finish
+            while (true) {
+
+                if (coloringDone) {
+                    // coloring done indicates that all nodes are given to the thread,
+                    // but it dosn't mean that they finished yet!
+
+                    boolean check = true;
+                    for (ColoringRunnable runnable : listA) {
+                        if (runnable.isIdle.get() == false) {
+                            check = false;
+                        }
+                    }
+                    if (check) break;
+                }
+
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+            }
+
+            Q.clear();
+            // Barrier synchronization
+            for (ColoringRunnable runnable : listA) {
+                Q.addAll(runnable.resultQueue);
+            }
+
+        }
+
+        colorIterator = new HashSet<>(mapOfColors.values()).iterator();
+        //mapColorIDs.clear();
+        // prepare mapColorIDs
+        for(Long id:mapOfColors.keySet()){
+            long color = mapOfColors.get(id);
+            if(mapColorIDs.containsKey(color)){
+                List<Long> li = mapColorIDs.get(color);
+                li.add(id);
+                mapColorIDs.put(id,li);
+                //System.out.println("Hallo");
+            } else{
+                List l = new ArrayList();
+                l.add(id);
+                mapColorIDs.put(id,l);
+            }
+        }
+
+        // start BackwardColoringStepRunnables
+        for (WorkerRunnableTemplate runnable : listB) {
+            runnable.isIdle.set(false);
+        }
+
+        // BFS threads work, wait for finishing
+        while(true) {
+            boolean check = true;
+            for (BackwardColoringStepRunnable runnable : listB) {
+                if (runnable.isIdle.get() == false) {
+                    check = false;
+                }
+            }
+            if (check) break;
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
 }
 

@@ -2,6 +2,7 @@ package de.saschapeukert.Algorithms.Impl.ConnectedComponents;
 
 import de.saschapeukert.Algorithms.Abst.MyAlgorithmBaseRunnable;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.BFS;
+import de.saschapeukert.Database.DBUtils;
 import de.saschapeukert.Datastructures.TarjanNode;
 import de.saschapeukert.StartComparison;
 import org.neo4j.graphdb.Direction;
@@ -17,12 +18,14 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
 
-    protected int componentID=1;
+    protected int componentID= DBUtils.getInstance("","").highestNodeKey+1;
     protected final CCAlgorithmType myType;
 
     protected Map<Long,TarjanNode> nodeDictionary;
     protected Stack<Long> stack;
     protected int maxdfs=0;
+
+    //private static Set<Long> test= new HashSet<>();
 
     public static Set<Long> allNodes; // except the trivial CCs
 
@@ -36,6 +39,10 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
             this.nodeDictionary = new HashMap<>(db.highestNodeKey);
         }
 
+    }
+
+    @Override
+    protected void initialize(){
         prepareAllNodes();
     }
 
@@ -62,7 +69,6 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
 
         while(it.hasNext()) {
             // Every node has to be marked as (part of) a component
-            it = allNodes.iterator();
 
             try {
                 Long n = it.next();
@@ -72,6 +78,12 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
             } catch (NoSuchElementException e) {
                 break;
             }
+            System.out.println(allNodes.size());
+            if(allNodes.size()==0){
+                System.out.println("nu?");
+            }
+
+            it = allNodes.iterator();
 
         }
     }
@@ -83,7 +95,6 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
 
         while(it.hasNext()){
             // Every node has to be marked as (part of) a component
-            it = allNodes.iterator();
 
             try {
                 Long n = it.next();
@@ -96,6 +107,7 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
             }catch (NoSuchElementException e){
                 break;
             }
+            it = allNodes.iterator();
 
         }
 
@@ -176,10 +188,10 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
         // Building the result string
         StringBuilder returnString = new StringBuilder();
         returnString.append("Component count: ").append(myResults.keySet().size()).append("\n");
-        returnString.append("Components with Size between 4 and 10\n");
+        returnString.append("Components with Size between 3 and 5\n");
         returnString.append("- - - - - - - -\n");
         for(Integer s:myResults.keySet()){
-            if((myResults.get(s).size()<=5) || (myResults.get(s).size()>=10)){
+            if((myResults.get(s).size()<=2) || (myResults.get(s).size()>=6)){
                 continue;
             }
 
@@ -254,11 +266,22 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
     public static void registerSCCandRemoveFromAllNodes(Set<Long> reachableIDs,int sccID){
         for(Long l:reachableIDs){
             StartComparison.putIntoResultCounter(l, new AtomicInteger((sccID)));
+//            if(test.contains(l)){
+//                System.out.println(l + " ->"+ sccID);
+//            } else{
+//                test.add(l);
+//            }
         }
         removeFromAllNodes(reachableIDs);
+        test(reachableIDs);
     }
 
-    private static synchronized void removeFromAllNodes(Collection c){
+    protected static synchronized void removeFromAllNodes(Collection c){
         allNodes.removeAll(c);
     }
+
+    protected static void test(Set<Long> s){
+
+    }
+
 }

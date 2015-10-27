@@ -84,6 +84,11 @@ public class RandomWalkAlgorithmRunnable extends MyAlgorithmBaseRunnable {
 
     }
 
+    @Override
+    protected void initialize() {
+
+    }
+
     private Node getNextNode(Node n){
         if (n != null) {
             int relationshipsOfNode = n.getDegree(Direction.OUTGOING);

@@ -67,7 +67,7 @@ public class ConnectedComponentsMultiThreadTest {
 
     }
 
-    /*
+
     @Test
     public void StronglyConnectedComponentsShouldBeCorrect() {
 
@@ -104,5 +104,5 @@ public class ConnectedComponentsMultiThreadTest {
 
         }
     }
-    */
+
 }

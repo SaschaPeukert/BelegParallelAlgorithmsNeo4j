@@ -34,13 +34,19 @@ public class BackwardColoringStepRunnable extends WorkerRunnableTemplate {
 
         MTConnectedComponentsAlgo.registerSCCandRemoveFromAllNodes(reachableIDs,(int) color);
 
+        for(Object o:reachableIDs){
+            MTConnectedComponentsAlgo.mapOfColors.remove(o);
+        }
+
+
+
         return true; // loop !
     }
 
-    @Override
-    protected void cleanUpOperation(){
-        isAlive.set(false);  // stop yourself
-    }
+    //@Override
+    //protected void cleanUpOperation(){
+    //    isAlive.set(false);  // stop yourself
+    //}
 
 }
 

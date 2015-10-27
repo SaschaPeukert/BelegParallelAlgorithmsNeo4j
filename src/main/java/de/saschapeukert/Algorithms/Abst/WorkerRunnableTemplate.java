@@ -33,7 +33,7 @@ public abstract class WorkerRunnableTemplate extends MyAlgorithmBaseRunnable {
             //System.out.println("Thread " + posInList + " waiting");
             while (isIdle.get()) {
                 try {
-                    Thread.sleep(10);
+                    Thread.sleep(1);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -75,4 +75,7 @@ public abstract class WorkerRunnableTemplate extends MyAlgorithmBaseRunnable {
     }
     protected abstract boolean operation();
 
+
+    @Override
+    protected void initialize(){}
 }
