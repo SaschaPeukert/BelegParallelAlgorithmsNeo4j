@@ -12,17 +12,20 @@ import java.util.Queue;
  */
 public class ColoringRunnable extends WorkerRunnableTemplate {
 
-    public final Queue<Long> resultQueue = new LinkedList<>();
+    public final Queue<Long> resultQueue;
+    private final Queue<Long> privateQueue;
 
 
     public ColoringRunnable( boolean output){
         super(output);
+        resultQueue = new LinkedList<>();
+        privateQueue = new LinkedList<>();
     }
 
     @Override
     protected boolean operation(){
 
-        resultQueue.clear();
+        privateQueue.clear();
         parentID = MTConnectedComponentsAlgo.getElementFromQ();
 
         if(parentID==-1){
@@ -39,7 +42,7 @@ public class ColoringRunnable extends WorkerRunnableTemplate {
                 changedAtLeastOneColor=true;
                 if(MTConnectedComponentsAlgo.mapOfVisitedNodes.get(u)==false){
                     MTConnectedComponentsAlgo.mapOfVisitedNodes.put(u, true);
-                    resultQueue.add(u);
+                    privateQueue.add(u);
                 }
             }
         }
@@ -51,9 +54,7 @@ public class ColoringRunnable extends WorkerRunnableTemplate {
             }
         }
 
-        for(Long v:resultQueue){
-            MTConnectedComponentsAlgo.mapOfVisitedNodes.put(v,false);
-        }
+        resultQueue.addAll(privateQueue);
 
         return true;
     }

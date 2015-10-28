@@ -30,7 +30,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     private static boolean coloringDone;
     public static Set<Long> Q;
 
-    private static final long nCutoff=10000;
+    private static final long nCutoff=100;
 
     public static final ConcurrentHashMap<Long, Long> mapOfColors = new ConcurrentHashMap<>();
     public static final ConcurrentHashMap<Long, List<Long>> mapColorIDs = new ConcurrentHashMap<>();
@@ -83,7 +83,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
             MTConnectedComponentsAlgo.mapOfColors.remove(o);
         }
 
-       // System.out.println(componentID);
+        System.out.println("FWBW: " + componentID);
 
         componentID++;
 
@@ -116,7 +116,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
             }
             Q = new HashSet<>(allNodes);
             MSColoring(listA, listB);  // TODO: Problem is here!
-            System.out.println(allNodes.size());
+            //System.out.println(allNodes.size());
         }
 
         // PHASE 3
@@ -174,6 +174,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     }
 
     private void MSColoring(List<ColoringRunnable> listA, List<BackwardColoringStepRunnable> listB){
+
         while(Q.size()!=0) {
 
             coloringDone = false;
@@ -211,11 +212,19 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
             // Barrier synchronization
             for (ColoringRunnable runnable : listA) {
                 Q.addAll(runnable.resultQueue);
+                runnable.resultQueue.clear();
+
+            }
+            System.out.println(Q.size());
+            for(Long v:Q){
+                mapOfVisitedNodes.put(v,false);
             }
 
         }
 
-        colorIterator = new HashSet<>(mapOfColors.values()).iterator();
+        System.out.println("Coloring done");
+
+        colorIterator = new HashSet<>(mapOfColors.values()).iterator(); // ERROR must be in ColoringRunnable
         //mapColorIDs.clear();
         // prepare mapColorIDs
         for(Long id:mapOfColors.keySet()){
@@ -252,6 +261,8 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
                 e.printStackTrace();
             }
         }
+
+        System.out.println("MS-Coloring done");
 
     }
 

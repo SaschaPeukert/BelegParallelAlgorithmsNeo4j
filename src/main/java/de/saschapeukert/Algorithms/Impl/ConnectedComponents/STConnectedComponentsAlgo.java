@@ -78,10 +78,10 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
             } catch (NoSuchElementException e) {
                 break;
             }
-            System.out.println(allNodes.size());
-            if(allNodes.size()==0){
-                System.out.println("nu?");
-            }
+//            System.out.println(allNodes.size());
+//            if(allNodes.size()==0){
+//                System.out.println("nu?");
+//            }
 
             it = allNodes.iterator();
 
