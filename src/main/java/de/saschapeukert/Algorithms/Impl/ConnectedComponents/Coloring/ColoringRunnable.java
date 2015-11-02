@@ -32,25 +32,28 @@ public class ColoringRunnable extends WorkerRunnableTemplate {
             return false;
         }
 
-        Queue<Long> listOfReachableNodes = expandNode(parentID,MTConnectedComponentsAlgo.Q,false, Direction.OUTGOING);
+        Queue<Long> listOfReachableNodes = expandNode(parentID,MTConnectedComponentsAlgo.allNodes,false, Direction.OUTGOING);
 
         boolean changedAtLeastOneColor = false;
         for(Long u:listOfReachableNodes){
 
-            if(colorIsGreaterThan(parentID,u)){
-                MTConnectedComponentsAlgo.mapOfColors.put(u,MTConnectedComponentsAlgo.mapOfColors.get(parentID));
-                changedAtLeastOneColor=true;
-                if(MTConnectedComponentsAlgo.mapOfVisitedNodes.get(u)==false){
-                    MTConnectedComponentsAlgo.mapOfVisitedNodes.put(u, true);
-                    privateQueue.add(u);
+           // synchronized (u){
+                if(colorIsGreaterThan(parentID,u)){
+                    MTConnectedComponentsAlgo.mapOfColors.put(u,MTConnectedComponentsAlgo.mapOfColors.get(parentID));
+                    changedAtLeastOneColor=true;
+                    if(MTConnectedComponentsAlgo.mapOfVisitedNodes.get(u)==false){
+                        MTConnectedComponentsAlgo.mapOfVisitedNodes.put(u, true);
+                        privateQueue.add(u);
+                    }
                 }
-            }
+          //  }
+
         }
 
         if(changedAtLeastOneColor){
             if(MTConnectedComponentsAlgo.mapOfVisitedNodes.get(parentID)==false){
                 MTConnectedComponentsAlgo.mapOfVisitedNodes.put(parentID,true);
-                resultQueue.add(parentID);
+                privateQueue.add(parentID);
             }
         }
 

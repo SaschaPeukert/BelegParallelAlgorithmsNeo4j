@@ -247,7 +247,7 @@ public class StartComparison {
             e.printStackTrace();
         }
 
-        System.out.println(runnable.getResults());    //TODO REMOVE, JUST FOR DEBUG
+        //System.out.println(runnable.getResults());    //TODO REMOVE, JUST FOR DEBUG
 
         return runnable.timer.elapsed(TimeUnit.MILLISECONDS);
 

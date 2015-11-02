@@ -30,7 +30,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     private static boolean coloringDone;
     public static Set<Long> Q;
 
-    private static final long nCutoff=100;
+    public static  long nCutoff=100;
 
     public static final ConcurrentHashMap<Long, Long> mapOfColors = new ConcurrentHashMap<>();
     public static final ConcurrentHashMap<Long, List<Long>> mapColorIDs = new ConcurrentHashMap<>();
@@ -83,7 +83,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
             MTConnectedComponentsAlgo.mapOfColors.remove(o);
         }
 
-        System.out.println("FWBW: " + componentID);
+        System.out.println("Potentialy biggest component: " + componentID);
 
         componentID++;
 
@@ -120,7 +120,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         }
 
         // PHASE 3
-        System.out.println(i + " ,Phase 3");
+        System.out.println(i+", Phase 3");
         //System.out.println(allNodes.size());
         super.strongly(); // call seq. tarjan
 
@@ -180,6 +180,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
             coloringDone = false;
             itQ = Q.iterator();
 
+
             // wake up threads
             for (ColoringRunnable cRunnable : listA) {
                 cRunnable.isIdle.set(false);
@@ -215,31 +216,32 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
                 runnable.resultQueue.clear();
 
             }
-            System.out.println(Q.size());
+            //System.out.println(Q.size());
             for(Long v:Q){
                 mapOfVisitedNodes.put(v,false);
             }
 
         }
 
-        System.out.println("Coloring done");
+       // System.out.println("Coloring done");
 
         colorIterator = new HashSet<>(mapOfColors.values()).iterator(); // ERROR must be in ColoringRunnable
         //mapColorIDs.clear();
         // prepare mapColorIDs
-        for(Long id:mapOfColors.keySet()){
+        for(Long id:mapOfColors.keySet()){          // FIXME !!!
             long color = mapOfColors.get(id);
+
             if(mapColorIDs.containsKey(color)){
                 List<Long> li = mapColorIDs.get(color);
                 li.add(id);
-                mapColorIDs.put(id,li);
-                //System.out.println("Hallo");
+                //mapColorIDs.put(id,li);
+
             } else{
                 List l = new ArrayList();
                 l.add(id);
-                mapColorIDs.put(id,l);
+                mapColorIDs.put(color,l);
             }
-        }
+        }                                   // FIXME !!!
 
         // start BackwardColoringStepRunnables
         for (WorkerRunnableTemplate runnable : listB) {
@@ -262,7 +264,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
             }
         }
 
-        System.out.println("MS-Coloring done");
+        //System.out.println("MS-Coloring done");
 
     }
 

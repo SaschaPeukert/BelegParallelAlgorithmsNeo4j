@@ -78,10 +78,6 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
             } catch (NoSuchElementException e) {
                 break;
             }
-//            System.out.println(allNodes.size());
-//            if(allNodes.size()==0){
-//                System.out.println("nu?");
-//            }
 
             it = allNodes.iterator();
 
@@ -143,15 +139,31 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
     }
 
     protected void trimOrAddToAllNodes(Node n){
-        if(n.getDegree()==0){
-            // trivial CC
-            StartComparison.putIntoResultCounter(n.getId(), new AtomicInteger(componentID));
-            componentID++;
-
+        if(this.myType==CCAlgorithmType.STRONG){
+            if(n.getDegree(Direction.OUTGOING)==0 || n.getDegree(Direction.OUTGOING.INCOMING)==0){
+                // trivial CC
+                StartComparison.putIntoResultCounter(n.getId(), new AtomicInteger(componentID));
+                componentID++;
+            } else{
+                allNodes.add(n.getId());
+                furtherInspectNodeWhileTrim(n);
+            }
         } else{
-            allNodes.add(n.getId());
-            furtherInspectNodeWhileTrim(n);
+            if(n.getDegree()==0){
+                // trivial CC
+                StartComparison.putIntoResultCounter(n.getId(), new AtomicInteger(componentID));
+                componentID++;
+            } else{
+                allNodes.add(n.getId());
+                furtherInspectNodeWhileTrim(n);
+            }
         }
+
+
+
+
+
+
     }
 
     protected void furtherInspectNodeWhileTrim(Node n){

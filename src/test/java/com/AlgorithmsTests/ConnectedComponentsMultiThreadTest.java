@@ -1,5 +1,6 @@
 package com.AlgorithmsTests;
 
+import de.saschapeukert.Algorithms.Impl.ConnectedComponents.MTConnectedComponentsAlgo;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.STConnectedComponentsAlgo;
 import de.saschapeukert.StartComparison;
 import org.apache.commons.lang3.SystemUtils;
@@ -72,6 +73,7 @@ public class ConnectedComponentsMultiThreadTest {
     public void StronglyConnectedComponentsShouldBeCorrect() {
 
         // Do the Run, get results
+        MTConnectedComponentsAlgo.nCutoff=3;
         StartComparison.main(argsSCC);
         Map<Integer,List<Long>> resultOfRun = STConnectedComponentsAlgo.getMapofComponentToIDs();
 
