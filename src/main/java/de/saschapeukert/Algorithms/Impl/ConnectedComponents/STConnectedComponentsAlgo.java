@@ -25,8 +25,6 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
     protected Stack<Long> stack;
     protected int maxdfs=0;
 
-    //private static Set<Long> test= new HashSet<>();
-
     public static Set<Long> allNodes; // except the trivial CCs
 
     public STConnectedComponentsAlgo(CCAlgorithmType type, boolean output) {
@@ -278,11 +276,7 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
     public static void registerSCCandRemoveFromAllNodes(Set<Long> reachableIDs,int sccID){
         for(Long l:reachableIDs){
             StartComparison.putIntoResultCounter(l, new AtomicInteger((sccID)));
-//            if(test.contains(l)){
-//                System.out.println(l + " ->"+ sccID);
-//            } else{
-//                test.add(l);
-//            }
+
         }
         removeFromAllNodes(reachableIDs);
         test(reachableIDs);

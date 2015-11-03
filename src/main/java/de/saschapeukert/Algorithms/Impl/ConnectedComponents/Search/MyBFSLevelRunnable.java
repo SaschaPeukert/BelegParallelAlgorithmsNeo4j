@@ -31,6 +31,10 @@ public class MyBFSLevelRunnable extends WorkerRunnableTemplate {
             parentID = MyBFS.frontierList.get(key);
             Queue<Long> q = expandNode(parentID,MyBFS.visitedIDs,true,direction);
 
+            if(MyBFS.nodeIDSet!=null){
+                q.retainAll(MyBFS.nodeIDSet);
+            }
+
             MyBFS.MapOfQueues.put(key, q);
             MyBFS.visitedIDs.addAll(q);
 

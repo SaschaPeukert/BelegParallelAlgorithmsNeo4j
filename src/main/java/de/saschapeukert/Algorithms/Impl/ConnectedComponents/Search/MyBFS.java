@@ -26,6 +26,8 @@ public class MyBFS {
     private final int THRESHOLD=100000;
     private final DBUtils db;
 
+    static Set<Long> nodeIDSet;
+
     private final ExecutorService executor;
 
     private static MyBFS instance;
@@ -53,8 +55,10 @@ public class MyBFS {
     }
 
 
-    public Set<Long> work(long nodeID, Direction direction){
+    public Set<Long> work(long nodeID, Direction direction, Set<Long> set){
 
+
+        nodeIDSet = set;
         ReadOperations ops = db.getReadOperations();
         //Set<Long> visitedIDs = new HashSet<>();
         visitedIDs.clear();
@@ -85,6 +89,12 @@ public class MyBFS {
             if (visitedIDs.contains(child)) {
                 continue;
             }
+            if(nodeIDSet!=null){  // Little bit dirty fix
+                if(!nodeIDSet.contains(child)){
+                    continue;
+                }
+            }
+
             visitedIDs.add(child);
             frontierList.add(child);
         }

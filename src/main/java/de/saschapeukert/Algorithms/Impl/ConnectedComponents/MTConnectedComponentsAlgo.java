@@ -56,7 +56,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     protected void searchForWeakly(long n){
 
         MyBFS bfs = MyBFS.getInstance();
-        Set<Long> reachableIDs = bfs.work(n, Direction.BOTH);
+        Set<Long> reachableIDs = bfs.work(n, Direction.BOTH,null);
 
         MTConnectedComponentsAlgo.registerSCCandRemoveFromAllNodes(reachableIDs,componentID);
 
@@ -74,17 +74,10 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
 
         // PHASE 1
 
-            // TODO: MyBFS should be used here
-        Set<Long> D = BFS.go(maxDegreeID, Direction.OUTGOING);
-        D.retainAll(BFS.go(maxDegreeID, Direction.INCOMING, D)); // D = S from Paper from here on
-
-        MTConnectedComponentsAlgo.registerSCCandRemoveFromAllNodes(D,componentID);
-        for(Object o:D){
-            MTConnectedComponentsAlgo.mapOfColors.remove(o);
-        }
+        // TODO: MyBFS should be used here
+        FWBW_Step(false);
 
         System.out.println("Potentialy biggest component: " + componentID);
-
         componentID++;
 
         // PHASE 2
@@ -268,5 +261,27 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
 
     }
 
+
+    private void FWBW_Step(boolean myBFS){
+        // TODO: MyBFS should be used here
+        Set<Long> D;
+        if(myBFS){
+            MyBFS instance =MyBFS.getInstance();
+
+            D = instance.work(maxDegreeID, Direction.OUTGOING,null);
+            D.retainAll(instance.work(maxDegreeID, Direction.INCOMING, D)); // D = S from Paper from here on
+
+        } else{
+            D = BFS.go(maxDegreeID, Direction.OUTGOING);
+            D.retainAll(BFS.go(maxDegreeID, Direction.INCOMING, D)); // D = S from Paper from here on
+        }
+
+        MTConnectedComponentsAlgo.registerSCCandRemoveFromAllNodes(D,componentID);
+        for(Object o:D){
+            MTConnectedComponentsAlgo.mapOfColors.remove(o);
+        }
+
+
+    }
 }
 
