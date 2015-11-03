@@ -30,6 +30,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     private static boolean coloringDone;
     public static Set<Long> Q;
 
+    public static boolean myBFS=false;
     public static  long nCutoff=100;
 
     public static final ConcurrentHashMap<Long, Long> mapOfColors = new ConcurrentHashMap<>();
@@ -54,9 +55,13 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
 
     @Override
     protected void searchForWeakly(long n){
-
-        MyBFS bfs = MyBFS.getInstance();
-        Set<Long> reachableIDs = bfs.work(n, Direction.BOTH,null);
+        Set<Long> reachableIDs;
+        if(myBFS) {
+            MyBFS bfs = MyBFS.getInstance();
+            reachableIDs = bfs.work(n, Direction.BOTH, null);
+        } else{
+            reachableIDs = BFS.go(n,Direction.BOTH);
+        }
 
         MTConnectedComponentsAlgo.registerSCCandRemoveFromAllNodes(reachableIDs,componentID);
 
@@ -75,7 +80,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         // PHASE 1
 
         // TODO: MyBFS should be used here
-        FWBW_Step(false);
+        FWBW_Step(myBFS);
 
         System.out.println("Potentialy biggest component: " + componentID);
         componentID++;

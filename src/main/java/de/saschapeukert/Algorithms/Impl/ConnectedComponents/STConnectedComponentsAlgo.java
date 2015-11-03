@@ -157,11 +157,6 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
             }
         }
 
-
-
-
-
-
     }
 
     protected void furtherInspectNodeWhileTrim(Node n){
