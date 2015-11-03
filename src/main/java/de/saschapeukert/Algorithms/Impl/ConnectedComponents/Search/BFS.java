@@ -21,11 +21,9 @@ public class BFS {
         Set<Long> visitedIDs = new HashSet<>();
         List<Long> frontierList= new LinkedList<>();
 
-        visitedIDs.clear();
-
         frontierList.add(nodeID);
-
         visitedIDs.add(nodeID);
+
         while(!frontierList.isEmpty())
         {
             Long n = frontierList.remove(0);
@@ -36,14 +34,10 @@ public class BFS {
                 }
                 visitedIDs.add(child);
                 frontierList.add(child);
-
             }
-
         }
         return visitedIDs;
     }
-
-    // TODO: Implement this in myBFS too
 
     /**
      * Only does BFS on the nodes specified in nodeIDSet
@@ -60,15 +54,12 @@ public class BFS {
         Set<Long> visitedIDs = new HashSet<>();
         List<Long> frontierList= new LinkedList<>();
 
-        visitedIDs.clear();
-
         frontierList.add(nodeID);
-
         visitedIDs.add(nodeID);
+
         while(!frontierList.isEmpty())
         {
             Long n = frontierList.remove(0);
-
             for(Long child: db.getConnectedNodeIDs(ops, n, direction)){
                 if(visitedIDs.contains(child)){
                     continue;
@@ -78,11 +69,8 @@ public class BFS {
                 }
                 visitedIDs.add(child);
                 frontierList.add(child);
-
             }
-
         }
         return visitedIDs;
     }
-
 }

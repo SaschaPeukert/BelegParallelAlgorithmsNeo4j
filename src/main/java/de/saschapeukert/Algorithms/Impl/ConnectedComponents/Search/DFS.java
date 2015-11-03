@@ -22,7 +22,6 @@ public class DFS {
         ops =db.getReadOperations();
 
         doDFS(n, direction);
-
         return visitedIDs;
     }
 
@@ -30,7 +29,6 @@ public class DFS {
         if (visitedIDs.contains(n)) {
             return;
         }
-
         visitedIDs.add(n);
 
         for (Long l : db.getConnectedNodeIDs(ops, n, direction)) {

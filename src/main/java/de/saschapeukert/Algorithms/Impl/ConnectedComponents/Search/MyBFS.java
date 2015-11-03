@@ -27,9 +27,7 @@ public class MyBFS {
     private final DBUtils db;
 
     static Set<Long> nodeIDSet;
-
     private final ExecutorService executor;
-
     private static MyBFS instance;
 
     public static MyBFS getInstance(){
@@ -49,7 +47,6 @@ public class MyBFS {
             list.add(runnable);
             executor.execute(runnable);
         }
-
         MapOfQueues = new ConcurrentSkipListMap<>();
         db = DBUtils.getInstance("","");
     }
@@ -57,15 +54,14 @@ public class MyBFS {
 
     public Set<Long> work(long nodeID, Direction direction, Set<Long> set){
 
-
         nodeIDSet = set;
         ReadOperations ops = db.getReadOperations();
         //Set<Long> visitedIDs = new HashSet<>();
         visitedIDs.clear();
 
         frontierList.add(nodeID);
-
         visitedIDs.add(nodeID);
+
         while(!frontierList.isEmpty())
         {
             int size = frontierList.size();
@@ -75,9 +71,7 @@ public class MyBFS {
             } else{
                 // sequential
                 doSequentialLevel(direction,ops);
-
             }
-
         }
         return visitedIDs;
     }
@@ -94,11 +88,9 @@ public class MyBFS {
                     continue;
                 }
             }
-
             visitedIDs.add(child);
             frontierList.add(child);
         }
-
     }
 
     private void doParallelLevel(Direction direction, int size){
@@ -107,7 +99,6 @@ public class MyBFS {
         for(int i=0;i<StartComparison.NUMBER_OF_THREADS;i++){
             ThreadCheckList.add(false);
         }
-
         for(MyBFSLevelRunnable runnable:list){
             runnable.direction = direction;
             runnable.isIdle.set(false);
@@ -117,7 +108,6 @@ public class MyBFS {
         boolean check;
         while(true){
             //System.out.println(MapOfQueues.keySet().size() + "/" + size);
-
             check=true;
             for(int i=0;i<StartComparison.NUMBER_OF_THREADS;i++){
                 if(!checkThreadList(i)){
@@ -139,8 +129,6 @@ public class MyBFS {
         // threads finished, collecting results -> new frontier
         frontierList.clear();
         for(int i=0;i<size;i++){
-
-            //System.out.println(i +" s:" + size);
             frontierList.addAll(MapOfQueues.get(i));
         }
 
@@ -154,7 +142,6 @@ public class MyBFS {
             runnable.isAlive.set(false);
             runnable.isIdle.set(false);
         }
-
         StartComparison.waitForExecutorToFinishAll(executor);
     }
 

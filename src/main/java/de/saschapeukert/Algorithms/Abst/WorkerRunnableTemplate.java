@@ -16,13 +16,11 @@ public abstract class WorkerRunnableTemplate extends MyAlgorithmBaseRunnable {
         super(output);
     }
 
-
     protected volatile long parentID;
     private ReadOperations ops;
 
     public final AtomicBoolean isAlive = new AtomicBoolean(true);
     public final AtomicBoolean isIdle = new AtomicBoolean(true);
-
 
     @Override
     protected void compute() {
@@ -43,14 +41,11 @@ public abstract class WorkerRunnableTemplate extends MyAlgorithmBaseRunnable {
                 //System.out.println("Thread " + posInList + " killed");
                 return;
             }
-
             //noinspection StatementWithEmptyBody,StatementWithEmptyBody
             while (operation()) {
                 //work
             }
-
             cleanUpOperation();
-
             //System.out.println("Thread " + posInList + " done");
         }
     }
@@ -64,7 +59,6 @@ public abstract class WorkerRunnableTemplate extends MyAlgorithmBaseRunnable {
             } else{
                 if(!c.contains(child)) continue;
             }
-
             resultQueue.add(child);
         }
         return resultQueue;
@@ -74,7 +68,6 @@ public abstract class WorkerRunnableTemplate extends MyAlgorithmBaseRunnable {
         isIdle.set(true); // now it waits after one operation and can be used again
     }
     protected abstract boolean operation();
-
 
     @Override
     protected void initialize(){}

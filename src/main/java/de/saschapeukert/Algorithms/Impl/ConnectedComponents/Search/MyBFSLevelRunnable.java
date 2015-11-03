@@ -11,7 +11,6 @@ import java.util.Queue;
  */
 public class MyBFSLevelRunnable extends WorkerRunnableTemplate {
 
-
     public Direction direction;
     private final int posInList;
     private int i; //counter

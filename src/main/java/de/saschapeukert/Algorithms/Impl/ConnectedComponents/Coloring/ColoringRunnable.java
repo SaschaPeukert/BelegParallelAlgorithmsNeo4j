@@ -15,7 +15,6 @@ public class ColoringRunnable extends WorkerRunnableTemplate {
     public final Queue<Long> resultQueue;
     private final Queue<Long> privateQueue;
 
-
     public ColoringRunnable( boolean output){
         super(output);
         resultQueue = new LinkedList<>();
@@ -32,22 +31,19 @@ public class ColoringRunnable extends WorkerRunnableTemplate {
             return false;
         }
 
-        Queue<Long> listOfReachableNodes = expandNode(parentID,MTConnectedComponentsAlgo.allNodes,false, Direction.OUTGOING);
-
+        Queue<Long> listOfReachableNodes = expandNode(parentID,
+                MTConnectedComponentsAlgo.allNodes,false, Direction.OUTGOING);
         boolean changedAtLeastOneColor = false;
+
         for(Long u:listOfReachableNodes){
-
-           // synchronized (u){
-                if(colorIsGreaterThan(parentID,u)){
-                    MTConnectedComponentsAlgo.mapOfColors.put(u,MTConnectedComponentsAlgo.mapOfColors.get(parentID));
-                    changedAtLeastOneColor=true;
-                    if(MTConnectedComponentsAlgo.mapOfVisitedNodes.get(u)==false){
-                        MTConnectedComponentsAlgo.mapOfVisitedNodes.put(u, true);
-                        privateQueue.add(u);
-                    }
+            if(colorIsGreaterThan(parentID,u)){
+                MTConnectedComponentsAlgo.mapOfColors.put(u,MTConnectedComponentsAlgo.mapOfColors.get(parentID));
+                changedAtLeastOneColor=true;
+                if(MTConnectedComponentsAlgo.mapOfVisitedNodes.get(u)==false){
+                    MTConnectedComponentsAlgo.mapOfVisitedNodes.put(u, true);
+                    privateQueue.add(u);
                 }
-          //  }
-
+            }
         }
 
         if(changedAtLeastOneColor){
@@ -56,9 +52,7 @@ public class ColoringRunnable extends WorkerRunnableTemplate {
                 privateQueue.add(parentID);
             }
         }
-
         resultQueue.addAll(privateQueue);
-
         return true;
     }
 

@@ -253,7 +253,6 @@ public class StartComparison {
 
     }
 
-
     private static long doMultiThreadRandomWalk(int noOfSteps, boolean output){
 
         // INIT
@@ -273,7 +272,6 @@ public class StartComparison {
             }
             executor.execute(rw);
             list.add(rw);
-
         }
 
         waitForExecutorToFinishAll(executor);

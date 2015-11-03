@@ -18,7 +18,6 @@ import java.util.concurrent.Executors;
  * Created by Sascha Peukert on 06.08.2015.
  */
 
-
 @SuppressWarnings("deprecation")
 public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
 
@@ -75,19 +74,14 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
      */
     @Override
     protected void strongly(){
-            // TODO: check/fix what happens if maxDegreeID is still on default value
-
         // PHASE 1
+        FWBW_Step(myBFS); // TODO: MyBFS should be used here
 
-        // TODO: MyBFS should be used here
-        FWBW_Step(myBFS);
-
-        System.out.println("Potentialy biggest component: " + componentID);
+        //System.out.println("Potentialy biggest component: " + componentID);
         componentID++;
 
         // PHASE 2
-
-        // Start Threads
+            // Start Threads
         ExecutorService executor = Executors.newFixedThreadPool(StartComparison.NUMBER_OF_THREADS*2);
 
             // start fixed Number of ColoringRunnable Threads
@@ -102,9 +96,9 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
             executor.execute(bwRunnable);
         }
 
-        System.out.println("Phase 2");
+        //System.out.println("Phase 2");
         int i=0;
-        while(nCutoff<allNodes.size()) {
+        while(nCutoff<allNodes.size()) { // Do MS-Coloring
             i++;
             if(i!=1){
                 mapOfColors.clear();
@@ -113,16 +107,14 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
                 }
             }
             Q = new HashSet<>(allNodes);
-            MSColoring(listA, listB);  // TODO: Problem is here!
-            //System.out.println(allNodes.size());
+            MSColoring(listA, listB);
         }
 
         // PHASE 3
-        System.out.println(i+", Phase 3");
-        //System.out.println(allNodes.size());
+        //System.out.println(i+", Phase 3");
         super.strongly(); // call seq. tarjan
 
-        // finish threads and executor
+            // finish threads and executor
         for(WorkerRunnableTemplate runnable:listA){
             runnable.isAlive.set(false);
             runnable.isIdle.set(false);
@@ -143,7 +135,6 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
                 maxdDegreeINOUT =degreeINOUT;
                 maxDegreeID = n.getId();
             }
-
             mapOfColors.put(n.getId(), n.getId());
             mapOfVisitedNodes.put(n.getId(),false);
         }
@@ -157,7 +148,6 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         if(itQ.hasNext()){
             return itQ.next();
         }
-
         coloringDone=true;
         return -1;
     }
@@ -167,17 +157,14 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         if(colorIterator.hasNext()){
            return colorIterator.next();
         }
-
         return -1;
     }
 
     private void MSColoring(List<ColoringRunnable> listA, List<BackwardColoringStepRunnable> listB){
 
         while(Q.size()!=0) {
-
             coloringDone = false;
             itQ = Q.iterator();
-
 
             // wake up threads
             for (ColoringRunnable cRunnable : listA) {
@@ -189,7 +176,6 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
                 if (coloringDone) {
                     // coloring done indicates that all nodes are given to the thread,
                     // but it dosn't mean that they finished yet!
-
                     boolean check = true;
                     for (ColoringRunnable runnable : listA) {
                         if (runnable.isIdle.get() == false) {
@@ -198,13 +184,11 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
                     }
                     if (check) break;
                 }
-
                 try {
                     Thread.sleep(1);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-
             }
 
             Q.clear();
@@ -214,32 +198,26 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
                 runnable.resultQueue.clear();
 
             }
-            //System.out.println(Q.size());
             for(Long v:Q){
                 mapOfVisitedNodes.put(v,false);
             }
 
         }
+        // Coloring done
 
-       // System.out.println("Coloring done");
-
-        colorIterator = new HashSet<>(mapOfColors.values()).iterator(); // ERROR must be in ColoringRunnable
-        //mapColorIDs.clear();
+        colorIterator = new HashSet<>(mapOfColors.values()).iterator();
         // prepare mapColorIDs
-        for(Long id:mapOfColors.keySet()){          // FIXME !!!
+        for(Long id:mapOfColors.keySet()){
             long color = mapOfColors.get(id);
-
             if(mapColorIDs.containsKey(color)){
                 List<Long> li = mapColorIDs.get(color);
                 li.add(id);
-                //mapColorIDs.put(id,li);
-
             } else{
                 List l = new ArrayList();
                 l.add(id);
                 mapColorIDs.put(color,l);
             }
-        }                                   // FIXME !!!
+        }
 
         // start BackwardColoringStepRunnables
         for (WorkerRunnableTemplate runnable : listB) {
@@ -256,23 +234,18 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
             }
             if (check) break;
             try {
-                Thread.sleep(10);
+                Thread.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
 
-        //System.out.println("MS-Coloring done");
-
     }
 
-
     private void FWBW_Step(boolean myBFS){
-        // TODO: MyBFS should be used here
         Set<Long> D;
         if(myBFS){
             MyBFS instance =MyBFS.getInstance();
-
             D = instance.work(maxDegreeID, Direction.OUTGOING,null);
             D.retainAll(instance.work(maxDegreeID, Direction.INCOMING, D)); // D = S from Paper from here on
 

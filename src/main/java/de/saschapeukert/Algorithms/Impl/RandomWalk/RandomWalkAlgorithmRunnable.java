@@ -27,11 +27,10 @@ public class RandomWalkAlgorithmRunnable extends MyAlgorithmBaseRunnable {
         this.currentNode = null;
         this.NUMBER_OF_STEPS = NumberOfSteps;
         this.random = ThreadLocalRandom.current();
-
     }
+
     @Override
     public void compute() {
-
 /*
         TraversalDescription traversalDescription = graphDb.traversalDescription().depthFirst().expand(new PathExpander<AtomicInteger>() {
             @Override
@@ -62,7 +61,6 @@ public class RandomWalkAlgorithmRunnable extends MyAlgorithmBaseRunnable {
 
         }
 */
-
         timer.start();
 
         while (this.NUMBER_OF_STEPS > 0) {
@@ -73,21 +71,15 @@ public class RandomWalkAlgorithmRunnable extends MyAlgorithmBaseRunnable {
             } else {
                 currentNode = getNextNode(currentNode);
             }
-
             if(output)
                 StartComparison.incrementResultCounterforId(currentNode.getId());
-
             NUMBER_OF_STEPS--;
-
         }
         timer.stop();
-
     }
 
     @Override
-    protected void initialize() {
-
-    }
+    protected void initialize() {}
 
     private Node getNextNode(Node n){
         if (n != null) {
@@ -96,13 +88,11 @@ public class RandomWalkAlgorithmRunnable extends MyAlgorithmBaseRunnable {
             if(relationshipsOfNode>0){
                 // Choose one of the relationships to follow
                 Iterator<Relationship> itR = n.getRelationships(Direction.OUTGOING).iterator();
-
                 int new_relationshipIndex = random.nextInt(relationshipsOfNode);
 
                 for(int i=0;i<=new_relationshipIndex;i++)
                 {
                     if(i==new_relationshipIndex){
-
                         Relationship r = itR.next();
                         return r.getOtherNode(n);
 
@@ -110,14 +100,10 @@ public class RandomWalkAlgorithmRunnable extends MyAlgorithmBaseRunnable {
                         itR.next();
                     }
                 }
-
-
             }
-
         }
         return db.getSomeRandomNode( random);  // Node has no outgoing relationships or is start "node"
     }
-
 }
 
 

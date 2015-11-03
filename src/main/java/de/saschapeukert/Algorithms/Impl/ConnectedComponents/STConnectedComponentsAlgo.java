@@ -36,7 +36,6 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
             this.stack = new Stack<>();
             this.nodeDictionary = new HashMap<>(db.highestNodeKey);
         }
-
     }
 
     @Override
@@ -55,10 +54,7 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
             strongly();
         }
 
-
-
         timer.stop();
-
     }
 
     protected void strongly(){
@@ -66,59 +62,45 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
         Iterator<Long> it = allNodes.iterator();
 
         while(it.hasNext()) {
-            // Every node has to be marked as (part of) a component
 
             try {
                 Long n = it.next();
-
                 tarjan(n);
 
             } catch (NoSuchElementException e) {
                 break;
             }
-
             it = allNodes.iterator();
-
         }
     }
-
 
     protected void weakly(){
 
         Iterator<Long> it = allNodes.iterator();
-
         while(it.hasNext()){
             // Every node has to be marked as (part of) a component
 
             try {
                 Long n = it.next();
-
                 searchForWeakly(n);
                 componentID++;
-
-
 
             }catch (NoSuchElementException e){
                 break;
             }
             it = allNodes.iterator();
-
         }
-
     }
 
     protected void searchForWeakly(long n){
         Set<Long> reachableIDs = BFS.go(n, Direction.BOTH);
 
         registerSCCandRemoveFromAllNodes(reachableIDs,componentID);
-
     }
 
     private void prepareAllNodes(){
-        //allNodes = Sets.newConcurrentHashSet();
-        allNodes = new HashSet<>(db.highestNodeKey);
-        //        ;(db.highestNodeKey);
 
+        allNodes = new HashSet<>(db.highestNodeKey);
         tx = db.openTransaction();
 
         ResourceIterator<Node> it = db.getIteratorForAllNodes();
@@ -129,9 +111,7 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
 
             if(myType== CCAlgorithmType.STRONG)
                 nodeDictionary.put(n.getId(),new TarjanNode());
-
         }
-
         it.close();
         db.closeTransactionWithSuccess(tx);
     }
@@ -156,7 +136,6 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
                 furtherInspectNodeWhileTrim(n);
             }
         }
-
     }
 
     protected void furtherInspectNodeWhileTrim(Node n){
@@ -227,8 +206,8 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
         v.lowlink = maxdfs;
         maxdfs++;
 
-        v.onStack = true;           // This should be atomic
-        stack.push(currentNode);        // !
+        v.onStack = true;           // This should be
+        stack.push(currentNode);        // atomic
 
         allNodes.remove(currentNode);
 
@@ -251,7 +230,6 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
 
         if(v.lowlink == v.dfs){
             // Root of a SCC
-
             while(true){
                 Long node_v = stack.pop();                      // This should be atomic
                 TarjanNode v_new = nodeDictionary.get(node_v);  // !
@@ -274,15 +252,11 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
 
         }
         removeFromAllNodes(reachableIDs);
-        test(reachableIDs);
     }
 
     protected static synchronized void removeFromAllNodes(Collection c){
         allNodes.removeAll(c);
     }
 
-    protected static void test(Set<Long> s){
-
-    }
 
 }

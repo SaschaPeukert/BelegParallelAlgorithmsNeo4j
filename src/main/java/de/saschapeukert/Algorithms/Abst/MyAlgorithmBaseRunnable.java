@@ -14,7 +14,6 @@ public abstract class MyAlgorithmBaseRunnable extends MyBaseRunnable {
 
     protected abstract void compute();
 
-
     @Override
     /**
      * It will automaticly open a TA
@@ -25,7 +24,6 @@ public abstract class MyAlgorithmBaseRunnable extends MyBaseRunnable {
         compute();
         db.closeTransactionWithSuccess(this.tx);
     }
-
 
     /*
         This will also initialize the timer but NOT start it!
