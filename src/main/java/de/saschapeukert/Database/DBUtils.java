@@ -32,7 +32,6 @@ import java.util.concurrent.ThreadLocalRandom;
 @SuppressWarnings("deprecation")
 public class DBUtils {
 
-
     private static StoreAccess neoStore;
     private static GraphDatabaseService graphDb;
     public final int highestNodeKey;
@@ -43,20 +42,16 @@ public class DBUtils {
     public Node getSomeRandomNode( ThreadLocalRandom random){
         long r;
         while(true) {
-
             try {
-
                 // NEW VERSION, checks Map for ID and not DB
                 r = (long) random.nextInt(highestNodeKey);
                 if(StartComparison.resultCounterContainsKey(r)){
                     return graphDb.getNodeById(r);
                 }
-
             } catch (NotFoundException e){
                 // NEW: this should never be happening!
                 System.out.println("Something terrible is happend");
             }
-
         }
     }
 
@@ -64,7 +59,6 @@ public class DBUtils {
         GlobalGraphOperations ggop = GlobalGraphOperations.at(graphDb);
         return ggop.getAllNodes().iterator();
     }
-
 
     public ReadOperations getReadOperations(){
 
@@ -76,7 +70,6 @@ public class DBUtils {
 
         ThreadToStatementContextBridge ctx = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
         return ctx.get().readOperations();
-
     }
 
     public DataWriteOperations getDataWriteOperations(){
@@ -94,19 +87,15 @@ public class DBUtils {
         while(true) {
 
             r = (long) random.nextInt(highestNodeKey);
-
             // NEW VERSION without DB-Lookup
             if(StartComparison.resultCounterContainsKey(r))
                 return r;
-
         }
-
     }
 
     public Relationship getSomeRandomRelationship(ThreadLocalRandom random, int highestNodeId){
         long r;
         while(true) {
-
             try {
                 r = (long) random.nextInt(highestNodeId);
                 Node n = graphDb.getNodeById(r);  // meh?
@@ -114,9 +103,7 @@ public class DBUtils {
             } catch (NotFoundException | NoSuchElementException ex){
                 // NEXT!
             }
-
         }
-
     }
 
     public boolean removePropertyFromAllNodes(int PropertyID, DataWriteOperations ops){
@@ -129,13 +116,10 @@ public class DBUtils {
                 //if(i%250000==0)
                 //    System.out.println(i);
             }
-
-
         } catch (EntityNotFoundException e) {
             e.printStackTrace(); // TODO REMOVE
             return false;
         }
-
         return true;
     }
 
@@ -147,7 +131,6 @@ public class DBUtils {
      */
     public void removePropertyKey(int propertyID, DataWriteOperations ops){
         ops.graphRemoveProperty(propertyID);
-
     }
 
     public boolean createStringPropertyAtNode(long nodeID, String value, int PropertyID, DataWriteOperations ops){
@@ -158,7 +141,6 @@ public class DBUtils {
             e.printStackTrace(); // TODO REMOVE
             return false;
         }
-
         return true;
     }
 
@@ -170,14 +152,12 @@ public class DBUtils {
             e.printStackTrace(); // TODO REMOVE
             return false;
         }
-
         return true;
     }
 
     private int getHighestNodeID(){
 
         return (int) getStoreAcess().getNodeStore().getHighId();
-
     }
 
     private long getNextPropertyID(){
@@ -192,10 +172,8 @@ public class DBUtils {
 
     public  ResourceIterator<Node> getIteratorForAllNodes( ) {
         GlobalGraphOperations ggo = GlobalGraphOperations.at(graphDb);
-
         ResourceIterable<Node> allNodes = ggo.getAllNodes();
         return allNodes.iterator();
-
     }
 
     /**
@@ -205,7 +183,6 @@ public class DBUtils {
      */
     public int GetPropertyID(String propertyName){
         try(Transaction tx = graphDb.beginTx()) {
-
             ThreadToStatementContextBridge ctx = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
             DataWriteOperations ops = ctx.get().dataWriteOperations();
 
@@ -214,11 +191,8 @@ public class DBUtils {
         } catch (Exception e) {
             e.printStackTrace();  // TODO REMOVE
         }
-
         return -1; // ERROR happend
-
     }
-
 
     public Set<Long> getConnectedNodeIDs(ReadOperations ops, long nodeID, Direction dir){
         Set<Long> it = new HashSet<>();
@@ -227,11 +201,9 @@ public class DBUtils {
 
             while(itR.hasNext()){
                 long rID = itR.next();
-
                 Cursor<RelationshipItem> relCursor = ops.relationshipCursor(rID);
 
                 while(relCursor.next()){
-
                     RelationshipItem item = relCursor.get();
                     it.add(item.otherNode(nodeID));
                 }
@@ -241,13 +213,11 @@ public class DBUtils {
         } catch (EntityNotFoundException e) {
             e.printStackTrace();
         }
-
         return it;
     }
 
     public Transaction openTransaction(){
         return graphDb.beginTx();
-
     }
 
     public void closeTransactionWithSuccess(Transaction tx){
@@ -267,9 +237,17 @@ public class DBUtils {
                 .setConfig(GraphDatabaseSettings.keep_logical_logs, "false")  // to get rid of all those neostore.trasaction.db ... files
                 .setConfig(GraphDatabaseSettings.allow_store_upgrade, "true")
                 .newGraphDatabase();
+        /*GraphDatabaseBuilder builder = new HighlyAvailableGraphDatabaseFactory()
+                .newHighlyAvailableDatabaseBuilder(DB_PATH);
+        builder.setConfig(ClusterSettings.server_id, "1");
+        builder.setConfig(HaSettings.ha_server, "localhost:6001");
+        builder.setConfig(HaSettings.slave_only, Settings.FALSE);
+        builder.setConfig(ClusterSettings.cluster_server, "localhost:5001");
+        builder.setConfig(ClusterSettings.initial_hosts, "localhost:5001,localhost:5002");
+        GraphDatabaseService graphDb = builder.newGraphDatabase();
+        */
 
         registerShutdownHook();
-
         highestNodeKey = getHighestNodeID();
     }
 
@@ -283,9 +261,7 @@ public class DBUtils {
         if(instance==null){
              instance = new DBUtils(path, pagecache);
         }
-
         return instance;
-
     }
 
     private void registerShutdownHook( )
@@ -305,7 +281,6 @@ public class DBUtils {
                 } finally {
                     System.out.println("Shutting down neo4j complete.");
                 }
-
             }
         });
     }

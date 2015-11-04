@@ -24,18 +24,15 @@ public class OutputTop20 {
         String DB_PATH;
         String PAGECACHE;
         String PROP_NAME;
-
         Transaction tx;
 
         // READING THE INPUTPARAMETER
         try {
-
             PROP_NAME = args[0];
             PAGECACHE = args[1];
             DB_PATH = args[2];
 
         } catch (Exception e) {
-
             System.out.println("Not enough input parameter.");
             System.out.println("You have to supply: " +
                     " PropertyName PageCache(String)_in_G/M/K DB-Path");
@@ -47,21 +44,13 @@ public class OutputTop20 {
                 .setConfig(GraphDatabaseSettings.pagecache_memory, PAGECACHE)
                 .setConfig(GraphDatabaseSettings.keep_logical_logs, "false")  // to get rid of all those neostore.trasaction.db ... files
                 .setConfig(GraphDatabaseSettings.allow_store_upgrade, "true")
-                        //  .setConfig(GraphDatabaseSettings.read_only,"true")
                 .newGraphDatabase();
 
-
-        tx = DBUtils.getInstance("", "").openTransaction();
-
-
-
-        System.out.println(
-                printOutput(
-                        getTop20(PROP_NAME)));
-
+        tx = DBUtils.getInstance("", "").openTransaction();  // Does this work anymore??!?!?! TESTME -> FIXME
         DBUtils.getInstance("", "").closeTransactionWithSuccess(tx);
-
         graphDb.shutdown();
+
+        System.out.println(printOutput(getTop20(PROP_NAME)));
     }
 
     public static List<Object[]> getTop20(String propName){
@@ -72,10 +61,8 @@ public class OutputTop20 {
 
         while (result.hasNext()) {
             Map<String, Object> row = result.next();
-
             Object[] id_value = new Object[2];
             int i=0;
-
 
             for (Map.Entry<String, Object> column : row.entrySet()) {
                 id_value[i]=column.getValue();
@@ -83,7 +70,6 @@ public class OutputTop20 {
             }
             resultList.add(id_value);
         }
-
         return resultList;
     }
 
@@ -92,8 +78,6 @@ public class OutputTop20 {
         for(Object[] objs:list){
             result +=  "id("+objs[0] +") => "+ objs[1] + "\n";
         }
-
         return result;
-
     }
 }

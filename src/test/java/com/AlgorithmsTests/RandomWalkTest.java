@@ -20,34 +20,25 @@ public class RandomWalkTest {
     private static final String[] args = {"RW", "1001000", "1", "8", "1", "true", "RandomWalkCounterTest",
             "1G", "testDB\\graph.db", "Write"};
 
-
     @BeforeClass
     public static void oneTimeSetUp() {
-
         if(SystemUtils.IS_OS_UNIX){
             args[8] = "testDB/graph.db";
         }
-
     }
     @AfterClass
-    public static void oneTimeTearDown() {
-
-    }
+    public static void oneTimeTearDown() {}
 
     @Before
-    public void setUp() {
-
-    }
+    public void setUp() {}
 
     @Test
     public void RandomWalkShallNotCrash() {
-
         try{
             StartComparison.main(args);
         } catch (Exception e){
             e.printStackTrace();
             Assert.fail("It crashed. Why?");
-
         }
     }
 
@@ -57,9 +48,7 @@ public class RandomWalkTest {
         StartComparison.main(args);
 
         DBUtils db = DBUtils.getInstance(args[8], args[7]);
-
         Transaction tx = db.openTransaction();  // NOPE
-
         List<Object[]> resultList= OutputTop20.getTop20(args[6]);
 
         assertEquals((resultList.get(0)[0]),14L);
@@ -67,13 +56,11 @@ public class RandomWalkTest {
 
         List<Long> checkListTop3_7 = new ArrayList<>();
         for(int i=2;i<=6;i++){
-
             Long id =(Long)resultList.get(i)[0];
             if(checkListTop3_7.contains(id)){
                 // That case should never happen
                 continue;
             }
-
             if(id.equals(2L)){
                 checkListTop3_7.add(id);
             }
@@ -89,14 +76,9 @@ public class RandomWalkTest {
             if(id.equals(6L)){
                 checkListTop3_7.add(id);
             }
-
         }
-
         assertEquals(checkListTop3_7.size(),5);
-
         db.closeTransactionWithSuccess(tx);
-
     }
-
 }
 

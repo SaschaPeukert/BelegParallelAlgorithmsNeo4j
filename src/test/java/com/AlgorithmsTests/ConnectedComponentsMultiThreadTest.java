@@ -22,37 +22,30 @@ public class ConnectedComponentsMultiThreadTest {
 
     @BeforeClass
     public static void oneTimeSetUp() {
-
         if(SystemUtils.IS_OS_UNIX){
             argsWCC[8] = "testDB/graph.db";
             argsSCC[8] = "testDB/graph.db";
         }
     }
-    @AfterClass
-    public static void oneTimeTearDown() {
 
-    }
+    @AfterClass
+    public static void oneTimeTearDown() {}
 
     @Before
-    public void setUp() {
-
-    }
+    public void setUp() {}
 
     @Test
     public void WeaklyConnectedComponentsShallNotCrash() {
-
         try{
             StartComparison.main(argsWCC);
         } catch (Exception e){
             e.printStackTrace();
             Assert.fail("It crashed. Why?");
-
         }
     }
 
     @Test
     public void WeaklyConnectedComponentsShouldBeCorrect() {
-
         // Do the Run, get results
         StartComparison.main(argsWCC);
         Map<Integer,List<Long>> resultOfRun = STConnectedComponentsAlgo.getMapofComponentToIDs();
@@ -65,13 +58,10 @@ public class ConnectedComponentsMultiThreadTest {
         Assert.assertTrue("Fourth Component (FG) is wrong",CompareLists.compareValues(resultOfRun, 2, new Long[]{5L, 6L}));
         Assert.assertTrue("Fifth Component (HIJKLMNZ) is wrong",CompareLists.compareValues(resultOfRun, 8, new Long[]
                 {7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L}));
-
     }
-
 
     @Test
     public void StronglyConnectedComponentsShouldBeCorrect() {
-
         // Do the Run, get results
         MTConnectedComponentsAlgo.nCutoff=3;
         StartComparison.main(argsSCC);
@@ -90,21 +80,15 @@ public class ConnectedComponentsMultiThreadTest {
         Assert.assertTrue("Ninth Component (L) is wrong",CompareLists.compareValues(resultOfRun, 1, new Long[]{11L}));
         Assert.assertTrue("Tenth Component (M) is wrong",CompareLists.compareValues(resultOfRun, 1, new Long[]{12L}));
         Assert.assertTrue("Eleventh Component (N) is wrong",CompareLists.compareValues(resultOfRun, 1, new Long[]{13L}));
-
     }
-
-
 
     @Test
     public void StronglyConnectedComponentsShallNotCrash() {
-
         try{
             StartComparison.main(argsSCC);
         } catch (Exception e){
             e.printStackTrace();
             Assert.fail("It crashed. Why?");
-
         }
     }
-
 }
