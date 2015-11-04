@@ -3,7 +3,7 @@ package de.saschapeukert.Algorithms.Impl.ConnectedComponents;
 import de.saschapeukert.Algorithms.Abst.MyAlgorithmBaseRunnable;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.BFS;
 import de.saschapeukert.Database.DBUtils;
-import de.saschapeukert.Datastructures.TarjanNode;
+import de.saschapeukert.Datastructures.TarjanInfo;
 import de.saschapeukert.StartComparison;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
@@ -21,7 +21,7 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
     protected int componentID= DBUtils.getInstance("","").highestNodeKey+1;
     protected final CCAlgorithmType myType;
 
-    protected Map<Long,TarjanNode> nodeDictionary;
+    protected Map<Long,TarjanInfo> nodeDictionary;
     protected Stack<Long> stack;
     protected int maxdfs=0;
 
@@ -110,7 +110,7 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
             trimOrAddToAllNodes(n);
 
             if(myType== CCAlgorithmType.STRONG)
-                nodeDictionary.put(n.getId(),new TarjanNode());
+                nodeDictionary.put(n.getId(),new TarjanInfo());
         }
         it.close();
         db.closeTransactionWithSuccess(tx);
@@ -201,7 +201,7 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
 
     protected void tarjan(Long currentNode){
 
-        TarjanNode v = nodeDictionary.get(currentNode);
+        TarjanInfo v = nodeDictionary.get(currentNode);
         v.dfs = maxdfs;
         v.lowlink = maxdfs;
         maxdfs++;
@@ -214,7 +214,7 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
         Iterable<Long> it = db.getConnectedNodeIDs(db.getReadOperations(), currentNode, Direction.OUTGOING);
         for(Long l:it){
 
-            TarjanNode v_new = nodeDictionary.get(l);
+            TarjanInfo v_new = nodeDictionary.get(l);
 
             if(allNodes.contains(l)){
                 tarjan(l);
@@ -232,7 +232,7 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
             // Root of a SCC
             while(true){
                 Long node_v = stack.pop();                      // This should be atomic
-                TarjanNode v_new = nodeDictionary.get(node_v);  // !
+                TarjanInfo v_new = nodeDictionary.get(node_v);  // !
                 v_new.onStack= false;                           // !
 
                 StartComparison.putIntoResultCounter(node_v, new AtomicInteger(componentID));

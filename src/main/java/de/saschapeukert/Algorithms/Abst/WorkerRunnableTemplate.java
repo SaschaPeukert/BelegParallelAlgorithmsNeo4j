@@ -21,6 +21,7 @@ public abstract class WorkerRunnableTemplate extends MyAlgorithmBaseRunnable {
 
     public final AtomicBoolean isAlive = new AtomicBoolean(true);
     public final AtomicBoolean isIdle = new AtomicBoolean(true);
+    //public Stopwatch watch = Stopwatch.createUnstarted();
 
     @Override
     protected void compute() {
@@ -42,9 +43,11 @@ public abstract class WorkerRunnableTemplate extends MyAlgorithmBaseRunnable {
                 return;
             }
             //noinspection StatementWithEmptyBody,StatementWithEmptyBody
+            //watch.start();
             while (operation()) {
                 //work
             }
+            //watch.stop();
             cleanUpOperation();
             //System.out.println("Thread " + posInList + " done");
         }

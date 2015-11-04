@@ -118,10 +118,12 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         for(WorkerRunnableTemplate runnable:listA){
             runnable.isAlive.set(false);
             runnable.isIdle.set(false);
+            //System.out.println("CR: " + runnable.watch.elapsed(TimeUnit.NANOSECONDS)+ "ns");
         }
         for(WorkerRunnableTemplate runnable:listB){
             runnable.isAlive.set(false);
             runnable.isIdle.set(false);
+            //System.out.println("BW: " + runnable.watch.elapsed(TimeUnit.NANOSECONDS)+ "ns");
         }
 
         StartComparison.waitForExecutorToFinishAll(executor);
@@ -201,7 +203,6 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
             for(Long v:Q){
                 mapOfVisitedNodes.put(v,false);
             }
-
         }
         // Coloring done
 

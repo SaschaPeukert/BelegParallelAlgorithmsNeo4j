@@ -18,7 +18,7 @@ With this command maven will generate a jar file for you:
         java -jar <JAR> A B C D E F G H I J
         
          A = Name of the Algorithmus (RW, SCC, WCC)
-         B = OperationNumber (for RW) [for the other algorithms this parameter is irrelevant, but some value still needs to be present]
+         B = OperationNumber (for RW) [for the other algorithms this parameter is irrelevant**, but some value still needs to be present]
          C = Number of Runs
          D = Number of Threads *
          E = WarmUp Time in S
@@ -30,6 +30,7 @@ With this command maven will generate a jar file for you:
          
          
          * If D is greater than one, the corresponding multithread algorithm will automatically be used 
+         ** Attention: If this Number is -1 and SCC with 1 Thread is executed, Multistep SCC with 1 Thread will be used. This little "hack" is intended.
          
 *Example:*
            

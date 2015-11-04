@@ -167,15 +167,20 @@ public class StartComparison {
      * @param output
      * @return elapsed time as MILLISECONDS!
      */
-
     private static long doConnectedComponentsRun(CCAlgorithmType type, boolean output){
         STConnectedComponentsAlgo runnable;
         if(NUMBER_OF_THREADS>1) {
             runnable = new MTConnectedComponentsAlgo(
                     type, output);
         } else{
-            runnable = new STConnectedComponentsAlgo(
-                    type, output);
+            // Easter Egg?!
+            if(OPERATIONS==-1){
+                runnable = new MTConnectedComponentsAlgo(
+                        type, output);
+            } else{
+                runnable = new STConnectedComponentsAlgo(
+                        type, output);
+            }
         }
         Thread t = new Thread(runnable);
         t.setName("ConnectedComponentsAlgo");

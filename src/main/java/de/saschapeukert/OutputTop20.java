@@ -1,13 +1,9 @@
 package de.saschapeukert;
 
 import de.saschapeukert.Database.DBUtils;
-import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.graphdb.factory.GraphDatabaseFactory;
-import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,17 +34,9 @@ public class OutputTop20 {
                     " PropertyName PageCache(String)_in_G/M/K DB-Path");
             return;
         }
-
-        GraphDatabaseService graphDb = new GraphDatabaseFactory()
-                .newEmbeddedDatabaseBuilder(new File(DB_PATH))
-                .setConfig(GraphDatabaseSettings.pagecache_memory, PAGECACHE)
-                .setConfig(GraphDatabaseSettings.keep_logical_logs, "false")  // to get rid of all those neostore.trasaction.db ... files
-                .setConfig(GraphDatabaseSettings.allow_store_upgrade, "true")
-                .newGraphDatabase();
-
-        tx = DBUtils.getInstance("", "").openTransaction();  // Does this work anymore??!?!?! TESTME -> FIXME
-        DBUtils.getInstance("", "").closeTransactionWithSuccess(tx);
-        graphDb.shutdown();
+        DBUtils db = DBUtils.getInstance(DB_PATH, PAGECACHE);
+        tx = db.openTransaction();
+        db.closeTransactionWithSuccess(tx);
 
         System.out.println(printOutput(getTop20(PROP_NAME)));
     }
