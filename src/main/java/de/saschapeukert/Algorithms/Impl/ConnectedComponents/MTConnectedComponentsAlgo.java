@@ -27,7 +27,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     private static Iterator<Long> colorIterator;
 
     private static boolean coloringDone;
-    public static Set<Long> Q;
+    private static Set<Long> Q;
 
     public static boolean myBFS=false;
     public static  long nCutoff=100;
@@ -214,7 +214,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
                 List<Long> li = mapColorIDs.get(color);
                 li.add(id);
             } else{
-                List l = new ArrayList();
+                List<Long> l = new ArrayList<>();
                 l.add(id);
                 mapColorIDs.put(color,l);
             }

@@ -38,7 +38,7 @@ public class NeoWriter extends MyBaseRunnable {
             }
 
             Long l = (Long) StartComparison.getObjInResultCounterKeySet(i);
-            db.createIntPropertyAtNode(l, StartComparison.getResultCounterforId(l).intValue(), propID, ops);
+            db.createPropertyAtNode(l, StartComparison.getResultCounterforId(l).intValue(), propID, ops);
             count++;
         }
         db.closeTransactionWithSuccess(tx);

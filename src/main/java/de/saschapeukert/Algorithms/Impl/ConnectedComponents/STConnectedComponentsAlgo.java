@@ -11,19 +11,19 @@ import org.neo4j.graphdb.ResourceIterator;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Created by Sascha Peukert on 17.10.2015.
  */
 public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
 
-    protected int componentID= DBUtils.getInstance("","").highestNodeKey+1;
-    protected final CCAlgorithmType myType;
+    long componentID= DBUtils.getInstance("","").highestNodeKey+1;
+    final CCAlgorithmType myType;
 
-    protected Map<Long,TarjanInfo> nodeDictionary;
-    protected Stack<Long> stack;
-    protected int maxdfs=0;
+    private Map<Long,TarjanInfo> nodeDictionary;
+    private Stack<Long> stack;
+    private int maxdfs=0;
 
     public static Set<Long> allNodes; // except the trivial CCs
 
@@ -34,7 +34,7 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
         if(myType== CCAlgorithmType.STRONG) {
             // initialize nodeDictionary for tarjans algo
             this.stack = new Stack<>();
-            this.nodeDictionary = new HashMap<>(db.highestNodeKey);
+            this.nodeDictionary = new HashMap<>();
         }
     }
 
@@ -44,7 +44,7 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
     }
 
     @Override
-    public void compute() {
+    protected void compute() {
 
         timer.start();
 
@@ -57,7 +57,7 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
         timer.stop();
     }
 
-    protected void strongly(){
+    void strongly(){
 
         Iterator<Long> it = allNodes.iterator();
 
@@ -74,7 +74,7 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
         }
     }
 
-    protected void weakly(){
+    void weakly(){
 
         Iterator<Long> it = allNodes.iterator();
         while(it.hasNext()){
@@ -92,7 +92,7 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
         }
     }
 
-    protected void searchForWeakly(long n){
+    void searchForWeakly(long n){
         Set<Long> reachableIDs = BFS.go(n, Direction.BOTH);
 
         registerSCCandRemoveFromAllNodes(reachableIDs,componentID);
@@ -100,7 +100,7 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
 
     private void prepareAllNodes(){
 
-        allNodes = new HashSet<>(db.highestNodeKey);
+        allNodes = new HashSet<>();
         tx = db.openTransaction();
 
         ResourceIterator<Node> it = db.getIteratorForAllNodes();
@@ -116,11 +116,11 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
         db.closeTransactionWithSuccess(tx);
     }
 
-    protected void trimOrAddToAllNodes(Node n){
+    private void trimOrAddToAllNodes(Node n){
         if(this.myType==CCAlgorithmType.STRONG){
-            if(n.getDegree(Direction.OUTGOING)==0 || n.getDegree(Direction.OUTGOING.INCOMING)==0){
+            if(n.getDegree(Direction.OUTGOING)==0 || n.getDegree(Direction.INCOMING)==0){
                 // trivial CC
-                StartComparison.putIntoResultCounter(n.getId(), new AtomicInteger(componentID));
+                StartComparison.putIntoResultCounter(n.getId(), new AtomicLong(componentID));
                 componentID++;
             } else{
                 allNodes.add(n.getId());
@@ -129,7 +129,7 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
         } else{
             if(n.getDegree()==0){
                 // trivial CC
-                StartComparison.putIntoResultCounter(n.getId(), new AtomicInteger(componentID));
+                StartComparison.putIntoResultCounter(n.getId(), new AtomicLong(componentID));
                 componentID++;
             } else{
                 allNodes.add(n.getId());
@@ -138,7 +138,7 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
         }
     }
 
-    protected void furtherInspectNodeWhileTrim(Node n){
+    void furtherInspectNodeWhileTrim(Node n){
         // Overwrite this method to add code for trim()
     }
 
@@ -199,7 +199,7 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
     }
 
 
-    protected void tarjan(Long currentNode){
+    private void tarjan(Long currentNode){
 
         TarjanInfo v = nodeDictionary.get(currentNode);
         v.dfs = maxdfs;
@@ -235,7 +235,7 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
                 TarjanInfo v_new = nodeDictionary.get(node_v);  // !
                 v_new.onStack= false;                           // !
 
-                StartComparison.putIntoResultCounter(node_v, new AtomicInteger(componentID));
+                StartComparison.putIntoResultCounter(node_v, new AtomicLong(componentID));
                 if(Objects.equals(node_v, currentNode)){
                     componentID++;
                     break;
@@ -246,15 +246,15 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
 
     }
 
-    public static void registerSCCandRemoveFromAllNodes(Set<Long> reachableIDs,int sccID){
+    public static void registerSCCandRemoveFromAllNodes(Set<Long> reachableIDs,long sccID){
         for(Long l:reachableIDs){
-            StartComparison.putIntoResultCounter(l, new AtomicInteger((sccID)));
+            StartComparison.putIntoResultCounter(l, new AtomicLong((sccID)));
 
         }
         removeFromAllNodes(reachableIDs);
     }
 
-    protected static synchronized void removeFromAllNodes(Collection c){
+    private static synchronized void removeFromAllNodes(Collection<Long> c){
         allNodes.removeAll(c);
     }
 

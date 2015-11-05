@@ -12,6 +12,7 @@ import org.neo4j.kernel.api.cursor.RelationshipItem;
 import org.neo4j.kernel.api.exceptions.EntityNotFoundException;
 import org.neo4j.kernel.api.exceptions.InvalidTransactionTypeKernelException;
 import org.neo4j.kernel.api.exceptions.schema.ConstraintValidationKernelException;
+import org.neo4j.kernel.api.properties.DefinedProperty;
 import org.neo4j.kernel.api.properties.Property;
 import org.neo4j.kernel.impl.api.store.RelationshipIterator;
 import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
@@ -34,17 +35,16 @@ public class DBUtils {
 
     private static StoreAccess neoStore;
     private static GraphDatabaseService graphDb;
-    public final int highestNodeKey;
+    public final long highestNodeKey;
 
     private static DBUtils instance;
-    //private static ReadOperations ops;
 
     public Node getSomeRandomNode( ThreadLocalRandom random){
         long r;
         while(true) {
             try {
                 // NEW VERSION, checks Map for ID and not DB
-                r = (long) random.nextInt(highestNodeKey);
+                r = random.nextLong(highestNodeKey);
                 if(StartComparison.resultCounterContainsKey(r)){
                     return graphDb.getNodeById(r);
                 }
@@ -86,7 +86,7 @@ public class DBUtils {
         long r;
         while(true) {
 
-            r = (long) random.nextInt(highestNodeKey);
+            r = random.nextLong(highestNodeKey);
             // NEW VERSION without DB-Lookup
             if(StartComparison.resultCounterContainsKey(r))
                 return r;
@@ -133,10 +133,28 @@ public class DBUtils {
         ops.graphRemoveProperty(propertyID);
     }
 
-    public boolean createStringPropertyAtNode(long nodeID, String value, int PropertyID, DataWriteOperations ops){
-
+    public boolean createPropertyAtNode(long nodeID, Object value, int PropertyID, DataWriteOperations ops){
         try {
-            ops.nodeSetProperty(nodeID, Property.stringProperty(PropertyID, value));
+            DefinedProperty prop=null;
+            if(value instanceof Integer){
+                prop = Property.intProperty(PropertyID, (int)value);
+            } else if(value instanceof String){
+                prop = Property.stringProperty(PropertyID, (String)value);
+            } else if(value instanceof  Long){
+                prop = Property.longProperty(PropertyID, (long)value);
+            } else if(value instanceof Float) {
+                prop = Property.floatProperty(PropertyID, (float)value);
+            } else if(value instanceof Double) {
+                prop = Property.doubleProperty(PropertyID, (double)value);
+            }  else if(value instanceof Boolean) {
+                prop = Property.booleanProperty(PropertyID, (boolean)value);
+
+            }else{
+                System.out.println("I don't know this property! "+ value.getClass().getName() );
+                return false;
+            }
+            ops.nodeSetProperty(nodeID, prop);
+
         } catch (EntityNotFoundException | ConstraintValidationKernelException e) {
             e.printStackTrace(); // TODO REMOVE
             return false;
@@ -144,20 +162,9 @@ public class DBUtils {
         return true;
     }
 
-    public boolean createIntPropertyAtNode(long nodeID, int value, int PropertyID, DataWriteOperations ops){
+    private long getHighestNodeID(){
 
-        try {
-            ops.nodeSetProperty(nodeID, Property.intProperty(PropertyID, value));
-        } catch (EntityNotFoundException | ConstraintValidationKernelException e) {
-            e.printStackTrace(); // TODO REMOVE
-            return false;
-        }
-        return true;
-    }
-
-    private int getHighestNodeID(){
-
-        return (int) getStoreAcess().getNodeStore().getHighId();
+        return getStoreAcess().getNodeStore().getHighId();
     }
 
     private long getNextPropertyID(){

@@ -17,7 +17,7 @@ public class ConnectedComponentsMultiThreadTest {
     private static final String[] argsWCC = {"WCC", "1001000", "1", "8", "1", "true", "WeaklyConnectedComponentTest",
             "1G", "testDB\\graph.db", "NoWrite"};
     private static final String[] argsSCC = {"SCC", "1001000", "1", "8", "1", "true", "StronglyConnectedComponentTest",
-            "1G", "testDB\\graph.db", "NoWrite"};
+            "1G", "testDB\\graph.db", "Write"};
     // don't realy need to write here
 
     @BeforeClass

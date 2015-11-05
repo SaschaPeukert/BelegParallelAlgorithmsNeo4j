@@ -20,9 +20,9 @@ public class MyBFS {
     public static volatile List<Long> frontierList= new LinkedList<>();  // do not assign more than once
     public static volatile SortedMap<Integer,Queue<Long>> MapOfQueues;
     private static volatile List<Boolean> ThreadCheckList = new LinkedList<>();
-    public static Set<Long> visitedIDs = Sets.newConcurrentHashSet();
+    public static final Set<Long> visitedIDs = Sets.newConcurrentHashSet();
 
-    private List<MyBFSLevelRunnable> list;
+    private final List<MyBFSLevelRunnable> list;
     private final int THRESHOLD=100000;
     private final DBUtils db;
 

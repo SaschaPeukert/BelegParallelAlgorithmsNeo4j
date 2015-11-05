@@ -2,9 +2,9 @@ package de.saschapeukert;
 
 import com.google.common.base.Stopwatch;
 import de.saschapeukert.Algorithms.Abst.MyAlgorithmBaseRunnable;
-import de.saschapeukert.Algorithms.Impl.ConnectedComponents.STConnectedComponentsAlgo;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.CCAlgorithmType;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.MTConnectedComponentsAlgo;
+import de.saschapeukert.Algorithms.Impl.ConnectedComponents.STConnectedComponentsAlgo;
 import de.saschapeukert.Algorithms.Impl.RandomWalk.RandomWalkAlgorithmRunnable;
 import de.saschapeukert.Algorithms.Impl.RandomWalk.RandomWalkAlgorithmRunnableNewSPI;
 import de.saschapeukert.Database.DBUtils;
@@ -18,7 +18,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Created by Sascha Peukert on 04.08.2015.
@@ -40,7 +40,7 @@ public class StartComparison {
     private static String PAGECACHE;
     private static String ALGORITHM;
     private static String WRITE;
-    private static Map<Long,AtomicInteger> resultCounter;
+    private static Map<Long,AtomicLong> resultCounter;
     private static Object[] keySetOfResultCounter;
     private static final Histogram histogram = new Histogram(3600000000000L, 3);
 
@@ -253,12 +253,12 @@ public class StartComparison {
         return check;
     }
 
-    private static void prepaireResultMapAndCounter( int nodeIDhigh){
+    private static void prepaireResultMapAndCounter( long nodeIDhigh){
         Iterator<Node> it = DBUtils.getInstance("", "").getIteratorForAllNodes();
-        resultCounter = new HashMap<>(nodeIDhigh*2,1f);
+        resultCounter = new HashMap<>(0,1f);
 
         while(it.hasNext()){
-            resultCounter.put(it.next().getId(),new AtomicInteger(0));
+            resultCounter.put(it.next().getId(),new AtomicLong(0));
         }
         keySetOfResultCounter = resultCounter.keySet().toArray();  // should only be called once!
     }
@@ -277,17 +277,17 @@ public class StartComparison {
     public static Object getObjInResultCounterKeySet(int pos){
         return keySetOfResultCounter[pos];
     }
-    public static int incrementResultCounterforId(long id){
+    public static long incrementResultCounterforId(long id){
        return getResultCounterforId(id).incrementAndGet();
     }
 
-    public static AtomicInteger getResultCounterforId(long id){
+    public static AtomicLong getResultCounterforId(long id){
         return resultCounter.get(id);
     }
     public static boolean resultCounterContainsKey(long id){
         return resultCounter.containsKey(id);
     }
-    public static synchronized void putIntoResultCounter(long id, AtomicInteger value){
+    public static synchronized void putIntoResultCounter(long id, AtomicLong value){
         resultCounter.put(id,value);
     }
 
