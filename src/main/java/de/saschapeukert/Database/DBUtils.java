@@ -15,8 +15,7 @@ import org.neo4j.kernel.api.exceptions.schema.ConstraintValidationKernelExceptio
 import org.neo4j.kernel.api.properties.Property;
 import org.neo4j.kernel.impl.api.store.RelationshipIterator;
 import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
-import org.neo4j.kernel.impl.store.NeoStore;
-import org.neo4j.kernel.impl.store.StoreAccess;
+import org.neo4j.kernel.impl.store.NeoStores;
 import org.neo4j.tooling.GlobalGraphOperations;
 
 import java.io.File;
@@ -33,11 +32,12 @@ import java.util.concurrent.ThreadLocalRandom;
 public class DBUtils {
 
 
-    private static StoreAccess neoStore;
+    private static NeoStores neoStore;
     private static GraphDatabaseService graphDb;
     public int highestNodeKey;
 
     private static DBUtils instance;
+    private final ThreadToStatementContextBridge ctx;
     //private static ReadOperations ops;
 
     public Node getSomeRandomNode( ThreadLocalRandom random){
@@ -74,7 +74,6 @@ public class DBUtils {
 //        }
 //        return ops;
 
-        ThreadToStatementContextBridge ctx = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
         return ctx.get().readOperations();
 
     }
@@ -93,7 +92,7 @@ public class DBUtils {
         long r;
         while(true) {
 
-            r = (long) random.nextInt(highestNodeKey);
+            r = random.nextLong(highestNodeKey);
 
             // NEW VERSION without DB-Lookup
             if(StartComparison.resultCounterContainsKey(r))
@@ -184,9 +183,9 @@ public class DBUtils {
         return getStoreAcess().getPropertyStore().nextId();
     }
 
-    private StoreAccess getStoreAcess(){
+    private NeoStores getStoreAcess(){
         if(neoStore==null)
-            neoStore = new StoreAccess(((GraphDatabaseAPI)graphDb).getDependencyResolver().resolveDependency( NeoStore.class ));
+            neoStore = ((GraphDatabaseAPI)graphDb).getDependencyResolver().resolveDependency( NeoStores.class );
         return neoStore;
     }
 
@@ -206,7 +205,6 @@ public class DBUtils {
     public int GetPropertyID(String propertyName){
         try(Transaction tx = graphDb.beginTx()) {
 
-            ThreadToStatementContextBridge ctx = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
             DataWriteOperations ops = ctx.get().dataWriteOperations();
 
             return  ops.propertyKeyGetOrCreateForName(propertyName);
@@ -221,7 +219,7 @@ public class DBUtils {
 
 
     public Set<Long> getConnectedNodeIDs(ReadOperations ops, long nodeID, Direction dir){
-        Set<Long> it = new HashSet<>();
+        Set<Long> it = new HashSet<>(100000);
         try {
             RelationshipIterator itR = ops.nodeGetRelationships(nodeID, dir);
 
@@ -268,6 +266,7 @@ public class DBUtils {
                 .setConfig(GraphDatabaseSettings.allow_store_upgrade, "true")
                 .newGraphDatabase();
 
+        ctx = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
         registerShutdownHook();
 
         highestNodeKey = getHighestNodeID();
