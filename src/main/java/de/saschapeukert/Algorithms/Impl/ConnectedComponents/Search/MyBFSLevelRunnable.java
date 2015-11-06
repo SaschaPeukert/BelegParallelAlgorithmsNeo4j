@@ -5,8 +5,7 @@ import de.saschapeukert.StartComparison;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.kernel.api.ReadOperations;
 
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -55,7 +54,7 @@ public class MyBFSLevelRunnable extends MyAlgorithmBaseRunnable {
                 try {
                     int key = ((i * StartComparison.NUMBER_OF_THREADS) + posInList);
                     parentID = MyBFS.frontierList.get(key);
-                    Queue<Long> q = expandNode(parentID);
+                    Set<Long> q = expandNode(parentID);
 
                     MyBFS.MapOfQueues.put(key, q);
                     MyBFS.visitedIDs.addAll(q);
@@ -78,15 +77,10 @@ public class MyBFSLevelRunnable extends MyAlgorithmBaseRunnable {
     }
 
 
-    private Queue<Long> expandNode(Long id){
-        Queue<Long> resultQueue = new LinkedList<Long>();
-
-        for(Long child: db.getConnectedNodeIDs(ops, parentID, direction)){
-            if(MyBFS.visitedIDs.contains(child)) continue;
-
-            resultQueue.add(child);
-        }
-        return resultQueue;
+    private Set<Long> expandNode(Long id){
+        Set<Long> result = new HashSet<>(db.getConnectedNodeIDs(ops, id, direction));
+        result.removeAll(MyBFS.visitedIDs);
+        return result;
     }
 }
 

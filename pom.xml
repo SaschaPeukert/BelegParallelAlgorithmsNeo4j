@@ -12,7 +12,7 @@
         <guava.version>18.0</guava.version>
         <jmh.version>1.6.1</jmh.version>
         <fastutil.version>7.0.2</fastutil.version>
-        <neo4j_version>2.3.0-M03</neo4j_version>
+        <neo4j_version>2.3.0</neo4j_version>
     </properties>
 
     <repositories>
@@ -81,8 +81,8 @@
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                 </configuration>
             </plugin>
         </plugins>

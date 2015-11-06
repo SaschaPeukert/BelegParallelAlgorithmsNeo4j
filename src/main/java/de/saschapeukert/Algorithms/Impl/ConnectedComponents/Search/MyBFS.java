@@ -16,9 +16,9 @@ import java.util.concurrent.Executors;
  */
 public class MyBFS {
 
-    public static volatile List<Long> frontierList= new LinkedList<Long>();  // do not assign more than once
-    public static volatile SortedMap<Integer,Queue<Long>> MapOfQueues;
-    private static volatile List<Boolean> ThreadCheckList = new LinkedList<>();
+    public static volatile List<Long> frontierList= new ArrayList<>(100000);  // do not assign more than once
+    public static volatile SortedMap<Integer,Set<Long>> MapOfQueues;
+    private static volatile List<Boolean> ThreadCheckList = new ArrayList<>(StartComparison.NUMBER_OF_THREADS);
     public static Set<Long> visitedIDs = Sets.newConcurrentHashSet();
 
     private List<MyBFSLevelRunnable> list;
@@ -47,7 +47,7 @@ public class MyBFS {
             executor.execute(runnable);
         }
 
-        MapOfQueues = new ConcurrentSkipListMap<Integer, Queue<Long>>();
+        MapOfQueues = new ConcurrentSkipListMap<>();
         db = DBUtils.getInstance("","");
     }
 
@@ -113,7 +113,7 @@ public class MyBFS {
                     check=false;
                 }
             }
-            if(check==false){
+            if(!check){
                 try {
                     Thread.sleep(10);
                 } catch (InterruptedException e) {

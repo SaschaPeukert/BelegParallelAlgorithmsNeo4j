@@ -276,9 +276,6 @@ public class StartComparison {
           if(elapsedTime<runnable.timer.elapsed(TimeUnit.MICROSECONDS)){
              elapsedTime =runnable.timer.elapsed(TimeUnit.MICROSECONDS);
           }
-
-          runnable = null; // suggestion for garbage collector
-
         }
 
         return elapsedTime;
