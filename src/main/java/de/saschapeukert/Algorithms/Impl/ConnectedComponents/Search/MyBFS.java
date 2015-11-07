@@ -8,7 +8,6 @@ import org.neo4j.graphdb.Direction;
 import org.neo4j.kernel.api.ReadOperations;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -18,26 +17,28 @@ import java.util.concurrent.Executors;
 public class MyBFS {
 
     public static volatile List<Long> frontierList= new ArrayList<>(100000);  // do not assign more than once
-    public static volatile SortedMap<Integer,Set<Long>> MapOfQueues;
-    private static volatile List<Boolean> ThreadCheckList = new ArrayList<>(StartComparison.NUMBER_OF_THREADS);
+    //public static volatile SortedMap<Integer,Set<Long>> MapOfQueues;
     public static final Set<Long> visitedIDs = Sets.newConcurrentHashSet();
 
+    private static boolean levelDone;
+    private static Iterator<Long> it;
+
     private final List<MyBFSLevelRunnable> list;
-    private final int THRESHOLD=100000;
+    private final int THRESHOLD=0;
     private final DBUtils db;
 
     static Set<Long> nodeIDSet;
     private final ExecutorService executor;
-    private static MyBFS instance;
+    //private static MyBFS instance;
 
-    public static MyBFS getInstance(){
+    /*public static MyBFS getInstance(){
         if(instance==null){
             instance = new MyBFS();
         }
         return instance;
-    }
+    }*/
 
-    private MyBFS(){
+    public MyBFS(){
         executor = Executors.newFixedThreadPool(StartComparison.NUMBER_OF_THREADS);
 
         // start fixed Number of MyBFSLevelRunnable Threads
@@ -47,14 +48,19 @@ public class MyBFS {
             list.add(runnable);
             executor.execute(runnable);
         }
-        MapOfQueues = new ConcurrentSkipListMap<>();
+        //MapOfQueues = new ConcurrentSkipListMap<>();
         db = DBUtils.getInstance("","");
     }
 
 
     public Set<Long> work(long nodeID, Direction direction, Set<Long> set){
 
-        nodeIDSet = set;
+        if(set!=null){
+            nodeIDSet = new HashSet<>(set);
+        } else{
+            nodeIDSet = null;
+        }
+
         ReadOperations ops = db.getReadOperations();
         //Set<Long> visitedIDs = new HashSet<>();
         visitedIDs.clear();
@@ -79,26 +85,17 @@ public class MyBFS {
     private void doSequentialLevel(Direction direction, ReadOperations ops){
         Long n = frontierList.remove(0);
 
-        for(Long child: db.getConnectedNodeIDs(ops, n, direction)) {
-            if (visitedIDs.contains(child)) {
-                continue;
-            }
-            if(nodeIDSet!=null){  // Little bit dirty fix
-                if(!nodeIDSet.contains(child)){
-                    continue;
-                }
-            }
-            visitedIDs.add(child);
-            frontierList.add(child);
-        }
+        visitedIDs.add(n);
+        Set<Long> resultQueue = new HashSet<>(db.getConnectedNodeIDs(ops, n, direction));
+        resultQueue.removeAll(visitedIDs);
+
+        frontierList.addAll(resultQueue);
     }
 
     private void doParallelLevel(Direction direction, int size){
 
-        ThreadCheckList.clear();
-        for(int i=0;i<StartComparison.NUMBER_OF_THREADS;i++){
-            ThreadCheckList.add(false);
-        }
+        levelDone = false;
+        it = frontierList.iterator();
         for(MyBFSLevelRunnable runnable:list){
             runnable.direction = direction;
             runnable.isIdle.set(false);
@@ -108,31 +105,32 @@ public class MyBFS {
         boolean check;
         while(true){
             //System.out.println(MapOfQueues.keySet().size() + "/" + size);
-            check=true;
-            for(int i=0;i<StartComparison.NUMBER_OF_THREADS;i++){
-                if(!checkThreadList(i)){
-                    check=false;
+            if(levelDone){
+                check=true;
+                for (MyBFSLevelRunnable runnable : list) {
+                    if (runnable.isIdle.get() == false) {
+                        check = false;
+                    }
+                }
+                if(check){
+                    break;
                 }
             }
-            if(!check){
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            } else{
-                break;
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-
         }
 
         // threads finished, collecting results -> new frontier
         frontierList.clear();
-        for(int i=0;i<size;i++){
-            frontierList.addAll(MapOfQueues.get(i));
+
+        for(MyBFSLevelRunnable runnable : list){
+            frontierList.addAll(runnable.resultQueue);
+            runnable.resultQueue.clear();
         }
 
-        MapOfQueues.clear();
         //System.out.println("Done a level");
     }
 
@@ -145,11 +143,15 @@ public class MyBFS {
         StartComparison.waitForExecutorToFinishAll(executor);
     }
 
-    private synchronized boolean checkThreadList(int i){
-        return ThreadCheckList.get(i);
+    public static synchronized long getKey(){
+        if(it.hasNext()){
+            return it.next();
+        }
+        levelDone=true;
+        return -1;
     }
 
-    public static synchronized void setCheckThreadList(int i){
-        ThreadCheckList.set(i,true);
+    public ExecutorService getExecutor(){
+        return executor;
     }
 }

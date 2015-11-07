@@ -4,8 +4,7 @@ import de.saschapeukert.Algorithms.Abst.WorkerRunnableTemplate;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.MTConnectedComponentsAlgo;
 import org.neo4j.graphdb.Direction;
 
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -13,13 +12,13 @@ import java.util.Set;
  */
 public class ColoringRunnable extends WorkerRunnableTemplate {
 
-    public final Queue<Long> resultQueue;
-    private final Queue<Long> privateQueue;
+    public final Set<Long> resultQueue;
+    private final Set<Long> privateQueue;
 
     public ColoringRunnable( boolean output){
         super(output);
-        resultQueue = new LinkedList<>();
-        privateQueue = new LinkedList<>();
+        resultQueue = new HashSet<>(100000);
+        privateQueue = new HashSet<>(100000);
     }
 
     @Override

@@ -29,7 +29,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     private static boolean coloringDone;
     private static Set<Long> Q;
 
-    public static boolean myBFS=false;
+    public static boolean myBFS=true;
     public static  long nCutoff=100;
 
     public static final ConcurrentHashMap<Long, Long> mapOfColors = new ConcurrentHashMap<>();
@@ -38,8 +38,12 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
 
     public MTConnectedComponentsAlgo(CCAlgorithmType type, boolean output){
         super(type, output);
+        if(myType==CCAlgorithmType.WEAK){
+            mybfs = new MyBFS();
+        }
     }
 
+    private MyBFS mybfs;
 
     @Override
     public void compute() {
@@ -47,7 +51,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         super.compute();
 
         if(myType==CCAlgorithmType.WEAK){
-            MyBFS.getInstance().closeDownThreads();
+            mybfs.closeDownThreads();
         }
     }
 
@@ -56,8 +60,8 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     protected void searchForWeakly(long n){
         Set<Long> reachableIDs;
         if(myBFS) {
-            MyBFS bfs = MyBFS.getInstance();
-            reachableIDs = bfs.work(n, Direction.BOTH, null);
+            mybfs = new MyBFS();
+            reachableIDs = mybfs.work(n, Direction.BOTH, null);
         } else{
             reachableIDs = BFS.go(n,Direction.BOTH);
         }
@@ -246,8 +250,9 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     private void FWBW_Step(boolean myBFS){
         Set<Long> D;
         if(myBFS){
-            MyBFS instance =MyBFS.getInstance();
+            MyBFS instance =new MyBFS();
             D = instance.work(maxDegreeID, Direction.OUTGOING,null);
+            System.out.println(D.size());
             D.retainAll(instance.work(maxDegreeID, Direction.INCOMING, D)); // D = S from Paper from here on
 
         } else{
