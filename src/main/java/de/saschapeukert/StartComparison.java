@@ -137,7 +137,7 @@ public class StartComparison {
             }
         timer.stop();
         System.out.println("WarmUp finished after " + timer.elapsed(TimeUnit.SECONDS) + "s.");
-        timer = null;
+
     }
 
     private static void calculateConnectedComponents(int runs, CCAlgorithmType type, boolean output){
@@ -222,7 +222,7 @@ public class StartComparison {
           if(elapsedTime<runnable.timer.elapsed(TimeUnit.MICROSECONDS)){
              elapsedTime =runnable.timer.elapsed(TimeUnit.MICROSECONDS);
           }
-          runnable = null; // suggestion for garbage collector
+
         }
         return elapsedTime;
     }

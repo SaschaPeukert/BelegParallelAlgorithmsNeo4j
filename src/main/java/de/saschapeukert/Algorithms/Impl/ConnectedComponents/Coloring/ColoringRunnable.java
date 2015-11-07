@@ -6,6 +6,7 @@ import org.neo4j.graphdb.Direction;
 
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Set;
 
 /**
  * Created by Sascha Peukert on 04.10.2015.
@@ -31,7 +32,7 @@ public class ColoringRunnable extends WorkerRunnableTemplate {
             return false;
         }
 
-        Queue<Long> listOfReachableNodes = expandNode(parentID,
+        Set<Long> listOfReachableNodes = expandNode(parentID,
                 MTConnectedComponentsAlgo.allNodes,false, Direction.OUTGOING);
         boolean changedAtLeastOneColor = false;
 

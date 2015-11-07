@@ -17,9 +17,9 @@ import java.util.concurrent.Executors;
  */
 public class MyBFS {
 
-    public static volatile List<Long> frontierList= new LinkedList<>();  // do not assign more than once
-    public static volatile SortedMap<Integer,Queue<Long>> MapOfQueues;
-    private static volatile List<Boolean> ThreadCheckList = new LinkedList<>();
+    public static volatile List<Long> frontierList= new ArrayList<>(100000);  // do not assign more than once
+    public static volatile SortedMap<Integer,Set<Long>> MapOfQueues;
+    private static volatile List<Boolean> ThreadCheckList = new ArrayList<>(StartComparison.NUMBER_OF_THREADS);
     public static final Set<Long> visitedIDs = Sets.newConcurrentHashSet();
 
     private final List<MyBFSLevelRunnable> list;

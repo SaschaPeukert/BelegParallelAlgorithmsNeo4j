@@ -4,7 +4,7 @@ import de.saschapeukert.Algorithms.Abst.WorkerRunnableTemplate;
 import de.saschapeukert.StartComparison;
 import org.neo4j.graphdb.Direction;
 
-import java.util.Queue;
+import java.util.Set;
 
 /**
  * Created by Sascha Peukert on 04.10.2015.
@@ -28,7 +28,7 @@ public class MyBFSLevelRunnable extends WorkerRunnableTemplate {
         try {
             int key = ((i * StartComparison.NUMBER_OF_THREADS) + posInList);
             parentID = MyBFS.frontierList.get(key);
-            Queue<Long> q = expandNode(parentID,MyBFS.visitedIDs,true,direction);
+            Set<Long> q = expandNode(parentID,MyBFS.visitedIDs,true,direction);
 
             if(MyBFS.nodeIDSet!=null){
                 q.retainAll(MyBFS.nodeIDSet);

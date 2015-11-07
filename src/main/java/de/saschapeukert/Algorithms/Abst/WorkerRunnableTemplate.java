@@ -4,8 +4,8 @@ import org.neo4j.graphdb.Direction;
 import org.neo4j.kernel.api.ReadOperations;
 
 import java.util.Collection;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -53,17 +53,20 @@ public abstract class WorkerRunnableTemplate extends MyAlgorithmBaseRunnable {
         }
     }
 
-    protected Queue<Long> expandNode(Long id, Collection c, boolean contains, Direction dir){
-        Queue<Long> resultQueue = new LinkedList<>();
+    protected Set<Long> expandNode(Long id, Collection c, boolean contains, Direction dir){
+        Set<Long> resultQueue = new HashSet<>(db.getConnectedNodeIDs(ops, id, dir));
 
-        for(Long child: db.getConnectedNodeIDs(ops, id, dir)){
             if(contains){
-                if(c.contains(child)) continue;
+                // nicht aufnehmen
+                resultQueue.removeAll(c);
+                //if(c.contains(child)) continue;
             } else{
-                if(!c.contains(child)) continue;
+                // nur aufnehmen, wenn drin
+                resultQueue.retainAll(c);
+                //if(!c.contains(child)) continue;
             }
-            resultQueue.add(child);
-        }
+            //resultQueue.add(child);
+
         return resultQueue;
     }
 
