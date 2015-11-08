@@ -200,7 +200,7 @@ public class DBUtils {
     }
 
     public Set<Long> getConnectedNodeIDs(ReadOperations ops, long nodeID, Direction dir){
-        Set<Long> it = new HashSet<>(100000);
+        Set<Long> it = new HashSet<>(1000);
         try {
             RelationshipIterator itR = ops.nodeGetRelationships(nodeID, dir);
 

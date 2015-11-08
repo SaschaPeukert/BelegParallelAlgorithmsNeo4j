@@ -17,7 +17,6 @@ import java.util.concurrent.Executors;
 public class MyBFS {
 
     public static volatile List<Long> frontierList= new ArrayList<>(100000);  // do not assign more than once
-    //public static volatile SortedMap<Integer,Set<Long>> MapOfQueues;
     public static final Set<Long> visitedIDs = Sets.newConcurrentHashSet();
 
     private static boolean levelDone;
@@ -29,14 +28,6 @@ public class MyBFS {
 
     static Set<Long> nodeIDSet;
     private final ExecutorService executor;
-    //private static MyBFS instance;
-
-    /*public static MyBFS getInstance(){
-        if(instance==null){
-            instance = new MyBFS();
-        }
-        return instance;
-    }*/
 
     public MyBFS(){
         executor = Executors.newFixedThreadPool(StartComparison.NUMBER_OF_THREADS);
@@ -70,10 +61,9 @@ public class MyBFS {
 
         while(!frontierList.isEmpty())
         {
-            int size = frontierList.size();
-            if(size>THRESHOLD){
+            if(frontierList.size()>THRESHOLD){
                 // parallel
-                doParallelLevel(direction,size);
+                doParallelLevel(direction);
             } else{
                 // sequential
                 doSequentialLevel(direction,ops);
@@ -87,13 +77,15 @@ public class MyBFS {
 
         visitedIDs.add(n);
         Set<Long> resultQueue = new HashSet<>(db.getConnectedNodeIDs(ops, n, direction));
+        if(nodeIDSet!=null){
+            resultQueue.retainAll(MyBFS.nodeIDSet);
+        }
         resultQueue.removeAll(visitedIDs);
 
         frontierList.addAll(resultQueue);
     }
 
-    private void doParallelLevel(Direction direction, int size){
-
+    private void doParallelLevel(Direction direction){
         levelDone = false;
         it = frontierList.iterator();
         for(MyBFSLevelRunnable runnable:list){
@@ -122,7 +114,6 @@ public class MyBFS {
                 e.printStackTrace();
             }
         }
-
         // threads finished, collecting results -> new frontier
         frontierList.clear();
 
@@ -130,7 +121,6 @@ public class MyBFS {
             frontierList.addAll(runnable.resultQueue);
             runnable.resultQueue.clear();
         }
-
         //System.out.println("Done a level");
     }
 

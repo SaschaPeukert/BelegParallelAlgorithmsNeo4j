@@ -38,7 +38,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
 
     public MTConnectedComponentsAlgo(CCAlgorithmType type, boolean output){
         super(type, output);
-        if(myType==CCAlgorithmType.WEAK){
+        if(myBFS){
             mybfs = new MyBFS();
         }
     }
@@ -50,7 +50,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
 
         super.compute();
 
-        if(myType==CCAlgorithmType.WEAK){
+        if(myBFS){
             mybfs.closeDownThreads();
         }
     }
@@ -60,7 +60,6 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     protected void searchForWeakly(long n){
         Set<Long> reachableIDs;
         if(myBFS) {
-            mybfs = new MyBFS();
             reachableIDs = mybfs.work(n, Direction.BOTH, null);
         } else{
             reachableIDs = BFS.go(n,Direction.BOTH);
@@ -250,10 +249,9 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     private void FWBW_Step(boolean myBFS){
         Set<Long> D;
         if(myBFS){
-            MyBFS instance =new MyBFS();
-            D = instance.work(maxDegreeID, Direction.OUTGOING,null);
-            System.out.println(D.size());
-            D.retainAll(instance.work(maxDegreeID, Direction.INCOMING, D)); // D = S from Paper from here on
+            D = mybfs.work(maxDegreeID, Direction.OUTGOING,null);
+            //System.out.println(D.size());
+            D.retainAll(mybfs.work(maxDegreeID, Direction.INCOMING, D)); // D = S from Paper from here on
 
         } else{
             D = BFS.go(maxDegreeID, Direction.OUTGOING);
