@@ -29,7 +29,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     private static boolean coloringDone;
     private static Set<Long> Q;
 
-    public static boolean myBFS=true;
+    public static boolean myBFS=false;
     public static  long nCutoff=100;
 
     public static final ConcurrentHashMap<Long, Long> mapOfColors = new ConcurrentHashMap<>();
