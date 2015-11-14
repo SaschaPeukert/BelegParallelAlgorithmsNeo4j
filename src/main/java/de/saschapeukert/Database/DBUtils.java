@@ -36,6 +36,7 @@ public class DBUtils {
     private static GraphDatabaseService graphDb;
     private final ThreadToStatementContextBridge ctx;
     public final long highestNodeKey;
+    public final long highestRelationshipKey;
 
     private static DBUtils instance;
 
@@ -166,6 +167,11 @@ public class DBUtils {
         return getStoreAcess().getNodeStore().getHighId();
     }
 
+    private long getHighestRelationshipID(){
+
+        return getStoreAcess().getRelationshipStore().getHighId();
+    }
+
     private long getNextPropertyID(){
         return getStoreAcess().getPropertyStore().nextId();
     }
@@ -230,6 +236,24 @@ public class DBUtils {
         tx.close();
     }
 
+    public boolean loadNode(long id){
+        try{
+            graphDb.getNodeById(id);
+            return true;
+        } catch (Exception e){
+            return false;
+        }
+    }
+
+    public boolean loadRelationship(long id){
+        try{
+            graphDb.getRelationshipById(id);
+            return true;
+        } catch (Exception e){
+            return false;
+        }
+    }
+
     /**
      *  The constructor
      * @param path
@@ -257,6 +281,7 @@ public class DBUtils {
 
         registerShutdownHook();
         highestNodeKey = getHighestNodeID();
+        highestRelationshipKey = getHighestRelationshipID();
     }
 
     /**

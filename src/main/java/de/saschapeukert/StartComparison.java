@@ -62,6 +62,7 @@ public class StartComparison {
             prepaireResultMapAndCounter(db.highestNodeKey);
         db.closeTransactionWithSuccess(t);
         System.out.println("~ " + db.highestNodeKey + " Nodes");
+        System.out.println("~" + db.highestRelationshipKey + " Relationships");
 
         if(WRITE.equals("Write")){
             PROP_ID = db.GetPropertyID(PROP_NAME);
@@ -71,7 +72,8 @@ public class StartComparison {
                 return;
             }
         }
-        WarmUp(WARMUPTIME);
+        SkippingPagesWarmUp();
+        //WarmUp(WARMUPTIME);
         System.out.println("");
         Stopwatch timeOfComparision = Stopwatch.createStarted();
 
@@ -138,6 +140,25 @@ public class StartComparison {
         timer.stop();
         System.out.println("WarmUp finished after " + timer.elapsed(TimeUnit.SECONDS) + "s.");
 
+    }
+
+    private static void SkippingPagesWarmUp(){
+        System.out.println("Starting WarmUp.");
+        Stopwatch timer = Stopwatch.createStarted();
+
+        DBUtils db=DBUtils.getInstance("","");
+
+        Transaction tx =db.openTransaction();
+        for(int i=0;i<=db.highestNodeKey;i=i+15){
+            db.loadNode(i);
+        }
+        for(int i=0;i<=db.highestRelationshipKey;i=i+15){
+            db.loadRelationship(i);
+            //System.out.println(i);
+        }
+        db.closeTransactionWithSuccess(tx);
+        timer.stop();
+        System.out.println("WarmUp finished after " + timer.elapsed(TimeUnit.SECONDS) + "s.");
     }
 
     private static void calculateConnectedComponents(int runs, CCAlgorithmType type, boolean output){
