@@ -15,18 +15,17 @@ With this command maven will generate a jar file for you:
 
 **2. Start it with**
 
-        java -jar <JAR> A B C D E F G H I J
+        java -jar <JAR> A B C D E F G H I 
         
-         A = Name of the Algorithmus (RW, SCC, WCC)
+         A = Name of the Algorithmus (RW, SCC, WCC, DegreeStats)
          B = OperationNumber (for RW) [for the other algorithms this parameter is irrelevant**, but some value still needs to be present]
          C = Number of Runs
          D = Number of Threads *
-         E = WarmUp Time in S
-         F = New SPI (true or false) (for RW) [for the other algorithms this parameter is irrelevant, but some value still needs to be present]
-         G = PropertyName, under which the results will be saved at the nodes
-         H = PageCache (String ala "6G")
-         I = Path to DB
-         J = Write or NoWrite
+         E = New SPI (true or false) (for RW) [for the other algorithms this parameter is irrelevant, but some value still needs to be present]
+         F = PropertyName, under which the results will be saved at the nodes
+         G = PageCache (String ala "6G")
+         H = Path to DB
+         I = Write or NoWrite
          
          
          * If D is greater than one, the corresponding multithread algorithm will automatically be used 

@@ -17,7 +17,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class RandomWalkTest {
 
-    private static final String[] args = {"RW", "1001000", "1", "8", "1", "true", "RandomWalkCounterTest",
+    private static final String[] args = {"RW", "1001000", "1", "8", "true", "RandomWalkCounterTest",
             "1G", "testDB\\graph.db", "Write"};
 
     @BeforeClass
@@ -47,9 +47,9 @@ public class RandomWalkTest {
 
         StartComparison.main(args);
 
-        DBUtils db = DBUtils.getInstance(args[8], args[7]);
+        DBUtils db = DBUtils.getInstance(args[7], args[6]);
         Transaction tx = db.openTransaction();  // NOPE
-        List<Object[]> resultList= OutputTop20.getTop20(args[6]);
+        List<Object[]> resultList= OutputTop20.getTop20(args[5]);
 
         assertEquals((resultList.get(0)[0]),14L);
         assertEquals((resultList.get(1)[0]),7L);

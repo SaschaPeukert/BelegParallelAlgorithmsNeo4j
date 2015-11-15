@@ -10,6 +10,8 @@ import de.saschapeukert.Algorithms.Impl.RandomWalk.RandomWalkAlgorithmRunnableNe
 import de.saschapeukert.Database.DBUtils;
 import de.saschapeukert.Database.NeoWriter;
 import org.HdrHistogram.Histogram;
+import org.HdrHistogram.IntCountsHistogram;
+import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 
@@ -33,7 +35,7 @@ public class StartComparison {
     public static int NUMBER_OF_THREADS;
     private static int NUMBER_OF_RUNS; //Minimum: 1
     public static final int RANDOMWALKRANDOM = 20;  // Minimum: 1
-    private static  int WARMUPTIME; // in seconds
+    //private static  int WARMUPTIME; // in seconds
     private static  boolean NEWSPI;
     private static  String PROP_NAME;
     private static int PROP_ID;
@@ -42,8 +44,8 @@ public class StartComparison {
     private static String WRITE;
     private static Map<Long,AtomicLong> resultCounter;
     private static Object[] keySetOfResultCounter;
-    private static final Histogram histogram = new Histogram(3600000000000L, 3);
-
+    private static Histogram histogram;
+    ;
     public static void main(String[] args)  {
         readParameters(args);
 
@@ -58,11 +60,12 @@ public class StartComparison {
             System.out.println("Abort.");
             return;
         }
+        histogram = new Histogram(3600000000000L, 3);
         Transaction t = db.openTransaction();
             prepaireResultMapAndCounter(db.highestNodeKey);
         db.closeTransactionWithSuccess(t);
         System.out.println("~ " + db.highestNodeKey + " Nodes");
-        System.out.println("~" + db.highestRelationshipKey + " Relationships");
+        System.out.println("~ " + db.highestRelationshipKey + " Relationships");
 
         if(WRITE.equals("Write")){
             PROP_ID = db.GetPropertyID(PROP_NAME);
@@ -91,12 +94,15 @@ public class StartComparison {
                         NUMBER_OF_RUNS,
                         CCAlgorithmType.STRONG, true);
                 break;
+            case "DegreeStats":
+                doGetDegreeStatistics(db);
+                break;
             default:
                 System.out.println("Error: Unknown Algorithm.");
                 return;
         }
         timeOfComparision.stop();
-        System.out.println("\nWhole Comparison done in: " + timeOfComparision.elapsed(TimeUnit.SECONDS) + "s (+ WarmUp " + WARMUPTIME + "s)");
+        System.out.println("\nCalculations done in: " + timeOfComparision.elapsed(TimeUnit.SECONDS) + "s (+ WarmUp time)");
         if(WRITE.equals("Write"))
             writeResultsOut();
 
@@ -112,15 +118,15 @@ public class StartComparison {
             OPERATIONS = Integer.valueOf(args[1]);
             NUMBER_OF_RUNS = Integer.valueOf(args[2]);
             NUMBER_OF_THREADS = Integer.valueOf(args[3]);
-            WARMUPTIME = Integer.valueOf(args[4]);
-            NEWSPI = args[5].equals("true");
-            PROP_NAME = args[6];
-            PAGECACHE= args[7];
-            DB_PATH = args[8];
-            WRITE = args[9];
+            //WARMUPTIME = Integer.valueOf(args[4]);
+            NEWSPI = args[4].equals("true");
+            PROP_NAME = args[5];
+            PAGECACHE= args[6];
+            DB_PATH = args[7];
+            WRITE = args[8];
         } catch(Exception e){
             System.out.println("Not enough input parameter.");
-            System.out.println("You have to supply: AlgorithmName OperationNumber Number_of_Threads WarmUpTime_in_s " +
+            System.out.println("You have to supply: AlgorithmName OperationNumber Number_of_Threads " +
                     "NewSPI_bool PropertyName PageCache(String)_in_G/M/K DB-Path Write/NoWrite");
             System.exit(1);
         }
@@ -139,7 +145,6 @@ public class StartComparison {
             }
         timer.stop();
         System.out.println("WarmUp finished after " + timer.elapsed(TimeUnit.SECONDS) + "s.");
-
     }
 
     private static void SkippingPagesWarmUp(){
@@ -147,14 +152,12 @@ public class StartComparison {
         Stopwatch timer = Stopwatch.createStarted();
 
         DBUtils db=DBUtils.getInstance("","");
-
         Transaction tx =db.openTransaction();
         for(int i=0;i<=db.highestNodeKey;i=i+15){
             db.loadNode(i);
         }
         for(int i=0;i<=db.highestRelationshipKey;i=i+15){
             db.loadRelationship(i);
-            //System.out.println(i);
         }
         db.closeTransactionWithSuccess(tx);
         timer.stop();
@@ -246,6 +249,77 @@ public class StartComparison {
 
         }
         return elapsedTime;
+    }
+
+    private static void doGetDegreeStatistics(DBUtils db){
+        Map<Integer, Integer> mapInDegreeCounter= new HashMap<>();
+        Map<Integer, Integer> mapOutDegreeCounter= new HashMap<>();
+        Map<Integer, Integer> mapDegreeCounter= new HashMap<>();
+
+        IntCountsHistogram histogram_in = new IntCountsHistogram(0);
+        IntCountsHistogram histogram_out = new IntCountsHistogram(0);
+        IntCountsHistogram histogram_sum = new IntCountsHistogram(0);
+
+        Iterator<Long> it = resultCounter.keySet().iterator();
+        Transaction tx =db.openTransaction();
+        while(it.hasNext()){
+            Long l = it.next();
+            int in =db.getDegree(l, Direction.INCOMING);
+            int out = db.getDegree(l, Direction.OUTGOING);
+            incrementMapCounter(mapInDegreeCounter,in);
+            incrementMapCounter(mapOutDegreeCounter,out);
+            incrementMapCounter(mapDegreeCounter,in+out);
+        }
+        db.closeTransactionWithSuccess(tx);
+
+        // Raw Output
+        System.out.println("IN:");
+        for(int i:mapInDegreeCounter.keySet()){
+            System.out.println(i + ";" + mapInDegreeCounter.get(i));
+        }
+        System.out.println("");
+        System.out.println("OUT:");
+        for(int i:mapOutDegreeCounter.keySet()){
+            System.out.println(i + ";" + mapOutDegreeCounter.get(i));
+        }
+        System.out.println("");
+        System.out.println("SUM:");
+        for(int i:mapDegreeCounter.keySet()){
+            System.out.println(i + ";" + mapDegreeCounter.get(i));
+        }
+        System.out.println("");
+
+        // Histogram Output
+        for(int i:mapInDegreeCounter.keySet()){
+            histogram_in.recordValueWithCount((long)i ,(long) mapInDegreeCounter.get(i));
+        }
+        for(int i:mapOutDegreeCounter.keySet()){
+            histogram_out.recordValueWithCount((long)i ,(long) mapOutDegreeCounter.get(i));
+        }
+        for(int i:mapDegreeCounter.keySet()){
+            histogram_sum.recordValueWithCount((long)i ,(long) mapDegreeCounter.get(i));
+        }
+        System.out.println("In-Degrees:");
+        histogram_in.outputPercentileDistribution(System.out, 1.00);
+        System.out.println("");
+
+        System.out.println("Out-Degrees:");
+        histogram_out.outputPercentileDistribution(System.out, 1.00);
+        System.out.println("");
+
+        System.out.println("Degrees:");
+        histogram_sum.outputPercentileDistribution(System.out, 1.00);
+
+    }
+
+    private static void incrementMapCounter(Map<Integer, Integer> map, int id){
+        if(map.containsKey(id)){
+            int value = map.get(id);
+            value++;
+            map.put(id,value);
+        } else{
+            map.put(id,1);
+        }
     }
 
     private static boolean writeResultsOut(){

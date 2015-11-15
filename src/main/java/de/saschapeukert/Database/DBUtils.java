@@ -254,6 +254,10 @@ public class DBUtils {
         }
     }
 
+    public int getDegree(long id, Direction direction){
+       return graphDb.getNodeById(id).getDegree(direction);
+    }
+
     /**
      *  The constructor
      * @param path
@@ -296,6 +300,8 @@ public class DBUtils {
         }
         return instance;
     }
+
+
 
     private void registerShutdownHook( )
     {
