@@ -6,7 +6,7 @@ import org.neo4j.graphdb.Transaction;
 import java.util.concurrent.Callable;
 
 /**
- * Created by Sascha Peukert on 15.09.2015.
+ * Created by Sascha Peukert on 19.11.2015.
  */
 public abstract class newMyBaseCallable implements Callable {
 

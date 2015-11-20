@@ -8,18 +8,27 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Created by Sascha Peukert on 23.10.2015.
+ * Created by Sascha Peukert on 19.11.2015.
  */
 public abstract class WorkerCallableTemplate extends newMyBaseCallable {
-    protected WorkerCallableTemplate( boolean output) {
+
+    protected Long[] refArray;
+    protected int startPos; //incl.
+    protected int endPos; // not incl.
+
+    protected Set<Long> returnSet;
+    private ReadOperations ops;
+
+    protected WorkerCallableTemplate(int startPos, int endPos, Long[] arrayOfColors, boolean output) {
         super(output);
+        this.refArray = arrayOfColors;
+        this.startPos = startPos;
+        this.endPos = endPos;
     }
 
     // Children must overwrite compute()
 
-    protected long parentID;
-    protected Set<Long> returnSet;
-    private ReadOperations ops;
+
 
     public Object call() throws Exception {
         ops = db.getReadOperations();
@@ -27,17 +36,17 @@ public abstract class WorkerCallableTemplate extends newMyBaseCallable {
         return returnSet;
     }
 
-    protected Set<Long> expandNode(Long id, Collection c, boolean contains, Direction dir){
-        Set<Long> resultQueue = new HashSet<>(db.getConnectedNodeIDs(ops, id, dir));
+    protected Set<Long> expandNode(Long id, Collection c, boolean ignoreIfCollectionsContainsItem, Direction dir){
+        Set<Long> resultSet = new HashSet<>(db.getConnectedNodeIDs(ops, id, dir));
 
-        if(contains){
-                // nicht aufnehmen
-            resultQueue.removeAll(c);
+        if(ignoreIfCollectionsContainsItem){
+            // nicht aufnehmen
+            resultSet.removeAll(c);
         } else{
-                // nur aufnehmen, wenn drin
-            resultQueue.retainAll(c);
+            // nur aufnehmen, wenn drin
+            resultSet.retainAll(c);
         }
-        return resultQueue;
+        return resultSet;
     }
 
 }

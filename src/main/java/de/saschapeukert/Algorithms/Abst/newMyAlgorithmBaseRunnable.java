@@ -5,7 +5,7 @@ import com.google.common.base.Stopwatch;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by Sascha Peukert on 06.08.2015.
+ * Created by Sascha Peukert on 19.11.2015.
  */
 public abstract class newMyAlgorithmBaseRunnable extends newMyBaseCallable {
 

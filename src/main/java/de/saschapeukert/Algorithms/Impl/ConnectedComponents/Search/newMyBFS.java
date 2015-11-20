@@ -12,7 +12,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Created by Sascha Peukert on 04.10.2015.
+ * Created by Sascha Peukert on 19.11.2015.
  */
 public class newMyBFS {
 
