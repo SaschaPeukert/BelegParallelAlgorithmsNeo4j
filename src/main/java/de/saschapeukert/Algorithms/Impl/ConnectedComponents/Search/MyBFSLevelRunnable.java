@@ -15,13 +15,11 @@ public class MyBFSLevelRunnable extends WorkerRunnableTemplate {
     private final int posInList;
     //private int i; //counter
     public final Set<Long> resultQueue;
-    private final Set<Long> privateQueue;
 
     public MyBFSLevelRunnable(int pos, boolean output){
         super(output);
 
         resultQueue = new HashSet<>(100000);
-        privateQueue = new HashSet<>(100000);
         posInList = pos;
 
     }

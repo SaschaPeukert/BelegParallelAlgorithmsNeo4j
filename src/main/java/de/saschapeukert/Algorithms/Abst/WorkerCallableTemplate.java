@@ -19,11 +19,12 @@ public abstract class WorkerCallableTemplate extends newMyBaseCallable {
     protected Set<Long> returnSet;
     private ReadOperations ops;
 
-    protected WorkerCallableTemplate(int startPos, int endPos, Long[] arrayOfColors, boolean output) {
+    protected WorkerCallableTemplate(int startPos, int endPos, Long[] array, boolean output) {
         super(output);
-        this.refArray = arrayOfColors;
+        this.refArray = array;
         this.startPos = startPos;
         this.endPos = endPos;
+        returnSet = new HashSet<>(10000);
     }
 
     // Children must overwrite compute()

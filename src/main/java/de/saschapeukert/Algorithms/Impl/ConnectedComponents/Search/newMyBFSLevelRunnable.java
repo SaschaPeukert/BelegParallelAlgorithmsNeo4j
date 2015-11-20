@@ -3,7 +3,6 @@ package de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search;
 import de.saschapeukert.Algorithms.Abst.WorkerCallableTemplate;
 import org.neo4j.graphdb.Direction;
 
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -12,20 +11,18 @@ import java.util.Set;
 public class newMyBFSLevelRunnable extends WorkerCallableTemplate {
 
     public Direction direction;
-    private final Set<Long> privateQueue;
 
     public newMyBFSLevelRunnable(int startPos, int endPos, Long[] array, Direction direction, boolean output){
         super(startPos,endPos,array,output);
 
         this.direction = direction;
-        privateQueue = new HashSet<>(100000);
     }
 
     @Override
     protected void compute() {
 
         int currentPos=startPos;
-        while(startPos<endPos){
+        while(currentPos<endPos){
             long parentID = refArray[currentPos];
             Set<Long> q = expandNode(parentID,MyBFS.visitedIDs,true,direction);
             MyBFS.visitedIDs.add(parentID);
