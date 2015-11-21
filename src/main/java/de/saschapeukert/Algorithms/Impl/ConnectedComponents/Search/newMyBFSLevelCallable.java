@@ -8,11 +8,11 @@ import java.util.Set;
 /**
  * Created by Sascha Peukert on 19.11.2015.
  */
-public class newMyBFSLevelRunnable extends WorkerCallableTemplate {
+public class newMyBFSLevelCallable extends WorkerCallableTemplate {
 
     public Direction direction;
 
-    public newMyBFSLevelRunnable(int startPos, int endPos, Long[] array, Direction direction, boolean output){
+    public newMyBFSLevelCallable(int startPos, int endPos, Long[] array, Direction direction, boolean output){
         super(startPos,endPos,array,output);
 
         this.direction = direction;
@@ -25,19 +25,15 @@ public class newMyBFSLevelRunnable extends WorkerCallableTemplate {
         while(currentPos<endPos){
             long parentID = refArray[currentPos];
             Set<Long> q = expandNode(parentID,MyBFS.visitedIDs,true,direction);
-            MyBFS.visitedIDs.add(parentID);
+            MyBFS.visitedIDs.add(parentID); // this needs to happen here and not before expandNode
 
             if(MyBFS.nodeIDSet!=null){
                 // this is a backward sweep
-
-                q.add(parentID); // quick fix
+                //q.add(parentID); // quick fix // TODO TEST THIS
                 q.retainAll(MyBFS.nodeIDSet);
             }
-
             q.remove(parentID);
-
             returnSet.addAll(q);
-
             currentPos++;
         }
 

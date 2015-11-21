@@ -40,7 +40,7 @@ public class MyBFSLevelRunnable extends WorkerRunnableTemplate {
             MyBFS.visitedIDs.add(parentID);
 
             if(MyBFS.nodeIDSet!=null){
-                q.add(parentID); // quick fix
+               // q.add(parentID); // quick fix // TODO TEST THIS
                 q.retainAll(MyBFS.nodeIDSet);
             }
 

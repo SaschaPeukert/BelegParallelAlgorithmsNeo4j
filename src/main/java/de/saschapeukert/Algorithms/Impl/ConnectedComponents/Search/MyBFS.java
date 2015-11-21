@@ -16,14 +16,13 @@ import java.util.concurrent.Executors;
  */
 public class MyBFS {
 
-    public static volatile List<Long> frontierList= new ArrayList<>(100000);  // do not assign more than once
+    public static Set<Long> frontier = new HashSet<>(100000);  // do not assign more than once
     public static final Set<Long> visitedIDs = Sets.newConcurrentHashSet();
 
     private static boolean levelDone;
     private static Iterator<Long> it;
 
     private final List<MyBFSLevelRunnable> list;
-    private final int THRESHOLD=0;
     private final DBUtils db;
 
     static Set<Long> nodeIDSet;
@@ -56,38 +55,21 @@ public class MyBFS {
         //Set<Long> visitedIDs = new HashSet<>();
         visitedIDs.clear();
 
-        frontierList.add(nodeID);
+        frontier.add(nodeID);
         visitedIDs.add(nodeID);
 
-        while(!frontierList.isEmpty())
+        while(!frontier.isEmpty())
         {
-            if(frontierList.size()>THRESHOLD){
-                // parallel
-                doParallelLevel(direction);
-            } else{
-                // sequential
-                doSequentialLevel(direction,ops);
-            }
+            // parallel
+            doParallelLevel(direction);
+
         }
         return visitedIDs;
     }
 
-    private void doSequentialLevel(Direction direction, ReadOperations ops){
-        Long n = frontierList.remove(0);
-
-        visitedIDs.add(n);
-        Set<Long> resultQueue = new HashSet<>(db.getConnectedNodeIDs(ops, n, direction));
-        if(nodeIDSet!=null){
-            resultQueue.retainAll(MyBFS.nodeIDSet);
-        }
-        resultQueue.removeAll(visitedIDs);
-
-        frontierList.addAll(resultQueue);
-    }
-
     private void doParallelLevel(Direction direction){
         levelDone = false;
-        it = frontierList.iterator();
+        it = frontier.iterator();
         for(MyBFSLevelRunnable runnable:list){
             runnable.direction = direction;
             runnable.isIdle.set(false);
@@ -115,10 +97,10 @@ public class MyBFS {
             }
         }
         // threads finished, collecting results -> new frontier
-        frontierList.clear();
+        frontier.clear();
 
         for(MyBFSLevelRunnable runnable : list){
-            frontierList.addAll(runnable.resultQueue);
+            frontier.addAll(runnable.resultQueue);
             runnable.resultQueue.clear();
         }
         //System.out.println("Done a level");
@@ -139,9 +121,5 @@ public class MyBFS {
         }
         levelDone=true;
         return -1;
-    }
-
-    public ExecutorService getExecutor(){
-        return executor;
     }
 }
