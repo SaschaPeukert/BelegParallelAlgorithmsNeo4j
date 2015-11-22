@@ -29,8 +29,6 @@ public abstract class WorkerCallableTemplate extends newMyBaseCallable {
 
     // Children must overwrite compute()
 
-
-
     public Object call() throws Exception {
         ops = db.getReadOperations();
         work();
