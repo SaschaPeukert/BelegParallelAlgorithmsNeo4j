@@ -10,7 +10,7 @@ import java.util.Set;
 /**
  * Created by Sascha Peukert on 04.10.2015.
  */
-public class newColoringRunnable extends WorkerCallableTemplate {
+public class newColoringCallable extends WorkerCallableTemplate {
 
     private final Set<Long> privateQueue;
 
@@ -49,7 +49,7 @@ public class newColoringRunnable extends WorkerCallableTemplate {
         }
     }
 
-    public newColoringRunnable(int startPos, int endPos, Long[] array,boolean output){
+    public newColoringCallable(int startPos, int endPos, Long[] array, boolean output){
         super(startPos,endPos,array,output);
         privateQueue = new HashSet<>(100000);
     }
