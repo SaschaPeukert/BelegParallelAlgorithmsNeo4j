@@ -4,7 +4,7 @@ import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring.newBackward
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring.newColoringCallable;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.BFS;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.newMyBFS;
-import de.saschapeukert.StartComparison;
+import de.saschapeukert.newStartComparison;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 
@@ -79,7 +79,7 @@ public class newMTConnectedComponentsAlgo extends newSTConnectedComponentsAlgo {
 
         // PHASE 2
             // Start Threads
-        ExecutorService executor = Executors.newFixedThreadPool(StartComparison.NUMBER_OF_THREADS);
+        ExecutorService executor = Executors.newFixedThreadPool(newStartComparison.NUMBER_OF_THREADS);
         CompletionService<Set<Long>> pool = new ExecutorCompletionService<Set<Long>>(executor);
         //System.out.println("Phase 2");
         int i=0;
@@ -100,7 +100,7 @@ public class newMTConnectedComponentsAlgo extends newSTConnectedComponentsAlgo {
         super.strongly(); // call seq. tarjan
 
             // finish threads and executor
-        StartComparison.waitForExecutorToFinishAll(executor);
+        newStartComparison.waitForExecutorToFinishAll(executor);
     }
 
     @Override

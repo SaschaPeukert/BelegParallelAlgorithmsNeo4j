@@ -1,14 +1,14 @@
 package de.saschapeukert;
 
 import com.google.common.base.Stopwatch;
-import de.saschapeukert.Algorithms.Abst.MyAlgorithmBaseRunnable;
+import de.saschapeukert.Algorithms.Abst.newMyAlgorithmBaseCallable;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.CCAlgorithmType;
-import de.saschapeukert.Algorithms.Impl.ConnectedComponents.MTConnectedComponentsAlgo;
-import de.saschapeukert.Algorithms.Impl.ConnectedComponents.STConnectedComponentsAlgo;
-import de.saschapeukert.Algorithms.Impl.RandomWalk.RandomWalkAlgorithmRunnable;
-import de.saschapeukert.Algorithms.Impl.RandomWalk.RandomWalkAlgorithmRunnableNewSPI;
+import de.saschapeukert.Algorithms.Impl.ConnectedComponents.newMTConnectedComponentsAlgo;
+import de.saschapeukert.Algorithms.Impl.ConnectedComponents.newSTConnectedComponentsAlgo;
+import de.saschapeukert.Algorithms.Impl.RandomWalk.newRandomWalkAlgorithmCallable;
+import de.saschapeukert.Algorithms.Impl.RandomWalk.newRandomWalkAlgorithmCallableNewSPI;
 import de.saschapeukert.Database.DBUtils;
-import de.saschapeukert.Database.NeoWriter;
+import de.saschapeukert.Database.newNeoWriter;
 import org.HdrHistogram.Histogram;
 import org.HdrHistogram.IntCountsHistogram;
 import org.neo4j.graphdb.Direction;
@@ -16,16 +16,17 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 
 import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Created by Sascha Peukert on 04.08.2015.
  */
-public class StartComparison {
+public class newStartComparison {
 
     private  static String DB_PATH;
     // Server: /mnt/flash2/neo4j-enterprise-2.3.0-M02/data/graph.db
@@ -192,62 +193,71 @@ public class StartComparison {
      * @return elapsed time as MILLISECONDS!
      */
     private static long doConnectedComponentsRun(CCAlgorithmType type, boolean output){
-        STConnectedComponentsAlgo runnable;
+        newSTConnectedComponentsAlgo callable;
         if(NUMBER_OF_THREADS>1) {
-            runnable = new MTConnectedComponentsAlgo(
-                    type, output);
+            callable = new newMTConnectedComponentsAlgo(
+                    type,TimeUnit.MILLISECONDS, output);
         } else{
             // Easter Egg?!
             if(OPERATIONS==-1){
-                runnable = new MTConnectedComponentsAlgo(
-                        type, output);
+                callable = new newMTConnectedComponentsAlgo(
+                        type,TimeUnit.MILLISECONDS, output);
             } else{
-                runnable = new STConnectedComponentsAlgo(
-                        type, output);
+                callable = new newSTConnectedComponentsAlgo(
+                        type,TimeUnit.MILLISECONDS, output);
             }
         }
-        Thread t = new Thread(runnable);
-        t.setName("ConnectedComponentsAlgo");
-        t.start();
+        ExecutorService ex = Executors.newFixedThreadPool(1);
+        CompletionService<Long> pool = new ExecutorCompletionService<Long>(ex);
+        ex.submit(callable);
+
+        //System.out.println(callable.getResults());    //TODO REMOVE, JUST FOR DEBUG
+        long ret = -10000; // ERROR if not changed
+
         try {
-            t.join();
-            t = null;
+            ret = pool.take().get();
         } catch (InterruptedException e) {
             e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
         }
-
-        //System.out.println(runnable.getResults());    //TODO REMOVE, JUST FOR DEBUG
-        return runnable.timer.elapsed(TimeUnit.MILLISECONDS);
+        waitForExecutorToFinishAll(ex);
+        return ret; // ERROR
     }
 
     private static long doMultiThreadRandomWalk(int noOfSteps, boolean output){
         // INIT
-        List<MyAlgorithmBaseRunnable> list = new ArrayList<>(NUMBER_OF_THREADS);
         ExecutorService executor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
+        CompletionService<Long> pool = new ExecutorCompletionService<Long>(executor);
 
         for(int i=0;i<NUMBER_OF_THREADS;i++){
-            MyAlgorithmBaseRunnable rw;
+            newMyAlgorithmBaseCallable rw;
             if(NEWSPI){
-                rw = new RandomWalkAlgorithmRunnableNewSPI(
-                        noOfSteps/NUMBER_OF_THREADS, output);
+                rw = new newRandomWalkAlgorithmCallableNewSPI(
+                        noOfSteps/NUMBER_OF_THREADS,TimeUnit.MICROSECONDS, output);
             } else{
-                rw = new RandomWalkAlgorithmRunnable(
-                        noOfSteps/NUMBER_OF_THREADS, output);
+                rw = new newRandomWalkAlgorithmCallable(
+                        noOfSteps/NUMBER_OF_THREADS,TimeUnit.MICROSECONDS, output);
             }
-            executor.execute(rw);
-            list.add(rw);
+            executor.submit(rw);
+        }
+        long elapsedTime=0;
+
+        for(int i=0;i<NUMBER_OF_THREADS;i++){
+            try {
+                long time = pool.take().get();
+                if(elapsedTime<time){
+                    elapsedTime =time;
+                }
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
         }
 
         waitForExecutorToFinishAll(executor);
-        long elapsedTime=0;
-
-        for(MyAlgorithmBaseRunnable runnable : list){
-          // only the longest running thread time is of importance
-          if(elapsedTime<runnable.timer.elapsed(TimeUnit.MICROSECONDS)){
-             elapsedTime =runnable.timer.elapsed(TimeUnit.MICROSECONDS);
-          }
-
-        }
         return elapsedTime;
     }
 
@@ -309,7 +319,6 @@ public class StartComparison {
 
         System.out.println("Degrees:");
         histogram_sum.outputPercentileDistribution(System.out, 1.00);
-
     }
 
     private static void incrementMapCounter(Map<Integer, Integer> map, int id){
@@ -330,10 +339,11 @@ public class StartComparison {
         int endIndex = partOfData;
         //ThreadPoolExecutor executor = new ThreadPoolExecutor(NUMBER_OF_THREADS,NUMBER_OF_THREADS,0L,TimeUnit.NANOSECONDS,new ArrayBlockingQueue<Runnable>(1));
         ExecutorService executor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
+        CompletionService<Object> pool = new ExecutorCompletionService<Object>(executor);
 
         for(int i=0;i<NUMBER_OF_THREADS;i++){
-            NeoWriter neoWriter = new NeoWriter(PROP_ID,startIndex,endIndex);
-            executor.execute(neoWriter);
+            newNeoWriter neoWriter = new newNeoWriter(PROP_ID,startIndex,endIndex);
+            executor.submit(neoWriter);
 
             // new indexes for next round
             startIndex = endIndex;
@@ -343,6 +353,16 @@ public class StartComparison {
                 endIndex= sizeKeySet;
             }
         }
+        for(int i=0;i<NUMBER_OF_THREADS;i++){
+            try {
+                pool.take().get();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+
         boolean check = waitForExecutorToFinishAll(executor);
         System.out.println("Done Writing");
         return check;

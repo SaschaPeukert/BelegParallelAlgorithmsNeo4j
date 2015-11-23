@@ -1,7 +1,7 @@
 package de.saschapeukert.Database;
 
 import de.saschapeukert.Algorithms.Abst.newMyBaseCallable;
-import de.saschapeukert.StartComparison;
+import de.saschapeukert.newStartComparison;
 import org.neo4j.kernel.api.DataWriteOperations;
 
 /**
@@ -35,8 +35,8 @@ public class newNeoWriter extends newMyBaseCallable {
                 count =0;
             }
 
-            Long l = (Long) StartComparison.getObjInResultCounterKeySet(i);
-            db.createPropertyAtNode(l, StartComparison.getResultCounterforId(l).intValue(), propID, ops);
+            Long l = (Long) newStartComparison.getObjInResultCounterKeySet(i);
+            db.createPropertyAtNode(l, newStartComparison.getResultCounterforId(l).intValue(), propID, ops);
             count++;
         }
         db.closeTransactionWithSuccess(tx);

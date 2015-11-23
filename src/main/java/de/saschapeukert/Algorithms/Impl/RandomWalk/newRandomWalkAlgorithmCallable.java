@@ -2,6 +2,7 @@ package de.saschapeukert.Algorithms.Impl.RandomWalk;
 
 import de.saschapeukert.Algorithms.Abst.newMyAlgorithmBaseCallable;
 import de.saschapeukert.StartComparison;
+import de.saschapeukert.newStartComparison;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
@@ -72,7 +73,7 @@ public class newRandomWalkAlgorithmCallable extends newMyAlgorithmBaseCallable {
                 currentNode = getNextNode(currentNode);
             }
             if(output)
-                StartComparison.incrementResultCounterforId(currentNode.getId());
+                newStartComparison.incrementResultCounterforId(currentNode.getId());
             NUMBER_OF_STEPS--;
         }
         timer.stop();

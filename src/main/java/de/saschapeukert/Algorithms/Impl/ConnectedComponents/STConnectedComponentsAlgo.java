@@ -5,6 +5,7 @@ import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.BFS;
 import de.saschapeukert.Database.DBUtils;
 import de.saschapeukert.Datastructures.TarjanInfo;
 import de.saschapeukert.StartComparison;
+import de.saschapeukert.newStartComparison;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.ResourceIterator;
@@ -156,7 +157,7 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseRunnable {
                 newList.add(n);
                 myResults.put(StartComparison.getResultCounterforId(n).intValue(),newList);
             } else{
-                List<Long> oldList = myResults.get(StartComparison.getResultCounterforId(n).intValue());
+                List<Long> oldList = myResults.get(newStartComparison.getResultCounterforId(n).intValue());
                 oldList.add(n);
                 myResults.put(StartComparison.getResultCounterforId(n).intValue(),oldList);
             }
