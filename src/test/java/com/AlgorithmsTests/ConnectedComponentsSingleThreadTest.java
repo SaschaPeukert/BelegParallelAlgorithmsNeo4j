@@ -2,6 +2,7 @@ package com.AlgorithmsTests;
 
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.STConnectedComponentsAlgo;
 import de.saschapeukert.StartComparison;
+import de.saschapeukert.newStartComparison;
 import org.apache.commons.lang3.SystemUtils;
 import org.junit.*;
 
@@ -36,7 +37,7 @@ public class ConnectedComponentsSingleThreadTest {
     @Test
     public void WeaklyConnectedComponentsShallNotCrash() {
         try{
-            StartComparison.main(argsWCC);
+            newStartComparison.main(argsWCC);
         } catch (Exception e){
             e.printStackTrace();
             Assert.fail("It crashed. Why?");
@@ -46,7 +47,7 @@ public class ConnectedComponentsSingleThreadTest {
     @Test
     public void WeaklyConnectedComponentsShouldBeCorrect() {
         // Do the Run, get results
-        StartComparison.main(argsWCC);
+        newStartComparison.main(argsWCC);
         Map<Integer,List<Long>> resultOfRun = STConnectedComponentsAlgo.getMapofComponentToIDs();
 
         // Check the result
@@ -83,7 +84,7 @@ public class ConnectedComponentsSingleThreadTest {
     @Test
     public void StronglyConnectedComponentsShallNotCrash() {
         try{
-            StartComparison.main(argsSCC);
+            newStartComparison.main(argsSCC);
         } catch (Exception e){
             e.printStackTrace();
             Assert.fail("It crashed. Why?");
