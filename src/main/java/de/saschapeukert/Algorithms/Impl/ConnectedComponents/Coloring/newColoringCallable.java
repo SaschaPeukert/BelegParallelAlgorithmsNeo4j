@@ -1,7 +1,7 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring;
 
 import de.saschapeukert.Algorithms.Abst.WorkerCallableTemplate;
-import de.saschapeukert.Algorithms.Impl.ConnectedComponents.MTConnectedComponentsAlgo;
+import de.saschapeukert.Algorithms.Impl.ConnectedComponents.newMTConnectedComponentsAlgo;
 import org.neo4j.graphdb.Direction;
 
 import java.util.HashSet;
@@ -23,23 +23,23 @@ public class newColoringCallable extends WorkerCallableTemplate {
             long parentID = refArray[currentPos];
 
             Set<Long> listOfReachableNodes = expandNode(parentID,
-                    MTConnectedComponentsAlgo.allNodes,false, Direction.OUTGOING);
+                    newMTConnectedComponentsAlgo.allNodes,false, Direction.OUTGOING);
             boolean changedAtLeastOneColor = false;
 
             for(Long u:listOfReachableNodes){
                 if(colorIsGreaterThan(parentID,u)){
-                    MTConnectedComponentsAlgo.mapOfColors.put(u,MTConnectedComponentsAlgo.mapOfColors.get(parentID));
+                    newMTConnectedComponentsAlgo.mapOfColors.put(u,newMTConnectedComponentsAlgo.mapOfColors.get(parentID));
                     changedAtLeastOneColor=true;
-                    if(MTConnectedComponentsAlgo.mapOfVisitedNodes.get(u)==false){
-                        MTConnectedComponentsAlgo.mapOfVisitedNodes.put(u, true);
+                    if(newMTConnectedComponentsAlgo.mapOfVisitedNodes.get(u)==false){
+                        newMTConnectedComponentsAlgo.mapOfVisitedNodes.put(u, true);
                         privateQueue.add(u);
                     }
                 }
             }
 
             if(changedAtLeastOneColor){
-                if(MTConnectedComponentsAlgo.mapOfVisitedNodes.get(parentID)==false){
-                    MTConnectedComponentsAlgo.mapOfVisitedNodes.put(parentID,true);
+                if(newMTConnectedComponentsAlgo.mapOfVisitedNodes.get(parentID)==false){
+                    newMTConnectedComponentsAlgo.mapOfVisitedNodes.put(parentID,true);
                     privateQueue.add(parentID);
                 }
             }
@@ -55,7 +55,7 @@ public class newColoringCallable extends WorkerCallableTemplate {
     }
 
     private boolean colorIsGreaterThan(long a, long b){
-        return MTConnectedComponentsAlgo.mapOfColors.get(a) > MTConnectedComponentsAlgo.mapOfColors.get(b);
+        return newMTConnectedComponentsAlgo.mapOfColors.get(a) > newMTConnectedComponentsAlgo.mapOfColors.get(b);
     }
 }
 

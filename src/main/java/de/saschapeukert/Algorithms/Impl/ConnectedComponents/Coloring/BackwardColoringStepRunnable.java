@@ -30,7 +30,7 @@ public class BackwardColoringStepRunnable extends WorkerRunnableTemplate {
         List<Long> idList = MTConnectedComponentsAlgo.mapColorIDs.get(color);
         Set<Long> reachableIDs = BFS.go(color, Direction.INCOMING,idList); // new SCC
 
-        MTConnectedComponentsAlgo.registerSCCandRemoveFromAllNodes(reachableIDs,(int) color);
+        MTConnectedComponentsAlgo.registerSCCandRemoveFromAllNodes(reachableIDs, color);
 
         for(Object o:reachableIDs){
             MTConnectedComponentsAlgo.mapOfColors.remove(o);
