@@ -24,13 +24,13 @@ public class newMyBFSLevelCallable extends WorkerCallableTemplate {
         int currentPos=startPos;
         while(currentPos<endPos){
             long parentID = refArray[currentPos];
-            Set<Long> q = expandNode(parentID,MyBFS.visitedIDs,true,direction);
-            MyBFS.visitedIDs.add(parentID); // this needs to happen here and not before expandNode
+            Set<Long> q = expandNode(parentID,newMyBFS.visitedIDs,true,direction);
+            newMyBFS.visitedIDs.add(parentID); // this needs to happen here and not before expandNode
 
-            if(MyBFS.nodeIDSet!=null){
+            if(newMyBFS.nodeIDSet!=null){
                 // this is a backward sweep
                 //q.add(parentID); // quick fix // TODO TEST THIS
-                q.retainAll(MyBFS.nodeIDSet);
+                q.retainAll(newMyBFS.nodeIDSet);
             }
             q.remove(parentID);
             returnSet.addAll(q);

@@ -30,8 +30,10 @@ public abstract class WorkerCallableTemplate extends newMyBaseCallable {
     // Children must overwrite compute()
 
     public Object call() throws Exception {
-        ops = db.getReadOperations();
+        tx = db.openTransaction();
+        ops = db.getReadOperations(); // needs to be in a TA
         work();
+        db.closeTransactionWithSuccess(tx);
         return returnSet;
     }
 

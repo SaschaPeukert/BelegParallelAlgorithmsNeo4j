@@ -1,7 +1,6 @@
 package de.saschapeukert.Algorithms.Impl.RandomWalk;
 
 import de.saschapeukert.Algorithms.Abst.newMyAlgorithmBaseCallable;
-import de.saschapeukert.StartComparison;
 import de.saschapeukert.newStartComparison;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
@@ -24,7 +23,7 @@ public class newRandomWalkAlgorithmCallable extends newMyAlgorithmBaseCallable {
     public newRandomWalkAlgorithmCallable(int NumberOfSteps, TimeUnit tu, boolean output){
         super(tu, output);
 
-        this._RandomNodeParameter = StartComparison.RANDOMWALKRANDOM;
+        this._RandomNodeParameter = newStartComparison.RANDOMWALKRANDOM;
         this.currentNode = null;
         this.NUMBER_OF_STEPS = NumberOfSteps;
         this.random = ThreadLocalRandom.current();

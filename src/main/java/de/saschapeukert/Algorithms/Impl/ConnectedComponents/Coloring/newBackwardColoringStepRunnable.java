@@ -1,7 +1,6 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring;
 
 import de.saschapeukert.Algorithms.Abst.WorkerCallableTemplate;
-import de.saschapeukert.Algorithms.Impl.ConnectedComponents.MTConnectedComponentsAlgo;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.BFS;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.newMTConnectedComponentsAlgo;
 import org.neo4j.graphdb.Direction;
@@ -29,7 +28,7 @@ public class newBackwardColoringStepRunnable extends WorkerCallableTemplate {
             newMTConnectedComponentsAlgo.registerSCCandRemoveFromAllNodes(reachableIDs, color);
 
             for(Object o:reachableIDs){
-                MTConnectedComponentsAlgo.mapOfColors.remove(o);
+                newMTConnectedComponentsAlgo.mapOfColors.remove(o);
             }
             currentPos++;
         }

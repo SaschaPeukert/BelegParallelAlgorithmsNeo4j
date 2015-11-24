@@ -16,10 +16,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -208,19 +205,16 @@ public class newStartComparison {
             }
         }
         ExecutorService ex = Executors.newFixedThreadPool(1);
-        CompletionService<Long> pool = new ExecutorCompletionService<Long>(ex);
-        ex.submit(callable);
-
-        //System.out.println(callable.getResults());    //TODO REMOVE, JUST FOR DEBUG
-        long ret = -10000; // ERROR if not changed
-
+        long ret = -10000;
         try {
-            ret = pool.take().get();
+            ret = (long)(ex.submit(callable).get());
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {
             e.printStackTrace();
         }
+
+        //System.out.println(callable.getResults());    //TODO REMOVE, JUST FOR DEBUG
         waitForExecutorToFinishAll(ex);
         return ret; // ERROR
     }
@@ -228,7 +222,7 @@ public class newStartComparison {
     private static long doMultiThreadRandomWalk(int noOfSteps, boolean output){
         // INIT
         ExecutorService executor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
-        CompletionService<Long> pool = new ExecutorCompletionService<Long>(executor);
+        List<Future<Long>> list = new ArrayList<>();
 
         for(int i=0;i<NUMBER_OF_THREADS;i++){
             newMyAlgorithmBaseCallable rw;
@@ -239,13 +233,13 @@ public class newStartComparison {
                 rw = new newRandomWalkAlgorithmCallable(
                         noOfSteps/NUMBER_OF_THREADS,TimeUnit.MICROSECONDS, output);
             }
-            executor.submit(rw);
+            list.add(executor.submit(rw));
         }
         long elapsedTime=0;
 
         for(int i=0;i<NUMBER_OF_THREADS;i++){
             try {
-                long time = pool.take().get();
+                long time = list.get(i).get();
                 if(elapsedTime<time){
                     elapsedTime =time;
                 }
@@ -339,11 +333,11 @@ public class newStartComparison {
         int endIndex = partOfData;
         //ThreadPoolExecutor executor = new ThreadPoolExecutor(NUMBER_OF_THREADS,NUMBER_OF_THREADS,0L,TimeUnit.NANOSECONDS,new ArrayBlockingQueue<Runnable>(1));
         ExecutorService executor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
-        CompletionService<Object> pool = new ExecutorCompletionService<Object>(executor);
+        List<Future<Object>> list = new ArrayList<>();
 
         for(int i=0;i<NUMBER_OF_THREADS;i++){
             newNeoWriter neoWriter = new newNeoWriter(PROP_ID,startIndex,endIndex);
-            executor.submit(neoWriter);
+            list.add(executor.submit(neoWriter));
 
             // new indexes for next round
             startIndex = endIndex;
@@ -355,7 +349,7 @@ public class newStartComparison {
         }
         for(int i=0;i<NUMBER_OF_THREADS;i++){
             try {
-                pool.take().get();
+                list.get(i).get();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (ExecutionException e) {

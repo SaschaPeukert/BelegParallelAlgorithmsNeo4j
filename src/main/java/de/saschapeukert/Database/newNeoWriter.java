@@ -9,7 +9,7 @@ import org.neo4j.kernel.api.DataWriteOperations;
  */
 @SuppressWarnings("deprecation")
 public class newNeoWriter extends newMyBaseCallable {
-
+    // FIXME: HERE IS A PROBLEM!
     private final int propID;
     private final int startIndex; // inclusive
     private final int endIndex; // exclusive

@@ -2,7 +2,7 @@ package de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search;
 
 import com.google.common.collect.Sets;
 import de.saschapeukert.Database.DBUtils;
-import de.saschapeukert.StartComparison;
+import de.saschapeukert.newStartComparison;
 import org.neo4j.graphdb.Direction;
 
 import java.util.ArrayList;
@@ -26,7 +26,7 @@ public class newMyBFS {
     private final ExecutorService executor;
 
     public newMyBFS(){
-        executor = Executors.newFixedThreadPool(StartComparison.NUMBER_OF_THREADS);
+        executor = Executors.newFixedThreadPool(newStartComparison.NUMBER_OF_THREADS);
         db = DBUtils.getInstance("","");
     }
 
@@ -55,11 +55,16 @@ public class newMyBFS {
     private void doParallelLevel(Direction direction){
         int pos=0;
         int tasks =0;
-        Long[] frontierArray =(Long[]) frontierList.toArray();
-        CompletionService<Set<Long>> pool = new ExecutorCompletionService<Set<Long>>(executor);
+        Long[] frontierArray =frontierList.toArray(new Long[frontierList.size()]);
+        List<Future<Set<Long>>> list = new ArrayList<>();
         while(pos<frontierList.size()){
-            newMyBFSLevelCallable callable = new newMyBFSLevelCallable(pos,pos+BATCHSIZE,frontierArray,direction,false);
-            executor.submit(callable);
+            newMyBFSLevelCallable callable;
+            if((pos+BATCHSIZE)>=frontierList.size()){
+                callable = new newMyBFSLevelCallable(pos,frontierList.size(),frontierArray,direction,false);
+            } else{
+                callable = new newMyBFSLevelCallable(pos,pos+BATCHSIZE,frontierArray,direction,false);
+            }
+            list.add(executor.submit(callable));
             pos = pos+ BATCHSIZE;
             tasks++;
         }
@@ -68,7 +73,7 @@ public class newMyBFS {
         // threads finished, collecting results -> new frontier
         for(int i=0;i<tasks;i++){
             try {
-                frontierList.addAll(pool.take().get());
+                frontierList.addAll(list.get(i).get());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (ExecutionException e) {
@@ -79,6 +84,6 @@ public class newMyBFS {
     }
 
     public void closeDownThreadPool(){
-        StartComparison.waitForExecutorToFinishAll(executor);
+        newStartComparison.waitForExecutorToFinishAll(executor);
     }
 }

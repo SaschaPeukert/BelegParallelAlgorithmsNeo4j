@@ -80,7 +80,6 @@ public class newMTConnectedComponentsAlgo extends newSTConnectedComponentsAlgo {
         // PHASE 2
             // Start Threads
         ExecutorService executor = Executors.newFixedThreadPool(newStartComparison.NUMBER_OF_THREADS);
-        CompletionService<Set<Long>> pool = new ExecutorCompletionService<Set<Long>>(executor);
         //System.out.println("Phase 2");
         int i=0;
         while(nCutoff<allNodes.size()) { // Do MS-Coloring
@@ -92,7 +91,7 @@ public class newMTConnectedComponentsAlgo extends newSTConnectedComponentsAlgo {
                 }
             }
             Set<Long> Q = new HashSet<>(allNodes);
-            MSColoring(executor,pool, Q);
+            MSColoring(executor, Q);
         }
 
         // PHASE 3
@@ -116,7 +115,7 @@ public class newMTConnectedComponentsAlgo extends newSTConnectedComponentsAlgo {
         }
     }
 
-    private void MSColoring(ExecutorService executor, CompletionService<Set<Long>> pool, Set<Long> Q){
+    private void MSColoring(ExecutorService executor, Set<Long> Q){
         int tasks;
         int pos;
 
@@ -125,11 +124,17 @@ public class newMTConnectedComponentsAlgo extends newSTConnectedComponentsAlgo {
             // wake up threads
             tasks=0;
             pos=0;
-            Long[] queueArray = (Long[])Q.toArray();
+            Long[] queueArray = Q.toArray(new Long[Q.size()]);
+            List<Future<Set<Long>>> list = new ArrayList<>();
             while(pos<Q.size()){
-                newColoringCallable callable = new newColoringCallable(pos,pos+BATCHSIZE,queueArray,false);
-                executor.submit(callable);
-                pos = pos+ BATCHSIZE;
+                newColoringCallable callable;
+                if((pos+BATCHSIZE)>=Q.size()){
+                    callable = new newColoringCallable(pos,Q.size(),queueArray,false);
+                } else{
+                    callable = new newColoringCallable(pos,pos+BATCHSIZE,queueArray,false);
+                }
+                list.add(executor.submit(callable));
+                pos = pos+ BATCHSIZE; // new startPos = old EndPos
                 tasks++;
             }
 
@@ -137,7 +142,7 @@ public class newMTConnectedComponentsAlgo extends newSTConnectedComponentsAlgo {
             // Barrier synchronization
             for(int i=0;i<tasks;i++){
                 try {
-                    Q.addAll(pool.take().get());
+                    Q.addAll(list.get(i).get());
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 } catch (ExecutionException e) {
@@ -166,17 +171,23 @@ public class newMTConnectedComponentsAlgo extends newSTConnectedComponentsAlgo {
         // start BackwardColoringStepCallables
         pos=0;
         tasks=0;
-        Long[] colorArray = (Long[])Q.toArray(); // TODO !
-        while(pos<Q.size()){
-            newBackwardColoringStepRunnable callable = new newBackwardColoringStepRunnable(pos,pos+BATCHSIZE,colorArray,false);
-            executor.submit(callable);
-            pos = pos+ BATCHSIZE;
+        List<Future<Set<Long>>> list = new ArrayList<>();
+        Long[] colorArray = mapColorIDs.keySet().toArray(new Long[mapColorIDs.keySet().size()]);
+        while(pos<mapColorIDs.keySet().size()){
+            newBackwardColoringStepRunnable callable;
+            if((pos+BATCHSIZE)>=Q.size()){
+                callable = new newBackwardColoringStepRunnable(pos,mapColorIDs.keySet().size(),colorArray,false);
+            } else{
+                callable = new newBackwardColoringStepRunnable(pos,pos+BATCHSIZE,colorArray,false);
+            }
+            list.add(executor.submit(callable));
+            pos = pos+ BATCHSIZE; // new startPos = old EndPos
             tasks++;
         }
         // BFS threads work, wait for finishing
         for(int i=0;i<tasks;i++){
             try {
-                pool.take().get();
+               list.get(i).get();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (ExecutionException e) {

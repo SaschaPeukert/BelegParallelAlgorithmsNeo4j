@@ -1,7 +1,6 @@
 package com.AlgorithmsTests;
 
-import de.saschapeukert.Algorithms.Impl.ConnectedComponents.STConnectedComponentsAlgo;
-import de.saschapeukert.StartComparison;
+import de.saschapeukert.Algorithms.Impl.ConnectedComponents.newSTConnectedComponentsAlgo;
 import de.saschapeukert.newStartComparison;
 import org.apache.commons.lang3.SystemUtils;
 import org.junit.*;
@@ -48,7 +47,7 @@ public class ConnectedComponentsSingleThreadTest {
     public void WeaklyConnectedComponentsShouldBeCorrect() {
         // Do the Run, get results
         newStartComparison.main(argsWCC);
-        Map<Integer,List<Long>> resultOfRun = STConnectedComponentsAlgo.getMapofComponentToIDs();
+        Map<Integer,List<Long>> resultOfRun = newSTConnectedComponentsAlgo.getMapofComponentToIDs();
 
         // Check the result
         Assert.assertNull("There should not be an Component with ID 0", resultOfRun.get(0));
@@ -63,8 +62,8 @@ public class ConnectedComponentsSingleThreadTest {
     @Test
     public void StronglyConnectedComponentsShouldBeCorrect() {
         // Do the Run, get results
-        StartComparison.main(argsSCC);
-        Map<Integer,List<Long>> resultOfRun = STConnectedComponentsAlgo.getMapofComponentToIDs();
+        newStartComparison.main(argsSCC);
+        Map<Integer,List<Long>> resultOfRun = newSTConnectedComponentsAlgo.getMapofComponentToIDs();
 
         // Check the result
         Assert.assertNull("There should not be an Component with ID 0", resultOfRun.get(0));
