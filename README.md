@@ -33,5 +33,5 @@ With this command maven will generate a jar file for you:
          
 *Example:*
            
-         java -jar <JAR> RW 1001000 10 8 120 true RandomWalkCounterTest 6G C:\\BelegDB\\data\\graph.db NoWrite
+         java -jar <JAR> RW 1001000 10 8 true RandomWalkCounterTest 6G C:\\BelegDB\\data\\graph.db NoWrite
          
