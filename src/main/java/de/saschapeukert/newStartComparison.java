@@ -106,7 +106,7 @@ public class newStartComparison {
 
         //java.awt.Toolkit.getDefaultToolkit().beep();
         System.out.println("End: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()));
-       // graphDb.shutdown();
+
     }
 
     private static void readParameters(String[] args) {
@@ -325,7 +325,7 @@ public class newStartComparison {
         }
     }
 
-    private static boolean writeResultsOut(){
+    /*private static boolean writeResultsOut(){
         int sizeKeySet = resultCounter.keySet().size();
         int partOfData = sizeKeySet/NUMBER_OF_THREADS;  // LAST ONE TAKES MORE!
 
@@ -337,6 +337,7 @@ public class newStartComparison {
 
         for(int i=0;i<NUMBER_OF_THREADS;i++){
             newNeoWriter neoWriter = new newNeoWriter(PROP_ID,startIndex,endIndex);
+            //System.out.println("i:" +i + ",start: " + startIndex + ", end: " +endIndex);
             list.add(executor.submit(neoWriter));
 
             // new indexes for next round
@@ -357,6 +358,32 @@ public class newStartComparison {
             }
         }
 
+        boolean check = waitForExecutorToFinishAll(executor);
+        System.out.println("Done Writing");
+        return check;
+    }*/
+
+    private static boolean writeResultsOut(){
+        int sizeKeySet = resultCounter.keySet().size();
+        int partOfData = sizeKeySet/NUMBER_OF_THREADS;  // LAST ONE TAKES MORE!
+
+        int startIndex =0;
+        int endIndex = partOfData;
+        //ThreadPoolExecutor executor = new ThreadPoolExecutor(NUMBER_OF_THREADS,NUMBER_OF_THREADS,0L,TimeUnit.NANOSECONDS,new ArrayBlockingQueue<Runnable>(1));
+        ExecutorService executor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
+
+        for(int i=0;i<NUMBER_OF_THREADS;i++){
+            newNeoWriter neoWriter = new newNeoWriter(PROP_ID,startIndex,endIndex);
+            executor.submit(neoWriter);
+
+            // new indexes for next round
+            startIndex = endIndex;
+            endIndex = endIndex + partOfData;
+
+            if(i==NUMBER_OF_THREADS-2){
+                endIndex= sizeKeySet;
+            }
+        }
         boolean check = waitForExecutorToFinishAll(executor);
         System.out.println("Done Writing");
         return check;

@@ -23,28 +23,28 @@ public class newNeoWriter extends newMyBaseCallable {
 
     @Override
     protected void compute() {
-        tx = db.openTransaction();
+        //tx = db.openTransaction();
         DataWriteOperations ops = db.getDataWriteOperations();
 
         int count =0;
         for(int i = startIndex;i<endIndex;i++){
             if(count==100){
-                db.closeTransactionWithSuccess(tx);
-                tx = db.openTransaction();
+                db.closeTransactionWithSuccess(this.tx);
+                this.tx = db.openTransaction();
                 ops = db.getDataWriteOperations();
                 count =0;
             }
 
             Long l = (Long) newStartComparison.getObjInResultCounterKeySet(i);
-            db.createPropertyAtNode(l, newStartComparison.getResultCounterforId(l).intValue(), propID, ops);
+            db.createPropertyAtNode(l, newStartComparison.getResultCounterforId(l).longValue(), propID, ops);
             count++;
         }
-        db.closeTransactionWithSuccess(tx);
+        //db.closeTransactionWithSuccess(tx);
     }
 
     @Override
     public Object call() throws Exception {
-        work();
+        super.work();
         return null;
     }
 }
