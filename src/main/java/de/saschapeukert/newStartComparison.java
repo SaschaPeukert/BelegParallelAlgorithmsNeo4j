@@ -8,7 +8,7 @@ import de.saschapeukert.Algorithms.Impl.ConnectedComponents.newSTConnectedCompon
 import de.saschapeukert.Algorithms.Impl.RandomWalk.newRandomWalkAlgorithmCallable;
 import de.saschapeukert.Algorithms.Impl.RandomWalk.newRandomWalkAlgorithmCallableNewSPI;
 import de.saschapeukert.Database.DBUtils;
-import de.saschapeukert.Database.newNeoWriter;
+import de.saschapeukert.Database.NeoWriter;
 import org.HdrHistogram.Histogram;
 import org.HdrHistogram.IntCountsHistogram;
 import org.neo4j.graphdb.Direction;
@@ -43,6 +43,8 @@ public class newStartComparison {
     private static Map<Long,AtomicLong> resultCounter;
     private static Object[] keySetOfResultCounter;
     private static Histogram histogram;
+
+    static final int BATCH_SIZE  = 100_000;
 
     public static void main(String[] args)  {
         readParameters(args);
@@ -325,44 +327,6 @@ public class newStartComparison {
         }
     }
 
-    /*private static boolean writeResultsOut(){
-        int sizeKeySet = resultCounter.keySet().size();
-        int partOfData = sizeKeySet/NUMBER_OF_THREADS;  // LAST ONE TAKES MORE!
-
-        int startIndex =0;
-        int endIndex = partOfData;
-        //ThreadPoolExecutor executor = new ThreadPoolExecutor(NUMBER_OF_THREADS,NUMBER_OF_THREADS,0L,TimeUnit.NANOSECONDS,new ArrayBlockingQueue<Runnable>(1));
-        ExecutorService executor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
-        List<Future<Object>> list = new ArrayList<>();
-
-        for(int i=0;i<NUMBER_OF_THREADS;i++){
-            newNeoWriter neoWriter = new newNeoWriter(PROP_ID,startIndex,endIndex);
-            //System.out.println("i:" +i + ",start: " + startIndex + ", end: " +endIndex);
-            list.add(executor.submit(neoWriter));
-
-            // new indexes for next round
-            startIndex = endIndex;
-            endIndex = endIndex + partOfData;
-
-            if(i==NUMBER_OF_THREADS-2){
-                endIndex= sizeKeySet;
-            }
-        }
-        for(int i=0;i<NUMBER_OF_THREADS;i++){
-            try {
-                list.get(i).get();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            }
-        }
-
-        boolean check = waitForExecutorToFinishAll(executor);
-        System.out.println("Done Writing");
-        return check;
-    }*/
-
     private static boolean writeResultsOut(){
         int sizeKeySet = resultCounter.keySet().size();
         int partOfData = sizeKeySet/NUMBER_OF_THREADS;  // LAST ONE TAKES MORE!
@@ -372,18 +336,18 @@ public class newStartComparison {
         //ThreadPoolExecutor executor = new ThreadPoolExecutor(NUMBER_OF_THREADS,NUMBER_OF_THREADS,0L,TimeUnit.NANOSECONDS,new ArrayBlockingQueue<Runnable>(1));
         ExecutorService executor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
 
-        for(int i=0;i<NUMBER_OF_THREADS;i++){
-            newNeoWriter neoWriter = new newNeoWriter(PROP_ID,startIndex,endIndex);
-            executor.submit(neoWriter);
-
-            // new indexes for next round
-            startIndex = endIndex;
-            endIndex = endIndex + partOfData;
-
-            if(i==NUMBER_OF_THREADS-2){
-                endIndex= sizeKeySet;
+        int maxIndex = resultCounter.keySet().size();
+        for(int i=0;i<maxIndex;i+=BATCH_SIZE){
+            NeoWriter neoWriter;
+            if(i+BATCH_SIZE>=maxIndex){
+                neoWriter = new NeoWriter(PROP_ID,i,maxIndex,DBUtils.getInstance("", ""));
+            } else{
+                neoWriter = new NeoWriter(PROP_ID,i,i+BATCH_SIZE,DBUtils.getInstance("", ""));
             }
+
+            executor.submit(neoWriter);
         }
+
         boolean check = waitForExecutorToFinishAll(executor);
         System.out.println("Done Writing");
         return check;
