@@ -44,7 +44,7 @@ public class StartComparison {
     private static Object[] keySetOfResultCounter;
     private static Histogram histogram;
 
-    static final int BATCH_SIZE  = 100_000;
+    static final int BATCH_SIZE  = 100000;
 
     public static void main(String[] args)  {
         readParameters(args);
@@ -328,15 +328,11 @@ public class StartComparison {
     }
 
     private static boolean writeResultsOut(){
-        int sizeKeySet = resultCounter.keySet().size();
-        int partOfData = sizeKeySet/NUMBER_OF_THREADS;  // LAST ONE TAKES MORE!
-
-        int startIndex =0;
-        int endIndex = partOfData;
         //ThreadPoolExecutor executor = new ThreadPoolExecutor(NUMBER_OF_THREADS,NUMBER_OF_THREADS,0L,TimeUnit.NANOSECONDS,new ArrayBlockingQueue<Runnable>(1));
         ExecutorService executor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
 
         int maxIndex = resultCounter.keySet().size();
+        List<Future> futureList = new ArrayList<>();
         for(int i=0;i<maxIndex;i+=BATCH_SIZE){
             NeoWriter neoWriter;
             if(i+BATCH_SIZE>=maxIndex){
@@ -344,8 +340,16 @@ public class StartComparison {
             } else{
                 neoWriter = new NeoWriter(PROP_ID,i,i+BATCH_SIZE,DBUtils.getInstance("", ""));
             }
+            futureList.add(executor.submit(neoWriter));
+        }
 
-            executor.submit(neoWriter);
+        for (Future future : futureList) {
+            try {
+                future.get();
+
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
         }
 
         boolean check = waitForExecutorToFinishAll(executor);
