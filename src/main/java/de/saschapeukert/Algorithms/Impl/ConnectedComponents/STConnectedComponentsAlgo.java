@@ -1,10 +1,10 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents;
 
-import de.saschapeukert.Algorithms.Abst.newMyAlgorithmBaseCallable;
+import de.saschapeukert.Algorithms.Abst.myAlgorithmBaseCallable;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.BFS;
 import de.saschapeukert.Database.DBUtils;
 import de.saschapeukert.Datastructures.TarjanInfo;
-import de.saschapeukert.newStartComparison;
+import de.saschapeukert.StartComparison;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.ResourceIterator;
@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Created by Sascha Peukert on 17.10.2015.
  */
-public class newSTConnectedComponentsAlgo extends newMyAlgorithmBaseCallable {
+public class STConnectedComponentsAlgo extends myAlgorithmBaseCallable {
 
     long componentID= DBUtils.getInstance("","").highestNodeKey+1;
     final CCAlgorithmType myType;
@@ -27,7 +27,7 @@ public class newSTConnectedComponentsAlgo extends newMyAlgorithmBaseCallable {
 
     public static Set<Long> allNodes; // except the trivial CCs
 
-    public newSTConnectedComponentsAlgo(CCAlgorithmType type,TimeUnit timeUnit, boolean output) {
+    public STConnectedComponentsAlgo(CCAlgorithmType type, TimeUnit timeUnit, boolean output) {
         super(timeUnit, output);
         this.myType = type;
 
@@ -114,7 +114,7 @@ public class newSTConnectedComponentsAlgo extends newMyAlgorithmBaseCallable {
         if(this.myType==CCAlgorithmType.STRONG){
             if(n.getDegree(Direction.OUTGOING)==0 || n.getDegree(Direction.INCOMING)==0){
                 // trivial CC
-                newStartComparison.putIntoResultCounter(n.getId(), new AtomicLong(componentID));
+                StartComparison.putIntoResultCounter(n.getId(), new AtomicLong(componentID));
                 componentID++;
             } else{
                 allNodes.add(n.getId());
@@ -123,7 +123,7 @@ public class newSTConnectedComponentsAlgo extends newMyAlgorithmBaseCallable {
         } else{
             if(n.getDegree()==0){
                 // trivial CC
-                newStartComparison.putIntoResultCounter(n.getId(), new AtomicLong(componentID));
+                StartComparison.putIntoResultCounter(n.getId(), new AtomicLong(componentID));
                 componentID++;
             } else{
                 allNodes.add(n.getId());
@@ -141,18 +141,18 @@ public class newSTConnectedComponentsAlgo extends newMyAlgorithmBaseCallable {
         Map<Integer, List<Long>> myResults = new TreeMap<>();
 
         // to adapt to the "old" structure of componentsMap
-        Iterator<Long> it = newStartComparison.getIteratorforKeySetOfResultCounter();
+        Iterator<Long> it = StartComparison.getIteratorforKeySetOfResultCounter();
         while(it.hasNext()){
             long n = it.next();
-            if(!myResults.containsKey(newStartComparison.getResultCounterforId(n).intValue())){
+            if(!myResults.containsKey(StartComparison.getResultCounterforId(n).intValue())){
 
                 ArrayList<Long> newList = new ArrayList<>();
                 newList.add(n);
-                myResults.put(newStartComparison.getResultCounterforId(n).intValue(),newList);
+                myResults.put(StartComparison.getResultCounterforId(n).intValue(),newList);
             } else{
-                List<Long> oldList = myResults.get(newStartComparison.getResultCounterforId(n).intValue());
+                List<Long> oldList = myResults.get(StartComparison.getResultCounterforId(n).intValue());
                 oldList.add(n);
-                myResults.put(newStartComparison.getResultCounterforId(n).intValue(),oldList);
+                myResults.put(StartComparison.getResultCounterforId(n).intValue(),oldList);
             }
         }
 
@@ -229,7 +229,7 @@ public class newSTConnectedComponentsAlgo extends newMyAlgorithmBaseCallable {
                 TarjanInfo v_new = nodeDictionary.get(node_v);  // !
                 v_new.onStack= false;                           // !
 
-                newStartComparison.putIntoResultCounter(node_v, new AtomicLong(componentID));
+                StartComparison.putIntoResultCounter(node_v, new AtomicLong(componentID));
                 if(Objects.equals(node_v, currentNode)){
                     componentID++;
                     break;
@@ -240,7 +240,7 @@ public class newSTConnectedComponentsAlgo extends newMyAlgorithmBaseCallable {
 
     public static void registerSCCandRemoveFromAllNodes(Set<Long> reachableIDs,long sccID){
         for(Long l:reachableIDs){
-            newStartComparison.putIntoResultCounter(l, new AtomicLong((sccID)));
+            StartComparison.putIntoResultCounter(l, new AtomicLong((sccID)));
 
         }
         removeFromAllNodes(reachableIDs);

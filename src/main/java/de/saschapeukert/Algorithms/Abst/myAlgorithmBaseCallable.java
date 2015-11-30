@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by Sascha Peukert on 19.11.2015.
  */
-public abstract class newMyAlgorithmBaseCallable extends newMyBaseCallable {
+public abstract class myAlgorithmBaseCallable extends MyBaseCallable {
 
     public final Stopwatch timer;
     protected boolean output;
@@ -16,7 +16,7 @@ public abstract class newMyAlgorithmBaseCallable extends newMyBaseCallable {
     /*
         This will also initialize the timer but NOT start it!
      */
-    protected newMyAlgorithmBaseCallable(TimeUnit timeUnit, boolean output){
+    protected myAlgorithmBaseCallable(TimeUnit timeUnit, boolean output){
         super(output);
         this.timer = Stopwatch.createUnstarted();
         this.timeUnit = timeUnit;

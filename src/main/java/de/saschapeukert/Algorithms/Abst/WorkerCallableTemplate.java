@@ -10,7 +10,7 @@ import java.util.Set;
 /**
  * Created by Sascha Peukert on 19.11.2015.
  */
-public abstract class WorkerCallableTemplate extends newMyBaseCallable {
+public abstract class WorkerCallableTemplate extends MyBaseCallable {
 
     protected Long[] refArray;
     protected int startPos; //incl.

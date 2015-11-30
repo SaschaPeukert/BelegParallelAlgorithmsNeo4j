@@ -1,7 +1,7 @@
 package de.saschapeukert.Algorithms.Impl.RandomWalk;
 
-import de.saschapeukert.Algorithms.Abst.newMyAlgorithmBaseCallable;
-import de.saschapeukert.newStartComparison;
+import de.saschapeukert.Algorithms.Abst.myAlgorithmBaseCallable;
+import de.saschapeukert.StartComparison;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
@@ -13,17 +13,17 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by Sascha Peukert on 03.08.2015.
  */
-public class newRandomWalkAlgorithmCallable extends newMyAlgorithmBaseCallable {
+public class RandomWalkAlgorithmCallable extends myAlgorithmBaseCallable {
 
     private final int _RandomNodeParameter;
     private  Node currentNode;
     private int NUMBER_OF_STEPS;
     private final ThreadLocalRandom random;
 
-    public newRandomWalkAlgorithmCallable(int NumberOfSteps, TimeUnit tu, boolean output){
+    public RandomWalkAlgorithmCallable(int NumberOfSteps, TimeUnit tu, boolean output){
         super(tu, output);
 
-        this._RandomNodeParameter = newStartComparison.RANDOMWALKRANDOM;
+        this._RandomNodeParameter = StartComparison.RANDOMWALKRANDOM;
         this.currentNode = null;
         this.NUMBER_OF_STEPS = NumberOfSteps;
         this.random = ThreadLocalRandom.current();
@@ -72,7 +72,7 @@ public class newRandomWalkAlgorithmCallable extends newMyAlgorithmBaseCallable {
                 currentNode = getNextNode(currentNode);
             }
             if(output)
-                newStartComparison.incrementResultCounterforId(currentNode.getId());
+                StartComparison.incrementResultCounterforId(currentNode.getId());
             NUMBER_OF_STEPS--;
         }
         timer.stop();

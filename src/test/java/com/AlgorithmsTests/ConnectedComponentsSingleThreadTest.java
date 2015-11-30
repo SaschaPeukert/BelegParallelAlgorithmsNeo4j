@@ -1,7 +1,7 @@
 package com.AlgorithmsTests;
 
-import de.saschapeukert.Algorithms.Impl.ConnectedComponents.newSTConnectedComponentsAlgo;
-import de.saschapeukert.newStartComparison;
+import de.saschapeukert.Algorithms.Impl.ConnectedComponents.STConnectedComponentsAlgo;
+import de.saschapeukert.StartComparison;
 import org.apache.commons.lang3.SystemUtils;
 import org.junit.*;
 
@@ -36,7 +36,7 @@ public class ConnectedComponentsSingleThreadTest {
     @Test
     public void WeaklyConnectedComponentsShallNotCrash() {
         try{
-            newStartComparison.main(argsWCC);
+            StartComparison.main(argsWCC);
         } catch (Exception e){
             e.printStackTrace();
             Assert.fail("It crashed. Why?");
@@ -46,8 +46,8 @@ public class ConnectedComponentsSingleThreadTest {
     @Test
     public void WeaklyConnectedComponentsShouldBeCorrect() {
         // Do the Run, get results
-        newStartComparison.main(argsWCC);
-        Map<Integer,List<Long>> resultOfRun = newSTConnectedComponentsAlgo.getMapofComponentToIDs();
+        StartComparison.main(argsWCC);
+        Map<Integer,List<Long>> resultOfRun = STConnectedComponentsAlgo.getMapofComponentToIDs();
 
         // Check the result
         Assert.assertNull("There should not be an Component with ID 0", resultOfRun.get(0));
@@ -62,8 +62,8 @@ public class ConnectedComponentsSingleThreadTest {
     @Test
     public void StronglyConnectedComponentsShouldBeCorrect() {
         // Do the Run, get results
-        newStartComparison.main(argsSCC);
-        Map<Integer,List<Long>> resultOfRun = newSTConnectedComponentsAlgo.getMapofComponentToIDs();
+        StartComparison.main(argsSCC);
+        Map<Integer,List<Long>> resultOfRun = STConnectedComponentsAlgo.getMapofComponentToIDs();
 
         // Check the result
         Assert.assertNull("There should not be an Component with ID 0", resultOfRun.get(0));
@@ -83,7 +83,7 @@ public class ConnectedComponentsSingleThreadTest {
     @Test
     public void StronglyConnectedComponentsShallNotCrash() {
         try{
-            newStartComparison.main(argsSCC);
+            StartComparison.main(argsSCC);
         } catch (Exception e){
             e.printStackTrace();
             Assert.fail("It crashed. Why?");

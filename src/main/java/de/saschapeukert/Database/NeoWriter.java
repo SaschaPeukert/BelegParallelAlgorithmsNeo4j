@@ -1,6 +1,6 @@
 package de.saschapeukert.Database;
 
-import de.saschapeukert.newStartComparison;
+import de.saschapeukert.StartComparison;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.api.DataWriteOperations;
 
@@ -28,8 +28,8 @@ public class NeoWriter implements Runnable {
         DataWriteOperations ops = db.getDataWriteOperations();
 
         for(int i = startIndex;i<endIndex;i++){
-            Long l = (Long) newStartComparison.getObjInResultCounterKeySet(i);
-            db.createPropertyAtNode(l, newStartComparison.getResultCounterforId(l).longValue(), propID, ops);
+            Long l = (Long) StartComparison.getObjInResultCounterKeySet(i);
+            db.createPropertyAtNode(l, StartComparison.getResultCounterforId(l).longValue(), propID, ops);
         }
         db.closeTransactionWithSuccess(tx);
     }

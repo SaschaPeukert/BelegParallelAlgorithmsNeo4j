@@ -1,6 +1,6 @@
 package de.saschapeukert.Database;
 
-import de.saschapeukert.newStartComparison;
+import de.saschapeukert.StartComparison;
 import org.neo4j.cursor.Cursor;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
@@ -46,7 +46,7 @@ public class DBUtils {
             try {
                 // NEW VERSION, checks Map for ID and not DB
                 r = random.nextLong(highestNodeKey);
-                if(newStartComparison.resultCounterContainsKey(r)){
+                if(StartComparison.resultCounterContainsKey(r)){
                     return graphDb.getNodeById(r);
                 }
             } catch (NotFoundException e){
@@ -88,7 +88,7 @@ public class DBUtils {
 
             r = random.nextLong(highestNodeKey);
             // NEW VERSION without DB-Lookup
-            if(newStartComparison.resultCounterContainsKey(r))
+            if(StartComparison.resultCounterContainsKey(r))
                 return r;
         }
     }

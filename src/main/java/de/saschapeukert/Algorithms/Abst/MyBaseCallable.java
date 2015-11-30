@@ -8,7 +8,7 @@ import java.util.concurrent.Callable;
 /**
  * Created by Sascha Peukert on 19.11.2015.
  */
-public abstract class newMyBaseCallable implements Callable {
+public abstract class MyBaseCallable implements Callable {
 
     protected Transaction tx;
     protected DBUtils db;
@@ -16,7 +16,7 @@ public abstract class newMyBaseCallable implements Callable {
 
     protected abstract void compute();
 
-    public newMyBaseCallable(boolean output){
+    public MyBaseCallable(boolean output){
         this.db = DBUtils.getInstance("","");
         this.output = output;
     }

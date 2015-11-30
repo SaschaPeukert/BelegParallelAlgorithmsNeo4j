@@ -2,7 +2,7 @@ package com.AlgorithmsTests;
 
 import de.saschapeukert.Database.DBUtils;
 import de.saschapeukert.OutputTop20;
-import de.saschapeukert.newStartComparison;
+import de.saschapeukert.StartComparison;
 import org.apache.commons.lang3.SystemUtils;
 import org.junit.*;
 import org.neo4j.graphdb.Transaction;
@@ -35,7 +35,7 @@ public class RandomWalkTest {
     @Test
     public void RandomWalkShallNotCrash() {
         try{
-            newStartComparison.main(args);
+            StartComparison.main(args);
         } catch (Exception e){
             e.printStackTrace();
             Assert.fail("It crashed. Why?");
@@ -45,7 +45,7 @@ public class RandomWalkTest {
     @Test
     public void Top7NodesShouldHaveFixedPositionAfterRandomWalk() {
 
-        newStartComparison.main(args);
+        StartComparison.main(args);
 
         DBUtils db = DBUtils.getInstance(args[7], args[6]);
         Transaction tx = db.openTransaction();  // NOPE

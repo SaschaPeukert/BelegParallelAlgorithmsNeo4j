@@ -1,12 +1,12 @@
 package de.saschapeukert;
 
 import com.google.common.base.Stopwatch;
-import de.saschapeukert.Algorithms.Abst.newMyAlgorithmBaseCallable;
+import de.saschapeukert.Algorithms.Abst.myAlgorithmBaseCallable;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.CCAlgorithmType;
-import de.saschapeukert.Algorithms.Impl.ConnectedComponents.newMTConnectedComponentsAlgo;
-import de.saschapeukert.Algorithms.Impl.ConnectedComponents.newSTConnectedComponentsAlgo;
-import de.saschapeukert.Algorithms.Impl.RandomWalk.newRandomWalkAlgorithmCallable;
-import de.saschapeukert.Algorithms.Impl.RandomWalk.newRandomWalkAlgorithmCallableNewSPI;
+import de.saschapeukert.Algorithms.Impl.ConnectedComponents.MTConnectedComponentsAlgo;
+import de.saschapeukert.Algorithms.Impl.ConnectedComponents.STConnectedComponentsAlgo;
+import de.saschapeukert.Algorithms.Impl.RandomWalk.RandomWalkAlgorithmCallable;
+import de.saschapeukert.Algorithms.Impl.RandomWalk.RandomWalkAlgorithmCallableNewSPI;
 import de.saschapeukert.Database.DBUtils;
 import de.saschapeukert.Database.NeoWriter;
 import org.HdrHistogram.Histogram;
@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Created by Sascha Peukert on 04.08.2015.
  */
-public class newStartComparison {
+public class StartComparison {
 
     private  static String DB_PATH;
     // Server: /mnt/flash2/neo4j-enterprise-2.3.0-M02/data/graph.db
@@ -192,17 +192,17 @@ public class newStartComparison {
      * @return elapsed time as MILLISECONDS!
      */
     private static long doConnectedComponentsRun(CCAlgorithmType type, boolean output){
-        newSTConnectedComponentsAlgo callable;
+        STConnectedComponentsAlgo callable;
         if(NUMBER_OF_THREADS>1) {
-            callable = new newMTConnectedComponentsAlgo(
+            callable = new MTConnectedComponentsAlgo(
                     type,TimeUnit.MILLISECONDS, output);
         } else{
             // Easter Egg?!
             if(OPERATIONS==-1){
-                callable = new newMTConnectedComponentsAlgo(
+                callable = new MTConnectedComponentsAlgo(
                         type,TimeUnit.MILLISECONDS, output);
             } else{
-                callable = new newSTConnectedComponentsAlgo(
+                callable = new STConnectedComponentsAlgo(
                         type,TimeUnit.MILLISECONDS, output);
             }
         }
@@ -227,12 +227,12 @@ public class newStartComparison {
         List<Future<Long>> list = new ArrayList<>();
 
         for(int i=0;i<NUMBER_OF_THREADS;i++){
-            newMyAlgorithmBaseCallable rw;
+            myAlgorithmBaseCallable rw;
             if(NEWSPI){
-                rw = new newRandomWalkAlgorithmCallableNewSPI(
+                rw = new RandomWalkAlgorithmCallableNewSPI(
                         noOfSteps/NUMBER_OF_THREADS,TimeUnit.MICROSECONDS, output);
             } else{
-                rw = new newRandomWalkAlgorithmCallable(
+                rw = new RandomWalkAlgorithmCallable(
                         noOfSteps/NUMBER_OF_THREADS,TimeUnit.MICROSECONDS, output);
             }
             list.add(executor.submit(rw));

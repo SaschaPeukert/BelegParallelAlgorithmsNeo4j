@@ -2,7 +2,7 @@ package de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search;
 
 import com.google.common.collect.Sets;
 import de.saschapeukert.Database.DBUtils;
-import de.saschapeukert.newStartComparison;
+import de.saschapeukert.StartComparison;
 import org.neo4j.graphdb.Direction;
 
 import java.util.ArrayList;
@@ -14,7 +14,7 @@ import java.util.concurrent.*;
 /**
  * Created by Sascha Peukert on 19.11.2015.
  */
-public class newMyBFS {
+public class MyBFS {
 
     public static volatile List<Long> frontierList= new ArrayList<>(100000);  // do not assign more than once
     public static final Set<Long> visitedIDs = Sets.newConcurrentHashSet();
@@ -25,8 +25,8 @@ public class newMyBFS {
     static Set<Long> nodeIDSet;
     private final ExecutorService executor;
 
-    public newMyBFS(){
-        executor = Executors.newFixedThreadPool(newStartComparison.NUMBER_OF_THREADS);
+    public MyBFS(){
+        executor = Executors.newFixedThreadPool(StartComparison.NUMBER_OF_THREADS);
         db = DBUtils.getInstance("","");
     }
 
@@ -58,11 +58,11 @@ public class newMyBFS {
         Long[] frontierArray =frontierList.toArray(new Long[frontierList.size()]);
         List<Future<Set<Long>>> list = new ArrayList<>();
         while(pos<frontierList.size()){
-            newMyBFSLevelCallable callable;
+            MyBFSLevelCallable callable;
             if((pos+BATCHSIZE)>=frontierList.size()){
-                callable = new newMyBFSLevelCallable(pos,frontierList.size(),frontierArray,direction,false);
+                callable = new MyBFSLevelCallable(pos,frontierList.size(),frontierArray,direction,false);
             } else{
-                callable = new newMyBFSLevelCallable(pos,pos+BATCHSIZE,frontierArray,direction,false);
+                callable = new MyBFSLevelCallable(pos,pos+BATCHSIZE,frontierArray,direction,false);
             }
             list.add(executor.submit(callable));
             pos = pos+ BATCHSIZE;
@@ -84,6 +84,6 @@ public class newMyBFS {
     }
 
     public void closeDownThreadPool(){
-        newStartComparison.waitForExecutorToFinishAll(executor);
+        StartComparison.waitForExecutorToFinishAll(executor);
     }
 }

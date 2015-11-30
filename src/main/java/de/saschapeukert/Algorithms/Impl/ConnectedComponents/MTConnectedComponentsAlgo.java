@@ -1,10 +1,10 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents;
 
-import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring.newBackwardColoringStepRunnable;
-import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring.newColoringCallable;
+import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring.BackwardColoringStepRunnable;
+import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring.ColoringCallable;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.BFS;
-import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.newMyBFS;
-import de.saschapeukert.newStartComparison;
+import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.MyBFS;
+import de.saschapeukert.StartComparison;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 
@@ -19,7 +19,7 @@ import java.util.concurrent.*;
  */
 
 @SuppressWarnings("deprecation")
-public class newMTConnectedComponentsAlgo extends newSTConnectedComponentsAlgo {
+public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
 
     private long maxdDegreeINOUT=-1;
     private long maxDegreeID=-1;
@@ -32,14 +32,14 @@ public class newMTConnectedComponentsAlgo extends newSTConnectedComponentsAlgo {
     public static final ConcurrentHashMap<Long, List<Long>> mapColorIDs = new ConcurrentHashMap<>();
     public static final ConcurrentHashMap<Long, Boolean> mapOfVisitedNodes = new ConcurrentHashMap<>();
 
-    public newMTConnectedComponentsAlgo(CCAlgorithmType type, TimeUnit tu, boolean output){
+    public MTConnectedComponentsAlgo(CCAlgorithmType type, TimeUnit tu, boolean output){
         super(type, tu, output);
         if(myBFS){
-            mybfs = new newMyBFS();
+            mybfs = new MyBFS();
         }
     }
 
-    private newMyBFS mybfs;
+    private MyBFS mybfs;
 
     @Override
     public void compute() {
@@ -72,14 +72,14 @@ public class newMTConnectedComponentsAlgo extends newSTConnectedComponentsAlgo {
     @Override
     protected void strongly(){
         // PHASE 1
-        FWBW_Step(myBFS); // TODO: newMyBFS should be used here
+        FWBW_Step(myBFS); // TODO: MyBFS should be used here
 
         //System.out.println("Potentialy biggest component: " + componentID);
         componentID++;
 
         // PHASE 2
             // Start Threads
-        ExecutorService executor = Executors.newFixedThreadPool(newStartComparison.NUMBER_OF_THREADS);
+        ExecutorService executor = Executors.newFixedThreadPool(StartComparison.NUMBER_OF_THREADS);
         //System.out.println("Phase 2");
         int i=0;
         while(nCutoff<allNodes.size()) { // Do MS-Coloring
@@ -99,7 +99,7 @@ public class newMTConnectedComponentsAlgo extends newSTConnectedComponentsAlgo {
         super.strongly(); // call seq. tarjan
 
             // finish threads and executor
-        newStartComparison.waitForExecutorToFinishAll(executor);
+        StartComparison.waitForExecutorToFinishAll(executor);
     }
 
     @Override
@@ -127,11 +127,11 @@ public class newMTConnectedComponentsAlgo extends newSTConnectedComponentsAlgo {
             Long[] queueArray = Q.toArray(new Long[Q.size()]);
             List<Future<Set<Long>>> list = new ArrayList<>();
             while(pos<Q.size()){
-                newColoringCallable callable;
+                ColoringCallable callable;
                 if((pos+BATCHSIZE)>=Q.size()){
-                    callable = new newColoringCallable(pos,Q.size(),queueArray,false);
+                    callable = new ColoringCallable(pos,Q.size(),queueArray,false);
                 } else{
-                    callable = new newColoringCallable(pos,pos+BATCHSIZE,queueArray,false);
+                    callable = new ColoringCallable(pos,pos+BATCHSIZE,queueArray,false);
                 }
                 list.add(executor.submit(callable));
                 pos = pos+ BATCHSIZE; // new startPos = old EndPos
@@ -174,11 +174,11 @@ public class newMTConnectedComponentsAlgo extends newSTConnectedComponentsAlgo {
         List<Future<Set<Long>>> list = new ArrayList<>();
         Long[] colorArray = mapColorIDs.keySet().toArray(new Long[mapColorIDs.keySet().size()]);
         while(pos<mapColorIDs.keySet().size()){
-            newBackwardColoringStepRunnable callable;
+            BackwardColoringStepRunnable callable;
             if((pos+BATCHSIZE)>=Q.size()){
-                callable = new newBackwardColoringStepRunnable(pos,mapColorIDs.keySet().size(),colorArray,false);
+                callable = new BackwardColoringStepRunnable(pos,mapColorIDs.keySet().size(),colorArray,false);
             } else{
-                callable = new newBackwardColoringStepRunnable(pos,pos+BATCHSIZE,colorArray,false);
+                callable = new BackwardColoringStepRunnable(pos,pos+BATCHSIZE,colorArray,false);
             }
             list.add(executor.submit(callable));
             pos = pos+ BATCHSIZE; // new startPos = old EndPos
