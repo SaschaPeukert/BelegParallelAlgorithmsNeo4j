@@ -24,8 +24,8 @@ public class RandomWalkAlgorithmCallableNewSPI extends myAlgorithmBaseCallable {
     private final ThreadLocalRandom random;
     private ReadOperations ops;
 
-    public RandomWalkAlgorithmCallableNewSPI(int NumberOfSteps, TimeUnit tu, boolean output){
-        super(tu, output);
+    public RandomWalkAlgorithmCallableNewSPI(int NumberOfSteps, TimeUnit tu){
+        super(tu);
 
         this._RandomNodeParameter = StartComparison.RANDOMWALKRANDOM;
         this.currentNodeId = -1;
@@ -46,8 +46,7 @@ public class RandomWalkAlgorithmCallableNewSPI extends myAlgorithmBaseCallable {
             } else{
                 currentNodeId = getNextNode(currentNodeId);
             }
-            if(output)
-                StartComparison.incrementResultCounterforId(currentNodeId);
+            StartComparison.incrementResultCounterforId(currentNodeId);
             NUMBER_OF_STEPS--;
         }
         timer.stop();

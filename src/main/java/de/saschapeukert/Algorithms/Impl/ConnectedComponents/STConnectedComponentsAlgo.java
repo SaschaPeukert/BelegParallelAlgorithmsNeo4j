@@ -27,8 +27,8 @@ public class STConnectedComponentsAlgo extends myAlgorithmBaseCallable {
 
     public static Set<Long> allNodes; // except the trivial CCs
 
-    public STConnectedComponentsAlgo(CCAlgorithmType type, TimeUnit timeUnit, boolean output) {
-        super(timeUnit, output);
+    public STConnectedComponentsAlgo(CCAlgorithmType type, TimeUnit timeUnit) {
+        super(timeUnit);
         this.myType = type;
 
         if(myType== CCAlgorithmType.STRONG) {

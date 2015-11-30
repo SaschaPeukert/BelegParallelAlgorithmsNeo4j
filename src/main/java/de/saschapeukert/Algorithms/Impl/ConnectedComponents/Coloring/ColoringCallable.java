@@ -50,7 +50,7 @@ public class ColoringCallable extends WorkerCallableTemplate {
     }
 
     public ColoringCallable(int startPos, int endPos, Long[] array, boolean output){
-        super(startPos,endPos,array,output);
+        super(startPos,endPos,array);
         privateQueue = new HashSet<>(100000);
     }
 

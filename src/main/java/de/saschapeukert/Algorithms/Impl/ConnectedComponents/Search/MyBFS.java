@@ -60,9 +60,9 @@ public class MyBFS {
         while(pos<frontierList.size()){
             MyBFSLevelCallable callable;
             if((pos+BATCHSIZE)>=frontierList.size()){
-                callable = new MyBFSLevelCallable(pos,frontierList.size(),frontierArray,direction,false);
+                callable = new MyBFSLevelCallable(pos,frontierList.size(),frontierArray,direction);
             } else{
-                callable = new MyBFSLevelCallable(pos,pos+BATCHSIZE,frontierArray,direction,false);
+                callable = new MyBFSLevelCallable(pos,pos+BATCHSIZE,frontierArray,direction);
             }
             list.add(executor.submit(callable));
             pos = pos+ BATCHSIZE;

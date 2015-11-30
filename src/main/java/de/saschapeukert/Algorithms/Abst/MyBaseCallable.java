@@ -16,9 +16,8 @@ public abstract class MyBaseCallable implements Callable {
 
     protected abstract void compute();
 
-    public MyBaseCallable(boolean output){
+    public MyBaseCallable(){
         this.db = DBUtils.getInstance("","");
-        this.output = output;
     }
 
     protected void work(){

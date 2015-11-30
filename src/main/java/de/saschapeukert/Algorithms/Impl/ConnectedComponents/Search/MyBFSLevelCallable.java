@@ -12,8 +12,8 @@ public class MyBFSLevelCallable extends WorkerCallableTemplate {
 
     public Direction direction;
 
-    public MyBFSLevelCallable(int startPos, int endPos, Long[] array, Direction direction, boolean output){
-        super(startPos,endPos,array,output);
+    public MyBFSLevelCallable(int startPos, int endPos, Long[] array, Direction direction){
+        super(startPos,endPos,array);
 
         this.direction = direction;
     }

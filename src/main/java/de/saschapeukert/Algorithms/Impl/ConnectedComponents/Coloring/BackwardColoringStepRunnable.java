@@ -35,7 +35,7 @@ public class BackwardColoringStepRunnable extends WorkerCallableTemplate {
     }
 
     public BackwardColoringStepRunnable(int startPos, int endPos, Long[] arrayOfColors, boolean output ){
-        super(startPos,endPos,arrayOfColors,output);
+        super(startPos,endPos,arrayOfColors);
     }
 
 }

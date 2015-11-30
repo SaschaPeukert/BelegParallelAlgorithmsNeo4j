@@ -20,8 +20,8 @@ public class RandomWalkAlgorithmCallable extends myAlgorithmBaseCallable {
     private int NUMBER_OF_STEPS;
     private final ThreadLocalRandom random;
 
-    public RandomWalkAlgorithmCallable(int NumberOfSteps, TimeUnit tu, boolean output){
-        super(tu, output);
+    public RandomWalkAlgorithmCallable(int NumberOfSteps, TimeUnit tu){
+        super(tu);
 
         this._RandomNodeParameter = StartComparison.RANDOMWALKRANDOM;
         this.currentNode = null;
@@ -71,8 +71,7 @@ public class RandomWalkAlgorithmCallable extends myAlgorithmBaseCallable {
             } else {
                 currentNode = getNextNode(currentNode);
             }
-            if(output)
-                StartComparison.incrementResultCounterforId(currentNode.getId());
+            StartComparison.incrementResultCounterforId(currentNode.getId());
             NUMBER_OF_STEPS--;
         }
         timer.stop();

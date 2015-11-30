@@ -16,8 +16,7 @@ public abstract class myAlgorithmBaseCallable extends MyBaseCallable {
     /*
         This will also initialize the timer but NOT start it!
      */
-    protected myAlgorithmBaseCallable(TimeUnit timeUnit, boolean output){
-        super(output);
+    protected myAlgorithmBaseCallable(TimeUnit timeUnit){
         this.timer = Stopwatch.createUnstarted();
         this.timeUnit = timeUnit;
     }

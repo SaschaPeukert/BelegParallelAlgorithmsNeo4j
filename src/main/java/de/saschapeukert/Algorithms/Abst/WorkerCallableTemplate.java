@@ -19,8 +19,8 @@ public abstract class WorkerCallableTemplate extends MyBaseCallable {
     protected Set<Long> returnSet;
     private ReadOperations ops;
 
-    protected WorkerCallableTemplate(int startPos, int endPos, Long[] array, boolean output) {
-        super(output);
+    protected WorkerCallableTemplate(int startPos, int endPos, Long[] array) {
+
         this.refArray = array;
         this.startPos = startPos;
         this.endPos = endPos;

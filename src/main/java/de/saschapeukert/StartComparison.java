@@ -195,15 +195,15 @@ public class StartComparison {
         STConnectedComponentsAlgo callable;
         if(NUMBER_OF_THREADS>1) {
             callable = new MTConnectedComponentsAlgo(
-                    type,TimeUnit.MILLISECONDS, output);
+                    type,TimeUnit.MILLISECONDS);
         } else{
             // Easter Egg?!
             if(OPERATIONS==-1){
                 callable = new MTConnectedComponentsAlgo(
-                        type,TimeUnit.MILLISECONDS, output);
+                        type,TimeUnit.MILLISECONDS);
             } else{
                 callable = new STConnectedComponentsAlgo(
-                        type,TimeUnit.MILLISECONDS, output);
+                        type,TimeUnit.MILLISECONDS);
             }
         }
         ExecutorService ex = Executors.newFixedThreadPool(1);
@@ -230,10 +230,10 @@ public class StartComparison {
             myAlgorithmBaseCallable rw;
             if(NEWSPI){
                 rw = new RandomWalkAlgorithmCallableNewSPI(
-                        noOfSteps/NUMBER_OF_THREADS,TimeUnit.MICROSECONDS, output);
+                        noOfSteps/NUMBER_OF_THREADS,TimeUnit.MICROSECONDS);
             } else{
                 rw = new RandomWalkAlgorithmCallable(
-                        noOfSteps/NUMBER_OF_THREADS,TimeUnit.MICROSECONDS, output);
+                        noOfSteps/NUMBER_OF_THREADS,TimeUnit.MICROSECONDS);
             }
             list.add(executor.submit(rw));
         }
@@ -346,14 +346,13 @@ public class StartComparison {
         for (Future future : futureList) {
             try {
                 future.get();
-
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }
         }
 
         boolean check = waitForExecutorToFinishAll(executor);
-        System.out.println("Done Writing");
+        System.out.println("Done Writing. (" + futureList.size() + "T)");
         return check;
     }
 

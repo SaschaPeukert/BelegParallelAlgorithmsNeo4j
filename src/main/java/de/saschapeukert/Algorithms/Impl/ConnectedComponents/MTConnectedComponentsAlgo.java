@@ -32,8 +32,8 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     public static final ConcurrentHashMap<Long, List<Long>> mapColorIDs = new ConcurrentHashMap<>();
     public static final ConcurrentHashMap<Long, Boolean> mapOfVisitedNodes = new ConcurrentHashMap<>();
 
-    public MTConnectedComponentsAlgo(CCAlgorithmType type, TimeUnit tu, boolean output){
-        super(type, tu, output);
+    public MTConnectedComponentsAlgo(CCAlgorithmType type, TimeUnit tu){
+        super(type, tu);
         if(myBFS){
             mybfs = new MyBFS();
         }
