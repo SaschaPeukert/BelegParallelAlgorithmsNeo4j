@@ -4,6 +4,7 @@ import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring.BackwardCol
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring.ColoringCallable;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.BFS;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.MyBFS;
+import de.saschapeukert.Utils;
 import de.saschapeukert.StartComparison;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
@@ -24,9 +25,9 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     private long maxdDegreeINOUT=-1;
     private long maxDegreeID=-1;
 
-    public static boolean myBFS=true;
-    public static  long nCutoff=1000;
-    private int BATCHSIZE = 10000;
+    public static boolean myBFS=false;
+    public static  long nCutoff=10000; // TODO test this
+    private int BATCHSIZE = 10000;  // TODO test this
 
     public static final ConcurrentHashMap<Long, Long> mapOfColors = new ConcurrentHashMap<>();
     public static final ConcurrentHashMap<Long, List<Long>> mapColorIDs = new ConcurrentHashMap<>();
@@ -42,9 +43,9 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     private MyBFS mybfs;
 
     @Override
-    public void compute() {
+    public void work() {
 
-        super.compute();
+        super.work();
 
         if(myBFS){
             mybfs.closeDownThreadPool();
@@ -99,7 +100,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         super.strongly(); // call seq. tarjan
 
             // finish threads and executor
-        StartComparison.waitForExecutorToFinishAll(executor);
+        Utils.waitForExecutorToFinishAll(executor);
     }
 
     @Override

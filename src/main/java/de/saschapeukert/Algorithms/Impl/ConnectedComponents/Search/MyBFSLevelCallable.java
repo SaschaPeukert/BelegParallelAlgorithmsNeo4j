@@ -19,7 +19,7 @@ public class MyBFSLevelCallable extends WorkerCallableTemplate {
     }
 
     @Override
-    protected void compute() {
+    public void work() {
 
         int currentPos=startPos;
         while(currentPos<endPos){

@@ -33,10 +33,10 @@ public class RandomWalkAlgorithmCallableNewSPI extends myAlgorithmBaseCallable {
         this.random = ThreadLocalRandom.current();
     }
     @Override
-    public void compute() {
+    public void work() {
 
         timer.start();
-
+        this.tx = db.openTransaction();
         this.ops = db.getReadOperations();
 
         while (this.NUMBER_OF_STEPS > 0) {
@@ -49,7 +49,9 @@ public class RandomWalkAlgorithmCallableNewSPI extends myAlgorithmBaseCallable {
             StartComparison.incrementResultCounterforId(currentNodeId);
             NUMBER_OF_STEPS--;
         }
+        db.closeTransactionWithSuccess(tx);
         timer.stop();
+
     }
 
     private long getNextNode(long n){

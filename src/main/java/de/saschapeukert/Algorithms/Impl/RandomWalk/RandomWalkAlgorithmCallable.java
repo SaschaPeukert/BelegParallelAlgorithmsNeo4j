@@ -30,7 +30,7 @@ public class RandomWalkAlgorithmCallable extends myAlgorithmBaseCallable {
     }
 
     @Override
-    public void compute() {
+    public void work() {
 /*
         TraversalDescription traversalDescription = graphDb.traversalDescription().depthFirst().expand(new PathExpander<AtomicInteger>() {
             @Override
@@ -62,6 +62,7 @@ public class RandomWalkAlgorithmCallable extends myAlgorithmBaseCallable {
         }
 */
         timer.start();
+        this.tx = db.openTransaction();
 
         while (this.NUMBER_OF_STEPS > 0) {
 
@@ -74,7 +75,9 @@ public class RandomWalkAlgorithmCallable extends myAlgorithmBaseCallable {
             StartComparison.incrementResultCounterforId(currentNode.getId());
             NUMBER_OF_STEPS--;
         }
+        db.closeTransactionWithSuccess(tx);
         timer.stop();
+
     }
 
     private Node getNextNode(Node n){

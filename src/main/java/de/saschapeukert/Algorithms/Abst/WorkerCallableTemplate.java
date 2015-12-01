@@ -27,7 +27,7 @@ public abstract class WorkerCallableTemplate extends MyBaseCallable {
         returnSet = new HashSet<>(10000);
     }
 
-    // Children must overwrite compute()
+    // Children must overwrite work()
 
     public Object call() throws Exception {
         tx = db.openTransaction();

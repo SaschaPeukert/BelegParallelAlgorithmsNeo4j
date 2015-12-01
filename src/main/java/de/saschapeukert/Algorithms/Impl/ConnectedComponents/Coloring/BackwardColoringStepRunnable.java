@@ -15,7 +15,7 @@ import java.util.Set;
 public class BackwardColoringStepRunnable extends WorkerCallableTemplate {
 
     @Override
-    protected void compute() {
+    public void work() {
 
         int currentPos=startPos;
 

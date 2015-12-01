@@ -15,7 +15,7 @@ public class ColoringCallable extends WorkerCallableTemplate {
     private final Set<Long> privateQueue;
 
     @Override
-    protected void compute() {
+    public void work() {
 
         int currentPos=startPos;
         while(currentPos<endPos){

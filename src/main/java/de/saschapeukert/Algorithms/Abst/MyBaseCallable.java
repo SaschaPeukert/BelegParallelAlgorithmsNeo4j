@@ -14,16 +14,9 @@ public abstract class MyBaseCallable implements Callable {
     protected DBUtils db;
     protected Boolean output;
 
-    protected abstract void compute();
-
     public MyBaseCallable(){
         this.db = DBUtils.getInstance("","");
     }
 
-    protected void work(){
-        this.tx = db.openTransaction();
-        compute();
-        db.closeTransactionWithSuccess(this.tx);
-    }
-
+    public abstract void work();
 }

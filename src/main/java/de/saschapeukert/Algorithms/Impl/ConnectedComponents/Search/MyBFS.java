@@ -2,6 +2,7 @@ package de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search;
 
 import com.google.common.collect.Sets;
 import de.saschapeukert.Database.DBUtils;
+import de.saschapeukert.Utils;
 import de.saschapeukert.StartComparison;
 import org.neo4j.graphdb.Direction;
 
@@ -9,7 +10,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * Created by Sascha Peukert on 19.11.2015.
@@ -84,6 +88,6 @@ public class MyBFS {
     }
 
     public void closeDownThreadPool(){
-        StartComparison.waitForExecutorToFinishAll(executor);
+        Utils.waitForExecutorToFinishAll(executor);
     }
 }

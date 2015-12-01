@@ -39,17 +39,17 @@ public class STConnectedComponentsAlgo extends myAlgorithmBaseCallable {
     }
 
     @Override
-    protected void compute() {
+    public void work() {
 
         timer.start();
-
+        this.tx = db.openTransaction();
         prepareAllNodes();
         if(myType== CCAlgorithmType.WEAK) {
             weakly();
         } else{
             strongly();
         }
-
+        db.closeTransactionWithSuccess(tx);
         timer.stop();
     }
 

@@ -8,7 +8,7 @@ import de.saschapeukert.Algorithms.Impl.ConnectedComponents.STConnectedComponent
 import de.saschapeukert.Algorithms.Impl.RandomWalk.RandomWalkAlgorithmCallable;
 import de.saschapeukert.Algorithms.Impl.RandomWalk.RandomWalkAlgorithmCallableNewSPI;
 import de.saschapeukert.Database.DBUtils;
-import de.saschapeukert.Database.NeoWriter;
+import de.saschapeukert.Database.NeoWriterRunnable;
 import org.HdrHistogram.Histogram;
 import org.HdrHistogram.IntCountsHistogram;
 import org.neo4j.graphdb.Direction;
@@ -30,7 +30,7 @@ public class StartComparison {
     // SSD: C:\\BelegDB\\neo4j-enterprise-2.3.0-M02\\data\\graph.db
     // Meine HDD: E:\\Users\\Sascha\\Documents\\GIT\\BelegParallelAlgorithmsNeo4j\\testDB\\graph.db
     private static int OPERATIONS;
-    public static int NUMBER_OF_THREADS;
+    public static int NUMBER_OF_THREADS; //Runtime.getRuntime().availableProcessors();
     private static int NUMBER_OF_RUNS; //Minimum: 1
     public static final int RANDOMWALKRANDOM = 20;  // Minimum: 1
     //private static  int WARMUPTIME; // in seconds
@@ -76,7 +76,7 @@ public class StartComparison {
             }
         }
         SkippingPagesWarmUp();
-        //WarmUp(WARMUPTIME);
+
         System.out.println("");
         Stopwatch timeOfComparision = Stopwatch.createStarted();
 
@@ -217,7 +217,7 @@ public class StartComparison {
         }
 
         //System.out.println(callable.getResults());    //TODO REMOVE, JUST FOR DEBUG
-        waitForExecutorToFinishAll(ex);
+        Utils.waitForExecutorToFinishAll(ex);
         return ret; // ERROR
     }
 
@@ -253,7 +253,7 @@ public class StartComparison {
             }
         }
 
-        waitForExecutorToFinishAll(executor);
+        Utils.waitForExecutorToFinishAll(executor);
         return elapsedTime;
     }
 
@@ -334,13 +334,13 @@ public class StartComparison {
         int maxIndex = resultCounter.keySet().size();
         List<Future> futureList = new ArrayList<>();
         for(int i=0;i<maxIndex;i+=BATCH_SIZE){
-            NeoWriter neoWriter;
+            NeoWriterRunnable neoWriterRunnable;
             if(i+BATCH_SIZE>=maxIndex){
-                neoWriter = new NeoWriter(PROP_ID,i,maxIndex,DBUtils.getInstance("", ""));
+                neoWriterRunnable = new NeoWriterRunnable(PROP_ID,i,maxIndex,DBUtils.getInstance("", ""));
             } else{
-                neoWriter = new NeoWriter(PROP_ID,i,i+BATCH_SIZE,DBUtils.getInstance("", ""));
+                neoWriterRunnable = new NeoWriterRunnable(PROP_ID,i,i+BATCH_SIZE,DBUtils.getInstance("", ""));
             }
-            futureList.add(executor.submit(neoWriter));
+            futureList.add(executor.submit(neoWriterRunnable));
         }
 
         for (Future future : futureList) {
@@ -351,7 +351,7 @@ public class StartComparison {
             }
         }
 
-        boolean check = waitForExecutorToFinishAll(executor);
+        boolean check = Utils.waitForExecutorToFinishAll(executor);
         System.out.println("Done Writing. (" + futureList.size() + "T)");
         return check;
     }
@@ -366,16 +366,6 @@ public class StartComparison {
         keySetOfResultCounter = resultCounter.keySet().toArray();  // should only be called once!
     }
 
-    public static boolean waitForExecutorToFinishAll(ExecutorService executor){
-        executor.shutdown();
-        try {
-            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            return false;
-        }
-        return true;
-    }
 
     public static Object getObjInResultCounterKeySet(int pos){
         return keySetOfResultCounter[pos];

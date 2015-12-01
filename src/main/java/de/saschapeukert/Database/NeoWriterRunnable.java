@@ -8,14 +8,14 @@ import org.neo4j.kernel.api.DataWriteOperations;
  * Created by Sascha Peukert on 05.09.2015.
  */
 @SuppressWarnings("deprecation")
-public class NeoWriter implements Runnable {
+public class NeoWriterRunnable implements Runnable {
     // FIXME:Problem solved?
     private final int propID;
     private final int startIndex; // inclusive
     private final int endIndex; // exclusive
     private final DBUtils db;
 
-    public NeoWriter(int propID, int startIndex, int endIndex, DBUtils db){
+    public NeoWriterRunnable(int propID, int startIndex, int endIndex, DBUtils db){
         this.propID = propID;
         this.startIndex = startIndex;
         this.endIndex = endIndex;
