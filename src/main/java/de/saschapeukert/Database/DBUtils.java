@@ -205,6 +205,13 @@ public class DBUtils {
         return -1; // ERROR happend
     }
 
+    /**
+     *
+     * @param ops
+     * @param nodeID
+     * @param dir
+     * @return returns all connectedNodeIds, possibly even the original nodeID itself
+     */
     public Set<Long> getConnectedNodeIDs(ReadOperations ops, long nodeID, Direction dir){
         Set<Long> it = new HashSet<>(1000);
         try {

@@ -14,7 +14,6 @@ public class MyBFSLevelCallable extends WorkerCallableTemplate {
 
     public MyBFSLevelCallable(int startPos, int endPos, Long[] array, Direction direction){
         super(startPos,endPos,array);
-
         this.direction = direction;
     }
 
@@ -24,15 +23,8 @@ public class MyBFSLevelCallable extends WorkerCallableTemplate {
         int currentPos=startPos;
         while(currentPos<endPos){
             long parentID = refArray[currentPos];
-            Set<Long> q = expandNode(parentID, MyBFS.visitedIDs,true,direction);
-            MyBFS.visitedIDs.add(parentID); // this needs to happen here and not before expandNode
+            Set<Long> q = expandNode(parentID, direction);
 
-            if(MyBFS.nodeIDSet!=null){
-                // this is a backward sweep
-                //q.add(parentID); // quick fix // TODO TEST THIS
-                q.retainAll(MyBFS.nodeIDSet);
-            }
-            q.remove(parentID);
             returnSet.addAll(q);
             currentPos++;
         }

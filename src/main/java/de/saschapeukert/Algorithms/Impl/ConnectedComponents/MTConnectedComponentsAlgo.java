@@ -25,7 +25,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     private long maxdDegreeINOUT=-1;
     private long maxDegreeID=-1;
 
-    public static boolean myBFS=false;
+    public static boolean myBFS=true;
     public static  long nCutoff=10000; // TODO test this
     private int BATCHSIZE = 10000;  // TODO test this
 

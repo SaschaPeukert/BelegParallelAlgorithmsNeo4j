@@ -20,11 +20,11 @@ import java.util.concurrent.Future;
  */
 public class MyBFS {
 
-    public static volatile List<Long> frontierList= new ArrayList<>(100000);  // do not assign more than once
-    public static final Set<Long> visitedIDs = Sets.newConcurrentHashSet();
+    public List<Long> frontierList;
+    public final Set<Long> visitedIDs = Sets.newConcurrentHashSet();
 
     private final DBUtils db;
-    private final int BATCHSIZE = 10000;
+    private final int BATCHSIZE = 200000; // chosen by a few tests
 
     static Set<Long> nodeIDSet;
     private final ExecutorService executor;
@@ -44,8 +44,8 @@ public class MyBFS {
 
         visitedIDs.clear();
 
+        frontierList= new ArrayList<>(100000);
         frontierList.add(nodeID);
-        //visitedIDs.add(nodeID);
 
         while(!frontierList.isEmpty())
         {
@@ -72,7 +72,7 @@ public class MyBFS {
             pos = pos+ BATCHSIZE;
             tasks++;
         }
-
+        visitedIDs.addAll(frontierList);
         frontierList.clear();
         // threads finished, collecting results -> new frontier
         for(int i=0;i<tasks;i++){
@@ -84,7 +84,13 @@ public class MyBFS {
                 e.printStackTrace();
             }
         }
-        //System.out.println("Done a level");
+
+        frontierList.removeAll(visitedIDs);
+
+        if(MyBFS.nodeIDSet!=null){
+            // this is a backward sweep
+            frontierList.retainAll(nodeIDSet);
+        }
     }
 
     public void closeDownThreadPool(){
