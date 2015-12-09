@@ -82,7 +82,7 @@ public class StartComparison {
 
         switch (ALGORITHM){
             case "RW":
-                calculateRandomWalk_new(NUMBER_OF_RUNS, true);
+                calculateRandomWalk_new(NUMBER_OF_RUNS);
                 break;
             case "WCC":
                 calculateConnectedComponents(
@@ -141,7 +141,7 @@ public class StartComparison {
         Stopwatch timer = Stopwatch.createStarted();
 
         while (timer.elapsed(TimeUnit.SECONDS) < secs) {
-                doMultiThreadRandomWalk(100, false);
+                doMultiThreadRandomWalk(100);
             }
         timer.stop();
         System.out.println("WarmUp finished after " + timer.elapsed(TimeUnit.SECONDS) + "s.");
@@ -174,10 +174,10 @@ public class StartComparison {
         histogram.outputPercentileDistribution(System.out, 1.00);
     }
 
-    private static void calculateRandomWalk_new(int numberOfRunsPerStep, boolean output){
+    private static void calculateRandomWalk_new(int numberOfRunsPerStep){
         for(int i=0;i<numberOfRunsPerStep;i++){
             System.out.println("Now doing run " + (i + 1));
-            long run = doMultiThreadRandomWalk(OPERATIONS, output);
+            long run = doMultiThreadRandomWalk(OPERATIONS);
             histogram.recordValue(run);
         }
         System.out.println("");
@@ -221,7 +221,7 @@ public class StartComparison {
         return ret; // ERROR
     }
 
-    private static long doMultiThreadRandomWalk(int noOfSteps, boolean output){
+    private static long doMultiThreadRandomWalk(int noOfSteps){
         // INIT
         ExecutorService executor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
         List<Future<Long>> list = new ArrayList<>();

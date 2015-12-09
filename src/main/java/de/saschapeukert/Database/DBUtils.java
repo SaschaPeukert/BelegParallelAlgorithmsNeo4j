@@ -216,11 +216,9 @@ public class DBUtils {
         Set<Long> it = new HashSet<>(1000);
         try {
             RelationshipIterator itR = ops.nodeGetRelationships(nodeID, dir);
-
             while(itR.hasNext()){
                 long rID = itR.next();
                 Cursor<RelationshipItem> relCursor = ops.relationshipCursor(rID);
-
                 while(relCursor.next()){
                     RelationshipItem item = relCursor.get();
                     it.add(item.otherNode(nodeID));
