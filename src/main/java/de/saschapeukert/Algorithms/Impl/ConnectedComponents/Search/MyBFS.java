@@ -84,7 +84,7 @@ public class MyBFS {
                 e.printStackTrace();
             }
         }
-
+        list = null;
         frontierList.removeAll(visitedIDs);
 
         if(MyBFS.nodeIDSet!=null){

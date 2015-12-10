@@ -73,7 +73,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     @Override
     protected void strongly(){
         // PHASE 1
-        FWBW_Step(myBFS); // TODO: MyBFS should be used here
+        FWBW_Step(myBFS);
 
         //System.out.println("Potentialy biggest component: " + componentID);
         componentID++;
