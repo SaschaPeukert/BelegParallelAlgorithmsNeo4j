@@ -151,12 +151,16 @@ public class StartComparison {
         System.out.println("Starting WarmUp.");
         Stopwatch timer = Stopwatch.createStarted();
 
+        int sizeOfDbPage_byte = 8000;
+        int sizeOfNodeRecord_byte=15;
+        int sizeOfRelationshipRecord_byte = 34;
+
         DBUtils db=DBUtils.getInstance("","");
         Transaction tx =db.openTransaction();
-        for(int i=0;i<=db.highestNodeKey;i=i+15){
+        for(int i=0;i<=db.highestNodeKey;i=i+(sizeOfDbPage_byte/sizeOfNodeRecord_byte)){
             db.loadNode(i);
         }
-        for(int i=0;i<=db.highestRelationshipKey;i=i+15){
+        for(int i=0;i<=db.highestRelationshipKey;i=i+(sizeOfDbPage_byte/sizeOfRelationshipRecord_byte)){
             db.loadRelationship(i);
         }
         db.closeTransactionWithSuccess(tx);
