@@ -130,9 +130,9 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
             while(pos<Q.size()){
                 ColoringCallable callable;
                 if((pos+BATCHSIZE)>=Q.size()){
-                    callable = new ColoringCallable(pos,Q.size(),queueArray,false);
+                    callable = new ColoringCallable(pos,Q.size(),queueArray);
                 } else{
-                    callable = new ColoringCallable(pos,pos+BATCHSIZE,queueArray,false);
+                    callable = new ColoringCallable(pos,pos+BATCHSIZE,queueArray);
                 }
                 list.add(executor.submit(callable));
                 pos = pos+ BATCHSIZE; // new startPos = old EndPos
@@ -177,9 +177,9 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         while(pos<mapColorIDs.keySet().size()){
             BackwardColoringStepRunnable callable;
             if((pos+BATCHSIZE)>=Q.size()){
-                callable = new BackwardColoringStepRunnable(pos,mapColorIDs.keySet().size(),colorArray,false);
+                callable = new BackwardColoringStepRunnable(pos,mapColorIDs.keySet().size(),colorArray);
             } else{
-                callable = new BackwardColoringStepRunnable(pos,pos+BATCHSIZE,colorArray,false);
+                callable = new BackwardColoringStepRunnable(pos,pos+BATCHSIZE,colorArray);
             }
             list.add(executor.submit(callable));
             pos = pos+ BATCHSIZE; // new startPos = old EndPos
