@@ -18,7 +18,7 @@ With this command maven will generate a jar file for you:
         java -jar <JAR> A B C D E F G H I 
         
          A = Name of the Algorithmus (RW, SCC, WCC, DegreeStats)
-         B = OperationNumber (for RW) [for the other algorithms this parameter is irrelevant**, but some value still needs to be present]
+         B = OperationNumber (for RW) [for the other algorithms this parameter states eg. how many nodes (out of a list) a thread has to expand [BATCHSIZE]]
          C = Number of Runs
          D = Number of Threads *
          E = New SPI (true or false) (for RW) [for the other algorithms this parameter is irrelevant, but some value still needs to be present]

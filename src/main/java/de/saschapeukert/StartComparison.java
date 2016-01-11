@@ -45,6 +45,7 @@ public class StartComparison {
     private static Histogram histogram;
 
     public static int BATCHSIZE;//  = 100000;
+    private static int writeBATCHSIZE = 100000;
 
     public static void main(String[] args)  {
         readParameters(args);
@@ -333,9 +334,9 @@ public class StartComparison {
 
         int maxIndex = resultCounter.keySet().size();
         List<Future> futureList = new ArrayList<>();
-        for(int i=0;i<maxIndex;i+=BATCHSIZE){
+        for(int i=0;i<maxIndex;i+=writeBATCHSIZE){
             NeoWriterRunnable neoWriterRunnable;
-            if(i+BATCHSIZE>=maxIndex){
+            if(i+writeBATCHSIZE>=maxIndex){
                 neoWriterRunnable = new NeoWriterRunnable(PROP_ID,i,maxIndex,DBUtils.getInstance("", ""));
             } else{
                 neoWriterRunnable = new NeoWriterRunnable(PROP_ID,i,i+BATCHSIZE,DBUtils.getInstance("", ""));
