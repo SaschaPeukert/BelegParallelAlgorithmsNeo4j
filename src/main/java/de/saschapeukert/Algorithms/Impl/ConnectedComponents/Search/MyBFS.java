@@ -1,9 +1,8 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search;
 
 import com.google.common.collect.Sets;
-import de.saschapeukert.Database.DBUtils;
-import de.saschapeukert.Utils;
 import de.saschapeukert.StartComparison;
+import de.saschapeukert.Utils;
 import org.neo4j.graphdb.Direction;
 
 import java.util.ArrayList;
@@ -23,15 +22,14 @@ public class MyBFS {
     public List<Long> frontierList;
     public final Set<Long> visitedIDs = Sets.newConcurrentHashSet();
 
-    private final DBUtils db;
-    private final int BATCHSIZE = 200000; // chosen by a few tests
+    private final int BATCHSIZE = StartComparison.BATCHSIZE;//= 175000; // chosen by a few tests
 
     static Set<Long> nodeIDSet;
     private final ExecutorService executor;
 
     public MyBFS(){
         executor = Executors.newFixedThreadPool(StartComparison.NUMBER_OF_THREADS);
-        db = DBUtils.getInstance("","");
+
     }
 
     public Set<Long> work(long nodeID, Direction direction, Set<Long> set){
@@ -78,13 +76,10 @@ public class MyBFS {
         for(int i=0;i<tasks;i++){
             try {
                 frontierList.addAll(list.get(i).get());
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
+            } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }
         }
-        list = null;
         frontierList.removeAll(visitedIDs);
 
         if(MyBFS.nodeIDSet!=null){

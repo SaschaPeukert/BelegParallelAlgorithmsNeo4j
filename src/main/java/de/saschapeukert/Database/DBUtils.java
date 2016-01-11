@@ -135,7 +135,7 @@ public class DBUtils {
 
     public boolean createPropertyAtNode(long nodeID, Object value, int PropertyID, DataWriteOperations ops){
         try {
-            DefinedProperty prop=null;
+            DefinedProperty prop;
             if(value instanceof Integer){
                 prop = Property.intProperty(PropertyID, (int)value);
             } else if(value instanceof String){
@@ -243,7 +243,10 @@ public class DBUtils {
 
     public boolean loadNode(long id){
         try{
-            graphDb.getNodeById(id);
+            Cursor c =getReadOperations().nodeCursor(id);
+            c.next();
+            c.close();
+            //graphDb.getNodeById(id);
             return true;
         } catch (Exception e){
             return false;
@@ -252,7 +255,10 @@ public class DBUtils {
 
     public boolean loadRelationship(long id){
         try{
-            graphDb.getRelationshipById(id);
+            Cursor c = getReadOperations().relationshipCursor(id);
+            c.next();
+            c.close();
+            //graphDb.getRelationshipById(id);
             return true;
         } catch (Exception e){
             return false;

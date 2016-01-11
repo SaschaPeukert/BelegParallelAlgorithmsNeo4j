@@ -37,7 +37,7 @@ public abstract class WorkerCallableTemplate extends MyBaseCallable {
         return returnSet;
     }
 
-    protected Set<Long> expandNode(Long id, Collection c, boolean ignoreIfCollectionsContainsItem, Direction dir){
+    protected Set<Long> expandNode(Long id, Collection<Long> c, boolean ignoreIfCollectionsContainsItem, Direction dir){
         Set<Long> resultSet = expandNode(id,dir);
                 //new HashSet<>(db.getConnectedNodeIDs(ops, id, dir));
         if(ignoreIfCollectionsContainsItem){
@@ -51,8 +51,7 @@ public abstract class WorkerCallableTemplate extends MyBaseCallable {
     }
 
     protected Set<Long> expandNode(Long id, Direction dir){
-        Set<Long> resultSet = new HashSet<>(db.getConnectedNodeIDs(ops, id, dir));
-        return resultSet;
+        return new HashSet<>(db.getConnectedNodeIDs(ops, id, dir));
     }
 
 }

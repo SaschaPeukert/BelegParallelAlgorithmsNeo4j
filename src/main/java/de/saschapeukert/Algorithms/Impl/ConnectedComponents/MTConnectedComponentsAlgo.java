@@ -27,7 +27,6 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
 
     public static boolean myBFS=true;
     public static  long nCutoff=10000; // TODO test this
-    private int BATCHSIZE = 10000;  // TODO test this
 
     public static final ConcurrentHashMap<Long, Long> mapOfColors = new ConcurrentHashMap<>();
     public static final ConcurrentHashMap<Long, List<Long>> mapColorIDs = new ConcurrentHashMap<>();
@@ -120,6 +119,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         int tasks;
         int pos;
 
+        int sBATCHSIZE = 10000;
         while(Q.size()!=0) {
 
             // wake up threads
@@ -129,13 +129,13 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
             List<Future<Set<Long>>> list = new ArrayList<>();
             while(pos<Q.size()){
                 ColoringCallable callable;
-                if((pos+BATCHSIZE)>=Q.size()){
+                if((pos+ sBATCHSIZE)>=Q.size()){
                     callable = new ColoringCallable(pos,Q.size(),queueArray);
                 } else{
-                    callable = new ColoringCallable(pos,pos+BATCHSIZE,queueArray);
+                    callable = new ColoringCallable(pos,pos+ sBATCHSIZE,queueArray);
                 }
                 list.add(executor.submit(callable));
-                pos = pos+ BATCHSIZE; // new startPos = old EndPos
+                pos = pos+ sBATCHSIZE; // new startPos = old EndPos
                 tasks++;
             }
 
@@ -144,9 +144,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
             for(int i=0;i<tasks;i++){
                 try {
                     Q.addAll(list.get(i).get());
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (ExecutionException e) {
+                } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
                 }
             }
@@ -176,22 +174,20 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         Long[] colorArray = mapColorIDs.keySet().toArray(new Long[mapColorIDs.keySet().size()]);
         while(pos<mapColorIDs.keySet().size()){
             BackwardColoringStepRunnable callable;
-            if((pos+BATCHSIZE)>=Q.size()){
+            if((pos+ sBATCHSIZE)>=Q.size()){
                 callable = new BackwardColoringStepRunnable(pos,mapColorIDs.keySet().size(),colorArray);
             } else{
-                callable = new BackwardColoringStepRunnable(pos,pos+BATCHSIZE,colorArray);
+                callable = new BackwardColoringStepRunnable(pos,pos+ sBATCHSIZE,colorArray);
             }
             list.add(executor.submit(callable));
-            pos = pos+ BATCHSIZE; // new startPos = old EndPos
+            pos = pos+ sBATCHSIZE; // new startPos = old EndPos
             tasks++;
         }
         // BFS threads work, wait for finishing
         for(int i=0;i<tasks;i++){
             try {
                list.get(i).get();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
+            } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }
         }

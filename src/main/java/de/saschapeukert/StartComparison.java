@@ -44,7 +44,7 @@ public class StartComparison {
     private static Object[] keySetOfResultCounter;
     private static Histogram histogram;
 
-    static final int BATCH_SIZE  = 100000;
+    public static int BATCHSIZE;//  = 100000;
 
     public static void main(String[] args)  {
         readParameters(args);
@@ -87,12 +87,12 @@ public class StartComparison {
             case "WCC":
                 calculateConnectedComponents(
                          NUMBER_OF_RUNS,
-                        CCAlgorithmType.WEAK, true);
+                        CCAlgorithmType.WEAK);
                 break;
             case "SCC":
                 calculateConnectedComponents(
                         NUMBER_OF_RUNS,
-                        CCAlgorithmType.STRONG, true);
+                        CCAlgorithmType.STRONG);
                 break;
             case "DegreeStats":
                 doGetDegreeStatistics(db);
@@ -116,6 +116,7 @@ public class StartComparison {
         try {
             ALGORITHM = args[0];
             OPERATIONS = Integer.valueOf(args[1]);
+            BATCHSIZE = OPERATIONS;
             NUMBER_OF_RUNS = Integer.valueOf(args[2]);
             NUMBER_OF_THREADS = Integer.valueOf(args[3]);
             //WARMUPTIME = Integer.valueOf(args[4]);
@@ -168,10 +169,10 @@ public class StartComparison {
         System.out.println("WarmUp finished after " + timer.elapsed(TimeUnit.SECONDS) + "s.");
     }
 
-    private static void calculateConnectedComponents(int runs, CCAlgorithmType type, boolean output){
+    private static void calculateConnectedComponents(int runs, CCAlgorithmType type){
         for(int i=0;i<runs;i++){
             System.out.println("Now doing run " + (i + 1));
-            histogram.recordValue(doConnectedComponentsRun( type, output));
+            histogram.recordValue(doConnectedComponentsRun( type));
         }
         System.out.println("");
         System.out.println("Times of CC with " + NUMBER_OF_THREADS + " Threads:");
@@ -192,10 +193,9 @@ public class StartComparison {
     /**
      *
      * @param type
-     * @param output
      * @return elapsed time as MILLISECONDS!
      */
-    private static long doConnectedComponentsRun(CCAlgorithmType type, boolean output){
+    private static long doConnectedComponentsRun(CCAlgorithmType type){
         STConnectedComponentsAlgo callable;
         if(NUMBER_OF_THREADS>1) {
             callable = new MTConnectedComponentsAlgo(
@@ -214,9 +214,7 @@ public class StartComparison {
         long ret = -10000;
         try {
             ret = (long)(ex.submit(callable).get());
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
+        } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
 
@@ -250,9 +248,7 @@ public class StartComparison {
                     elapsedTime =time;
                 }
 
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
+            } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }
         }
@@ -337,12 +333,12 @@ public class StartComparison {
 
         int maxIndex = resultCounter.keySet().size();
         List<Future> futureList = new ArrayList<>();
-        for(int i=0;i<maxIndex;i+=BATCH_SIZE){
+        for(int i=0;i<maxIndex;i+=BATCHSIZE){
             NeoWriterRunnable neoWriterRunnable;
-            if(i+BATCH_SIZE>=maxIndex){
+            if(i+BATCHSIZE>=maxIndex){
                 neoWriterRunnable = new NeoWriterRunnable(PROP_ID,i,maxIndex,DBUtils.getInstance("", ""));
             } else{
-                neoWriterRunnable = new NeoWriterRunnable(PROP_ID,i,i+BATCH_SIZE,DBUtils.getInstance("", ""));
+                neoWriterRunnable = new NeoWriterRunnable(PROP_ID,i,i+BATCHSIZE,DBUtils.getInstance("", ""));
             }
             futureList.add(executor.submit(neoWriterRunnable));
         }
