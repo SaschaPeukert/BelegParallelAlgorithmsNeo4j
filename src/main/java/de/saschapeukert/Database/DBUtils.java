@@ -8,6 +8,7 @@ import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.kernel.GraphDatabaseAPI;
 import org.neo4j.kernel.api.DataWriteOperations;
 import org.neo4j.kernel.api.ReadOperations;
+import org.neo4j.kernel.api.cursor.NodeItem;
 import org.neo4j.kernel.api.cursor.RelationshipItem;
 import org.neo4j.kernel.api.exceptions.EntityNotFoundException;
 import org.neo4j.kernel.api.exceptions.InvalidTransactionTypeKernelException;
@@ -73,7 +74,7 @@ public class DBUtils {
     }
 
     public DataWriteOperations getDataWriteOperations(){
-        ThreadToStatementContextBridge ctx =((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class); // TODO MOVE
+        //ThreadToStatementContextBridge ctx =((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class); // TODO MOVE
         try {
             return ctx.get().dataWriteOperations();
         } catch (InvalidTransactionTypeKernelException e) {
@@ -243,7 +244,7 @@ public class DBUtils {
 
     public boolean loadNode(long id){
         try{
-            Cursor c =getReadOperations().nodeCursor(id);
+            Cursor<NodeItem> c =getReadOperations().nodeCursor(id);
             c.next();
             c.close();
             //graphDb.getNodeById(id);
@@ -293,7 +294,6 @@ public class DBUtils {
 
         ctx = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency
                 (ThreadToStatementContextBridge.class);
-
         registerShutdownHook();
         highestNodeKey = getHighestNodeID();
         highestRelationshipKey = getHighestRelationshipID();
