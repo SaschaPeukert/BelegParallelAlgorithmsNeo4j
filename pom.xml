@@ -61,7 +61,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>de.saschapeukert.StartComparison</mainClass>
+                            <mainClass>de.saschapeukert.Starter</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

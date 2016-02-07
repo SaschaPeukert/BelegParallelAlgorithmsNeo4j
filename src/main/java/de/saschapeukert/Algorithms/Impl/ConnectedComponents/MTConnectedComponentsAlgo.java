@@ -5,7 +5,7 @@ import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring.ColoringCal
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.BFS;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.MyBFS;
 import de.saschapeukert.Utils;
-import de.saschapeukert.StartComparison;
+import de.saschapeukert.Starter;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 
@@ -16,6 +16,8 @@ import java.util.Set;
 import java.util.concurrent.*;
 
 /**
+ * This class represents the multi thread Strongly Connected Components Algorithm (Multistep) using the Kernel API of Neo4j
+ * <br>
  * Created by Sascha Peukert on 06.08.2015.
  */
 
@@ -79,7 +81,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
 
         // PHASE 2
             // Start Threads
-        ExecutorService executor = Executors.newFixedThreadPool(StartComparison.NUMBER_OF_THREADS);
+        ExecutorService executor = Executors.newFixedThreadPool(Starter.NUMBER_OF_THREADS);
         //System.out.println("Phase 2");
         int i=0;
         while(nCutoff<allNodes.size()) { // Do MS-Coloring

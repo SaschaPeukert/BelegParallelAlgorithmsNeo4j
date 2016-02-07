@@ -1,6 +1,6 @@
 package de.saschapeukert.Database;
 
-import de.saschapeukert.StartComparison;
+import de.saschapeukert.Starter;
 import org.neo4j.cursor.Cursor;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
@@ -28,6 +28,9 @@ import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
+ * This class encapsulates all access to the neo4j database.
+ * It is a singleton class.
+ * <br>
  * Created by Sascha Peukert on 31.08.2015.
  */
 @SuppressWarnings("deprecation")
@@ -47,7 +50,7 @@ public class DBUtils {
             try {
                 // NEW VERSION, checks Map for ID and not DB
                 r = random.nextLong(highestNodeKey);
-                if(StartComparison.resultCounterContainsKey(r)){
+                if(Starter.resultCounterContainsKey(r)){
                     return graphDb.getNodeById(r);
                 }
             } catch (NotFoundException e){
@@ -89,7 +92,7 @@ public class DBUtils {
 
             r = random.nextLong(highestNodeKey);
             // NEW VERSION without DB-Lookup
-            if(StartComparison.resultCounterContainsKey(r))
+            if(Starter.resultCounterContainsKey(r))
                 return r;
         }
     }

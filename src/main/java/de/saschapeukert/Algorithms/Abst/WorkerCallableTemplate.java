@@ -8,6 +8,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
+ * This class is the basis of all Callables that need to perform work in parallel on distinct parts of ans array.
+ * Concrete classes that extend this need to implement work()! All operations done in work() will automatically be done
+ * within a transaction.
+ * <br>
  * Created by Sascha Peukert on 19.11.2015.
  */
 public abstract class WorkerCallableTemplate extends MyBaseCallable {
@@ -26,8 +30,6 @@ public abstract class WorkerCallableTemplate extends MyBaseCallable {
         this.endPos = endPos;
         returnSet = new HashSet<>(10000);
     }
-
-    // Children must overwrite work()
 
     public Object call() throws Exception {
         tx = db.openTransaction();

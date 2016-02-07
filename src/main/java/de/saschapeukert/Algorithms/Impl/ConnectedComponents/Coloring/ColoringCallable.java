@@ -8,6 +8,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
+ * This class represents a parallel Coloring to be used in Multistep Algorithm (parallel SCC)
+ * <br>
  * Created by Sascha Peukert on 04.10.2015.
  */
 public class ColoringCallable extends WorkerCallableTemplate {

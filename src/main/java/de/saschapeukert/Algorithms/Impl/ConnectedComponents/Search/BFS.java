@@ -7,6 +7,8 @@ import org.neo4j.kernel.api.ReadOperations;
 import java.util.*;
 
 /**
+ * This class represents a BFS to be used in Algorithms
+ * <br>
  * Created by Sascha Peukert on 04.10.2015.
  */
 public class BFS {

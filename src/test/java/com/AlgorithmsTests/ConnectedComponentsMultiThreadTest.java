@@ -2,7 +2,7 @@ package com.AlgorithmsTests;
 
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.MTConnectedComponentsAlgo;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.STConnectedComponentsAlgo;
-import de.saschapeukert.StartComparison;
+import de.saschapeukert.Starter;
 import org.apache.commons.lang3.SystemUtils;
 import org.junit.*;
 
@@ -37,7 +37,7 @@ public class ConnectedComponentsMultiThreadTest {
     @Test
     public void WeaklyConnectedComponentsShallNotCrash() {
         try{
-            StartComparison.main(argsWCC);
+            Starter.main(argsWCC);
         } catch (Exception e){
             e.printStackTrace();
             Assert.fail("It crashed. Why?");
@@ -47,7 +47,7 @@ public class ConnectedComponentsMultiThreadTest {
     @Test
     public void WeaklyConnectedComponentsShouldBeCorrect() {
         // Do the Run, get results
-        StartComparison.main(argsWCC);
+        Starter.main(argsWCC);
         Map<Integer,List<Long>> resultOfRun = STConnectedComponentsAlgo.getMapofComponentToIDs();
 
         // Check the result
@@ -64,7 +64,7 @@ public class ConnectedComponentsMultiThreadTest {
     public void StronglyConnectedComponentsShouldBeCorrect() {
         // Do the Run, get results
         MTConnectedComponentsAlgo.nCutoff=3;
-        StartComparison.main(argsSCC);
+        Starter.main(argsSCC);
         Map<Integer,List<Long>> resultOfRun = STConnectedComponentsAlgo.getMapofComponentToIDs();
 
         // Check the result
@@ -85,7 +85,7 @@ public class ConnectedComponentsMultiThreadTest {
     @Test
     public void StronglyConnectedComponentsShallNotCrash() {
         try{
-            StartComparison.main(argsSCC);
+            Starter.main(argsSCC);
         } catch (Exception e){
             e.printStackTrace();
             Assert.fail("It crashed. Why?");

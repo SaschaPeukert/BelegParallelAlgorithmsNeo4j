@@ -6,6 +6,8 @@ import org.neo4j.graphdb.Direction;
 import java.util.Set;
 
 /**
+ * This class is needed by MyBFS to explore a given part of the frontier in parallel.
+ * <br>
  * Created by Sascha Peukert on 19.11.2015.
  */
 public class MyBFSLevelCallable extends WorkerCallableTemplate {

@@ -1,7 +1,7 @@
 package de.saschapeukert.Algorithms.Impl.RandomWalk;
 
-import de.saschapeukert.Algorithms.Abst.myAlgorithmBaseCallable;
-import de.saschapeukert.StartComparison;
+import de.saschapeukert.Algorithms.Abst.MyAlgorithmBaseCallable;
+import de.saschapeukert.Starter;
 import org.neo4j.cursor.Cursor;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.kernel.api.ReadOperations;
@@ -13,10 +13,12 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * This class represents the Random Walk Algorithm using the Kernel API of Neo4j
+ * <br>
  * Created by Sascha Peukert on 03.08.2015.
  */
 
-public class RandomWalkAlgorithmCallableNewSPI extends myAlgorithmBaseCallable {
+public class RandomWalkKernelApiAlgorithmCallable extends MyAlgorithmBaseCallable {
 
     private final int _RandomNodeParameter;
     private long currentNodeId;
@@ -24,10 +26,10 @@ public class RandomWalkAlgorithmCallableNewSPI extends myAlgorithmBaseCallable {
     private final ThreadLocalRandom random;
     private ReadOperations ops;
 
-    public RandomWalkAlgorithmCallableNewSPI(int NumberOfSteps, TimeUnit tu){
+    public RandomWalkKernelApiAlgorithmCallable(int NumberOfSteps, TimeUnit tu){
         super(tu);
 
-        this._RandomNodeParameter = StartComparison.RANDOMWALKRANDOM;
+        this._RandomNodeParameter = Starter.RANDOMWALKRANDOM;
         this.currentNodeId = -1;
         this.NUMBER_OF_STEPS = NumberOfSteps;
         this.random = ThreadLocalRandom.current();
@@ -46,7 +48,7 @@ public class RandomWalkAlgorithmCallableNewSPI extends myAlgorithmBaseCallable {
             } else{
                 currentNodeId = getNextNode(currentNodeId);
             }
-            StartComparison.incrementResultCounterforId(currentNodeId);
+            Starter.incrementResultCounterforId(currentNodeId);
             NUMBER_OF_STEPS--;
         }
         db.closeTransactionWithSuccess(tx);

@@ -1,12 +1,12 @@
 package de.saschapeukert;
 
 import com.google.common.base.Stopwatch;
-import de.saschapeukert.Algorithms.Abst.myAlgorithmBaseCallable;
+import de.saschapeukert.Algorithms.Abst.MyAlgorithmBaseCallable;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.CCAlgorithmType;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.MTConnectedComponentsAlgo;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.STConnectedComponentsAlgo;
-import de.saschapeukert.Algorithms.Impl.RandomWalk.RandomWalkAlgorithmCallable;
-import de.saschapeukert.Algorithms.Impl.RandomWalk.RandomWalkAlgorithmCallableNewSPI;
+import de.saschapeukert.Algorithms.Impl.RandomWalk.RandomWalkCoreApiAlgorithmCallable;
+import de.saschapeukert.Algorithms.Impl.RandomWalk.RandomWalkKernelApiAlgorithmCallable;
 import de.saschapeukert.Database.DBUtils;
 import de.saschapeukert.Database.NeoWriterRunnable;
 import org.HdrHistogram.Histogram;
@@ -21,19 +21,18 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
+ * This class represents the Starter.
+ * It's function is described in Section 4.1 of my study project document.
+ * <br>
  * Created by Sascha Peukert on 04.08.2015.
  */
-public class StartComparison {
+public class Starter {
 
     private  static String DB_PATH;
-    // Server: /mnt/flash2/neo4j-enterprise-2.3.0-M02/data/graph.db
-    // SSD: C:\\BelegDB\\neo4j-enterprise-2.3.0-M02\\data\\graph.db
-    // Meine HDD: E:\\Users\\Sascha\\Documents\\GIT\\BelegParallelAlgorithmsNeo4j\\testDB\\graph.db
     private static int OPERATIONS;
     public static int NUMBER_OF_THREADS; //Runtime.getRuntime().availableProcessors();
     private static int NUMBER_OF_RUNS; //Minimum: 1
     public static final int RANDOMWALKRANDOM = 20;  // Minimum: 1
-    //private static  int WARMUPTIME; // in seconds
     private static  boolean NEWSPI;
     private static  String PROP_NAME;
     private static int PROP_ID;
@@ -230,12 +229,12 @@ public class StartComparison {
         List<Future<Long>> list = new ArrayList<>();
 
         for(int i=0;i<NUMBER_OF_THREADS;i++){
-            myAlgorithmBaseCallable rw;
+            MyAlgorithmBaseCallable rw;
             if(NEWSPI){
-                rw = new RandomWalkAlgorithmCallableNewSPI(
+                rw = new RandomWalkKernelApiAlgorithmCallable(
                         noOfSteps/NUMBER_OF_THREADS,TimeUnit.MICROSECONDS);
             } else{
-                rw = new RandomWalkAlgorithmCallable(
+                rw = new RandomWalkCoreApiAlgorithmCallable(
                         noOfSteps/NUMBER_OF_THREADS,TimeUnit.MICROSECONDS);
             }
             list.add(executor.submit(rw));

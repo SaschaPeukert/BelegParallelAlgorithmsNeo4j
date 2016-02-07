@@ -8,6 +8,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
+ * This class represents a DFS to be used in Algorithms
+ * <br>
  * Created by Sascha Peukert on 11.10.2015.
  */
 public class DFS {

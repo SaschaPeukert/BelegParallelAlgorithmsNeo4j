@@ -9,9 +9,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by Sascha Peukert on 21.09.2015.
- *
  * This class is used for debugging and displaying results
+ * <br>
+ * Created by Sascha Peukert on 21.09.2015.
  */
 public class OutputTop20 {
 

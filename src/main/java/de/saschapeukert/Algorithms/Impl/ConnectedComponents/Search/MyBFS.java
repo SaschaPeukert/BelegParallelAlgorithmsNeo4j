@@ -1,7 +1,7 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search;
 
 import com.google.common.collect.Sets;
-import de.saschapeukert.StartComparison;
+import de.saschapeukert.Starter;
 import de.saschapeukert.Utils;
 import org.neo4j.graphdb.Direction;
 
@@ -15,6 +15,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 /**
+ * This class represents a parallel BFS to be used in Algorithms
+ * <br>
  * Created by Sascha Peukert on 19.11.2015.
  */
 public class MyBFS {
@@ -22,13 +24,13 @@ public class MyBFS {
     public List<Long> frontierList;
     public final Set<Long> visitedIDs = Sets.newConcurrentHashSet();
 
-    private final int BATCHSIZE = StartComparison.BATCHSIZE;//= 175000; // chosen by a few tests
+    private final int BATCHSIZE = Starter.BATCHSIZE;//= 175000; // chosen by a few tests
 
     static Set<Long> nodeIDSet;
     private final ExecutorService executor;
 
     public MyBFS(){
-        executor = Executors.newFixedThreadPool(StartComparison.NUMBER_OF_THREADS);
+        executor = Executors.newFixedThreadPool(Starter.NUMBER_OF_THREADS);
 
     }
 

@@ -9,8 +9,11 @@ import java.util.List;
 import java.util.Set;
 
 /**
+ * This class is used in Multistep Algorithm (parallel SCC).
+ * It performs a backward search on all nodes with a specific color (for a given number of all colors).
+ * Those nodes found are saved as SCCs.
+ * <br>
  * Created by Sascha Peukert on 20.11.2015.
- *
  */
 public class BackwardColoringStepRunnable extends WorkerCallableTemplate {
 
