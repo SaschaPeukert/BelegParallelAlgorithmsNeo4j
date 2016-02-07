@@ -62,7 +62,7 @@ public class Starter {
         }
         histogram = new Histogram(3600000000000L, 3);
         Transaction t = db.openTransaction();
-            prepaireResultMapAndCounter(db.highestNodeKey);
+            prepaireResultMapAndCounter();
         db.closeTransactionWithSuccess(t);
         System.out.println("~ " + db.highestNodeKey + " Nodes");
         System.out.println("~ " + db.highestRelationshipKey + " Relationships");
@@ -119,7 +119,6 @@ public class Starter {
             BATCHSIZE = OPERATIONS;
             NUMBER_OF_RUNS = Integer.valueOf(args[2]);
             NUMBER_OF_THREADS = Integer.valueOf(args[3]);
-            //WARMUPTIME = Integer.valueOf(args[4]);
             NEWSPI = args[4].equals("true");
             PROP_NAME = args[5];
             PAGECACHE= args[6];
@@ -328,7 +327,6 @@ public class Starter {
     }
 
     private static boolean writeResultsOut(){
-        //ThreadPoolExecutor executor = new ThreadPoolExecutor(NUMBER_OF_THREADS,NUMBER_OF_THREADS,0L,TimeUnit.NANOSECONDS,new ArrayBlockingQueue<Runnable>(1));
         ExecutorService executor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
 
         int maxIndex = resultCounter.keySet().size();
@@ -356,7 +354,7 @@ public class Starter {
         return check;
     }
 
-    private static void prepaireResultMapAndCounter( long nodeIDhigh){
+    private static void prepaireResultMapAndCounter(){
         Iterator<Node> it = DBUtils.getInstance("", "").getIteratorForAllNodes();
         resultCounter = new HashMap<>(0,1f);
 
