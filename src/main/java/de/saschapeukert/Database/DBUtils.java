@@ -1,6 +1,7 @@
 package de.saschapeukert.Database;
 
 import de.saschapeukert.Starter;
+import org.neo4j.collection.primitive.PrimitiveLongIterator;
 import org.neo4j.cursor.Cursor;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
@@ -21,10 +22,7 @@ import org.neo4j.kernel.impl.store.NeoStores;
 import org.neo4j.tooling.GlobalGraphOperations;
 
 import java.io.File;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -192,6 +190,11 @@ public class DBUtils {
         return allNodes.iterator();
     }
 
+    public  PrimitiveLongIterator getPrimitiveLongIteratorForAllNodes( ) {
+        PrimitiveLongIterator it = getReadOperations().nodesGetAll();
+        return it;
+    }
+
     /**
      * Gets the PropertyID for a given PropertyName or creates a new ID for that name and returns it.
      * @param propertyName HAS TO BE UNIQUE
@@ -218,6 +221,26 @@ public class DBUtils {
      */
     public Set<Long> getConnectedNodeIDs(ReadOperations ops, long nodeID, Direction dir){
         Set<Long> it = new HashSet<>(1000);
+        try {
+            RelationshipIterator itR = ops.nodeGetRelationships(nodeID, dir);
+            while(itR.hasNext()){
+                long rID = itR.next();
+                Cursor<RelationshipItem> relCursor = ops.relationshipCursor(rID);
+                while(relCursor.next()){
+                    RelationshipItem item = relCursor.get();
+                    it.add(item.otherNode(nodeID));
+                }
+                relCursor.close();
+            }
+
+        } catch (EntityNotFoundException e) {
+            e.printStackTrace();
+        }
+        return it;
+    }
+
+    public List<Long> getConnectedNodeIDsAsList(ReadOperations ops, long nodeID, Direction dir){
+        List<Long> it = new ArrayList<>(10000);
         try {
             RelationshipIterator itR = ops.nodeGetRelationships(nodeID, dir);
             while(itR.hasNext()){

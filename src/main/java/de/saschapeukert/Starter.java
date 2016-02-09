@@ -11,8 +11,8 @@ import de.saschapeukert.Database.DBUtils;
 import de.saschapeukert.Database.NeoWriterRunnable;
 import org.HdrHistogram.Histogram;
 import org.HdrHistogram.IntCountsHistogram;
+import org.neo4j.collection.primitive.PrimitiveLongIterator;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 
 import java.text.SimpleDateFormat;
@@ -355,11 +355,11 @@ public class Starter {
     }
 
     private static void prepaireResultMapAndCounter(){
-        Iterator<Node> it = DBUtils.getInstance("", "").getIteratorForAllNodes();
+        PrimitiveLongIterator it = DBUtils.getInstance("", "").getPrimitiveLongIteratorForAllNodes();
         resultCounter = new HashMap<>(0,1f);
 
         while(it.hasNext()){
-            resultCounter.put(it.next().getId(),new AtomicLong(0));
+            resultCounter.put(it.next(),new AtomicLong(0));
         }
         keySetOfResultCounter = resultCounter.keySet().toArray();  // should only be called once!
     }

@@ -3,9 +3,7 @@ package de.saschapeukert.Algorithms.Abst;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.kernel.api.ReadOperations;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * This class is the basis of all Callables that need to perform work in parallel on distinct parts of ans array.
@@ -20,7 +18,7 @@ public abstract class WorkerCallableTemplate extends MyBaseCallable {
     protected int startPos; //incl.
     protected int endPos; // not incl.
 
-    protected Set<Long> returnSet;
+    protected List<Long> returnSet; // Set vorher
     private ReadOperations ops;
 
     protected WorkerCallableTemplate(int startPos, int endPos, Long[] array) {
@@ -28,7 +26,7 @@ public abstract class WorkerCallableTemplate extends MyBaseCallable {
         this.refArray = array;
         this.startPos = startPos;
         this.endPos = endPos;
-        returnSet = new HashSet<>(10000);
+        returnSet = new ArrayList<>(10000);
     }
 
     public Object call() throws Exception {
@@ -52,8 +50,25 @@ public abstract class WorkerCallableTemplate extends MyBaseCallable {
         return resultSet;
     }
 
+    protected List<Long> expandNodeAsList(Long id, Collection<Long> c, boolean ignoreIfCollectionsContainsItem, Direction dir){
+        List<Long> resultSet = expandNodeAsList(id,dir);
+        //new HashSet<>(db.getConnectedNodeIDs(ops, id, dir));
+        if(ignoreIfCollectionsContainsItem){
+            // nicht aufnehmen
+            resultSet.removeAll(c);
+        } else{
+            // nur aufnehmen, wenn drin
+            resultSet.retainAll(c);
+        }
+        return resultSet;
+    }
+
     protected Set<Long> expandNode(Long id, Direction dir){
         return new HashSet<>(db.getConnectedNodeIDs(ops, id, dir));
+    }
+
+    protected List<Long> expandNodeAsList(Long id, Direction dir){
+        return new ArrayList<>(db.getConnectedNodeIDsAsList(ops, id, dir));
     }
 
 }

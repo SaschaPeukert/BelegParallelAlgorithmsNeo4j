@@ -105,7 +105,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     }
 
     @Override
-    protected void furtherInspectNodeWhileTrim(Node n){
+    protected void furtherInspectNodeWhileTrim(Node n){  //<- FIXME
         if(myType==CCAlgorithmType.STRONG){
             long degreeINOUT = n.getDegree(Direction.INCOMING)*n.getDegree(Direction.OUTGOING);
             if(degreeINOUT>maxdDegreeINOUT){

@@ -77,7 +77,9 @@ public class MyBFS {
         // threads finished, collecting results -> new frontier
         for(int i=0;i<tasks;i++){
             try {
-                frontierList.addAll(list.get(i).get());
+                List<Long> partOfList = (List<Long>)list.get(i).get();
+                frontierList.removeAll(partOfList);
+                frontierList.addAll(partOfList);
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }
