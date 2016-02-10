@@ -19,7 +19,6 @@ import org.neo4j.kernel.api.properties.Property;
 import org.neo4j.kernel.impl.api.store.RelationshipIterator;
 import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
 import org.neo4j.kernel.impl.store.NeoStores;
-import org.neo4j.tooling.GlobalGraphOperations;
 
 import java.io.File;
 import java.util.*;
@@ -98,10 +97,10 @@ public class DBUtils {
 
     public boolean removePropertyFromAllNodes(int PropertyID, DataWriteOperations ops){
         //int i=0;
-        Iterator<Node> it = getIteratorForAllNodes();
+        PrimitiveLongIterator it = getPrimitiveLongIteratorForAllNodes();
         try {
             while(it.hasNext()){
-                ops.nodeRemoveProperty(it.next().getId(),PropertyID);
+                ops.nodeRemoveProperty(it.next(),PropertyID);
                 //i++;
                 //if(i%250000==0)
                 //    System.out.println(i);
@@ -172,11 +171,11 @@ public class DBUtils {
         return neoStore;
     }
 
-    public  ResourceIterator<Node> getIteratorForAllNodes( ) {
+    /*public  ResourceIterator<Node> getIteratorForAllNodes( ) {
         GlobalGraphOperations ggo = GlobalGraphOperations.at(graphDb);
         ResourceIterable<Node> allNodes = ggo.getAllNodes();
         return allNodes.iterator();
-    }
+    }*/
 
     public  PrimitiveLongIterator getPrimitiveLongIteratorForAllNodes( ) {
         PrimitiveLongIterator it = getReadOperations().nodesGetAll();
@@ -299,7 +298,6 @@ public class DBUtils {
     /**
      *
      * @param id
-     * @param direction
      * @return -1 if EntityNotFound
      */
     public int getDegree(long id)
