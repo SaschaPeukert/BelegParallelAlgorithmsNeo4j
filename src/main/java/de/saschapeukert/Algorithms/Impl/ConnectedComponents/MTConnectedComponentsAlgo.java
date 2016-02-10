@@ -7,7 +7,6 @@ import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.MyBFS;
 import de.saschapeukert.Utils;
 import de.saschapeukert.Starter;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.Node;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -105,15 +104,15 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     }
 
     @Override
-    protected void furtherInspectNodeWhileTrim(Node n){  //<- FIXME
+    protected void furtherInspectNodeWhileTrim(Long n){  //<- FIXME
         if(myType==CCAlgorithmType.STRONG){
-            long degreeINOUT = n.getDegree(Direction.INCOMING)*n.getDegree(Direction.OUTGOING);
+            long degreeINOUT = db.getDegree(n,Direction.INCOMING)*db.getDegree(n,Direction.OUTGOING);
             if(degreeINOUT>maxdDegreeINOUT){
                 maxdDegreeINOUT =degreeINOUT;
-                maxDegreeID = n.getId();
+                maxDegreeID = n;
             }
-            mapOfColors.put(n.getId(), n.getId());
-            mapOfVisitedNodes.put(n.getId(),false);
+            mapOfColors.put(n, n);
+            mapOfVisitedNodes.put(n,false);
         }
     }
 

@@ -5,9 +5,8 @@ import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.BFS;
 import de.saschapeukert.Database.DBUtils;
 import de.saschapeukert.Datastructures.TarjanInfo;
 import de.saschapeukert.Starter;
+import org.neo4j.collection.primitive.PrimitiveLongIterator;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.ResourceIterator;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -98,43 +97,43 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseCallable {
     private void prepareAllNodes(){
 
         allNodes = new HashSet<>();
-
-        ResourceIterator<Node> it = db.getIteratorForAllNodes();
+        PrimitiveLongIterator it  =db.getPrimitiveLongIteratorForAllNodes();
+        //ResourceIterator<Node> it = db.getIteratorForAllNodes();
         while(it.hasNext()){
-            Node n = it.next();
-
+            //Node n = it.next();
+            Long n = it.next();
             trimOrAddToAllNodes(n);
 
             if(myType== CCAlgorithmType.STRONG)
-                nodeDictionary.put(n.getId(),new TarjanInfo());
+                nodeDictionary.put(n,new TarjanInfo());
         }
-        it.close();
+        //it.close();
 
     }
 
-    private void trimOrAddToAllNodes(Node n){
+    private void trimOrAddToAllNodes(Long n){
         if(this.myType==CCAlgorithmType.STRONG){
-            if(n.getDegree(Direction.OUTGOING)==0 || n.getDegree(Direction.INCOMING)==0){
+            if((db.getDegree(n,Direction.OUTGOING)==0) || db.getDegree(n,Direction.INCOMING)==0){
                 // trivial CC
-                Starter.putIntoResultCounter(n.getId(), new AtomicLong(componentID));
+                Starter.putIntoResultCounter(n, new AtomicLong(componentID));
                 componentID++;
             } else{
-                allNodes.add(n.getId());
+                allNodes.add(n);
                 furtherInspectNodeWhileTrim(n);
             }
         } else{
-            if(n.getDegree()==0){
+            if(db.getDegree(n)==0){
                 // trivial CC
-                Starter.putIntoResultCounter(n.getId(), new AtomicLong(componentID));
+                Starter.putIntoResultCounter(n, new AtomicLong(componentID));
                 componentID++;
             } else{
-                allNodes.add(n.getId());
+                allNodes.add(n);
                 furtherInspectNodeWhileTrim(n);
             }
         }
     }
 
-    void furtherInspectNodeWhileTrim(Node n){
+    void furtherInspectNodeWhileTrim(Long n){
         // Overwrite this method to add code for trim()
     }
 

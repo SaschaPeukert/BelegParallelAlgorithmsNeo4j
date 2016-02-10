@@ -201,7 +201,8 @@ public class Starter {
                     type,TimeUnit.MILLISECONDS);
         } else{
             // Easter Egg?!
-            if(OPERATIONS==-1){
+            if(NUMBER_OF_THREADS==-1){
+                NUMBER_OF_THREADS = 1;
                 callable = new MTConnectedComponentsAlgo(
                         type,TimeUnit.MILLISECONDS);
             } else{

@@ -20,7 +20,7 @@ With this command maven will generate a jar file for you:
          A = Name of the Algorithmus (RW, SCC, WCC, DegreeStats)
          B = OperationNumber (for RW) [for the other algorithms this parameter states eg. how many nodes (out of a list) a thread has to expand [BATCHSIZE]]
          C = Number of Runs
-         D = Number of Threads *
+         D = Number of Threads * **
          E = Kernel API (true or false) (for RW) [for the other algorithms this parameter is irrelevant, but some value still needs to be present]
          F = PropertyName, under which the results will be saved at the nodes
          G = PageCache (String ala "6G")

@@ -21,7 +21,7 @@ import java.util.concurrent.Future;
  */
 public class MyBFS {
 
-    public List<Long> frontierList;
+    public Set<Long> frontierList;
     public final Set<Long> visitedIDs = Sets.newConcurrentHashSet();
 
     private final int BATCHSIZE = Starter.BATCHSIZE;//= 175000; // chosen by a few tests
@@ -44,7 +44,7 @@ public class MyBFS {
 
         visitedIDs.clear();
 
-        frontierList= new ArrayList<>(100000);
+        frontierList= new HashSet<>(100000);
         frontierList.add(nodeID);
 
         while(!frontierList.isEmpty())
@@ -75,10 +75,10 @@ public class MyBFS {
         visitedIDs.addAll(frontierList);
         frontierList.clear();
         // threads finished, collecting results -> new frontier
-        for(int i=0;i<tasks;i++){
+        for(int i=0;i<tasks;i++) {
             try {
-                List<Long> partOfList = (List<Long>)list.get(i).get();
-                frontierList.removeAll(partOfList);
+                List<Long> partOfList = (List<Long>) list.get(i).get();
+                //frontierList.removeAll(partOfList);
                 frontierList.addAll(partOfList);
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();

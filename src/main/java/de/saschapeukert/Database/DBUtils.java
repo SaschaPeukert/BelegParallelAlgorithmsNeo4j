@@ -58,19 +58,7 @@ public class DBUtils {
         }
     }
 
-    public ResourceIterator<Node> getResourceIteratorOfAllNodes(){
-        GlobalGraphOperations ggop = GlobalGraphOperations.at(graphDb);
-        return ggop.getAllNodes().iterator();
-    }
-
     public ReadOperations getReadOperations(){
-
-//        if(ops==null){
-//            ThreadToStatementContextBridge ctx = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class);
-//            ops = ctx.get().readOperations();
-//        }
-//        return ops;
-
         return ctx.get().readOperations();
     }
 
@@ -292,8 +280,31 @@ public class DBUtils {
         }
     }
 
-    public int getDegree(long id, Direction direction){
-       return graphDb.getNodeById(id).getDegree(direction);
+    /**
+     *
+     * @param id
+     * @param direction
+     * @return -1 if EntityNotFound
+     */
+    public int getDegree(long id, Direction direction)
+    {
+        try {
+            return getReadOperations().nodeGetDegree(id,direction);
+        } catch (EntityNotFoundException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    /**
+     *
+     * @param id
+     * @param direction
+     * @return -1 if EntityNotFound
+     */
+    public int getDegree(long id)
+    {
+        return getDegree(id,Direction.BOTH);
     }
 
     /**
