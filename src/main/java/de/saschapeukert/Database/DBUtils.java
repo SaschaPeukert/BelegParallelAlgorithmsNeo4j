@@ -19,7 +19,6 @@ import org.neo4j.kernel.api.properties.Property;
 import org.neo4j.kernel.impl.api.store.RelationshipIterator;
 import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
 import org.neo4j.kernel.impl.store.NeoStores;
-
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -61,8 +60,8 @@ public class DBUtils {
         return ctx.get().readOperations();
     }
 
-    public DataWriteOperations getDataWriteOperations(){
-        //ThreadToStatementContextBridge ctx =((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class); // TODO MOVE
+    public DataWriteOperations getDataWriteOperations()
+    {
         try {
             return ctx.get().dataWriteOperations();
         } catch (InvalidTransactionTypeKernelException e) {
@@ -74,7 +73,6 @@ public class DBUtils {
     public long getSomeRandomNodeId(ThreadLocalRandom random){
         long r;
         while(true) {
-
             r = random.nextLong(highestNodeKey);
             // NEW VERSION without DB-Lookup
             if(Starter.resultCounterContainsKey(r))
@@ -317,16 +315,6 @@ public class DBUtils {
                 .setConfig(GraphDatabaseSettings.keep_logical_logs, "false")  // to get rid of all those neostore.trasaction.db ... files
                 .setConfig(GraphDatabaseSettings.allow_store_upgrade, "true")
                 .newGraphDatabase();
-        /*GraphDatabaseBuilder builder = new HighlyAvailableGraphDatabaseFactory()
-                .newHighlyAvailableDatabaseBuilder(DB_PATH);
-        builder.setConfig(ClusterSettings.server_id, "1");
-        builder.setConfig(HaSettings.ha_server, "localhost:6001");
-        builder.setConfig(HaSettings.slave_only, Settings.FALSE);
-        builder.setConfig(ClusterSettings.cluster_server, "localhost:5001");
-        builder.setConfig(ClusterSettings.initial_hosts, "localhost:5001,localhost:5002");
-        GraphDatabaseService graphDb = builder.newGraphDatabase();
-        */
-
         ctx = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency
                 (ThreadToStatementContextBridge.class);
         registerShutdownHook();
@@ -346,8 +334,6 @@ public class DBUtils {
         }
         return instance;
     }
-
-
 
     private void registerShutdownHook( )
     {

@@ -4,8 +4,8 @@ import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring.BackwardCol
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring.ColoringCallable;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.BFS;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.MyBFS;
-import de.saschapeukert.Utils;
 import de.saschapeukert.Starter;
+import de.saschapeukert.Utils;
 import org.neo4j.graphdb.Direction;
 
 import java.util.ArrayList;
