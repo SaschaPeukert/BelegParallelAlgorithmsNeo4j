@@ -25,7 +25,7 @@ public class MyBFSLevelRecursiveTask extends WorkerRecursiveTaskTemplate {
 
         int currentPos=startPos;
         MyBFSLevelRecursiveTask left=null;
-        if(endPos-currentPos > Starter.BATCHSIZE) {
+        if(endPos-currentPos >= Starter.BATCHSIZE*2) {
             // Fork
             int middle = (endPos - currentPos) / 2;
             left = new MyBFSLevelRecursiveTask(startPos, middle, refArray, direction);
