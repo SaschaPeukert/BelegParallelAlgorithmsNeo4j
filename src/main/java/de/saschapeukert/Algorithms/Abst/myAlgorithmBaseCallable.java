@@ -16,12 +16,15 @@ public abstract class MyAlgorithmBaseCallable extends MyBaseCallable {
 
     public final Stopwatch timer;
     protected final TimeUnit timeUnit;
+    public long parallelTime;
 
     /*
         This will also initialize the timer but NOT start it!
      */
     protected MyAlgorithmBaseCallable(TimeUnit timeUnit){
         this.timer = Stopwatch.createUnstarted();
+        this.parallelTime = 0;
+
         this.timeUnit = timeUnit;
     }
 

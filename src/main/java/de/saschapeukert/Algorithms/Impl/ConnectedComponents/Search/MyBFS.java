@@ -3,6 +3,7 @@ package de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search;
 import com.carrotsearch.hppc.LongArrayList;
 import com.carrotsearch.hppc.LongHashSet;
 import com.carrotsearch.hppc.cursors.LongCursor;
+import com.google.common.base.Stopwatch;
 import de.saschapeukert.Starter;
 import de.saschapeukert.Utils;
 import org.neo4j.graphdb.Direction;
@@ -30,6 +31,8 @@ public class MyBFS {
     static LongHashSet nodeIDSet;
     private final ExecutorService executor;
 
+    public Stopwatch parallelTimer;
+
     public MyBFS(){
         executor = Executors.newFixedThreadPool(Starter.NUMBER_OF_THREADS);
 
@@ -37,6 +40,7 @@ public class MyBFS {
 
     public LongHashSet work(long nodeID, Direction direction, LongHashSet set){
 
+        parallelTimer = Stopwatch.createUnstarted();
         if(set!=null){
             nodeIDSet = new LongHashSet(set);
         } else{
@@ -74,6 +78,8 @@ public class MyBFS {
             pos = pos+ BATCHSIZE;
             tasks++;
         }
+        parallelTimer.start();
+
         visitedIDs.addAll(frontierList);
         frontierList.clear();
         // threads finished, collecting results -> new frontier
@@ -92,6 +98,7 @@ public class MyBFS {
                 e.printStackTrace();
             }
         }
+        parallelTimer.stop();
         frontierList.removeAll(visitedIDs);
 
         if(MyBFS.nodeIDSet!=null){

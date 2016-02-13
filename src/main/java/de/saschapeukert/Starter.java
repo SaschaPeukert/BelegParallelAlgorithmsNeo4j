@@ -48,6 +48,8 @@ public class Starter {
     public static int BATCHSIZE;//  = 100000;
     private static int writeBATCHSIZE = 100000;
 
+    private static double parallelTimes_ms=0;
+
     public static void main(String[] args)  {
         readParameters(args);
 
@@ -105,6 +107,7 @@ public class Starter {
         }
         timeOfComparision.stop();
         System.out.println("\nCalculations done in: " + timeOfComparision.elapsed(TimeUnit.SECONDS) + "s (+ WarmUp time)");
+        System.out.println("ca. " + (parallelTimes_ms/NUMBER_OF_RUNS) + "% of it in parallel");
         if(WRITE.equals("Write"))
             writeResultsOut();
 
@@ -143,7 +146,7 @@ public class Starter {
         Stopwatch timer = Stopwatch.createStarted();
 
         while (timer.elapsed(TimeUnit.SECONDS) < secs) {
-                doMultiThreadRandomWalk(100);
+                doRandomWalk(100);
             }
         timer.stop();
         System.out.println("WarmUp finished after " + timer.elapsed(TimeUnit.SECONDS) + "s.");
@@ -183,7 +186,7 @@ public class Starter {
     private static void calculateRandomWalk_new(int numberOfRunsPerStep){
         for(int i=0;i<numberOfRunsPerStep;i++){
             System.out.println("Now doing run " + (i + 1));
-            long run = doMultiThreadRandomWalk(OPERATIONS);
+            long run = doRandomWalk(OPERATIONS);
             histogram.recordValue(run);
         }
         System.out.println("");
@@ -216,6 +219,15 @@ public class Starter {
         long ret = -10000;
         try {
             ret = (long)(ex.submit(callable).get());
+            if(NUMBER_OF_THREADS!=1){
+
+                parallelTimes_ms = parallelTimes_ms +(100/(double)ret)*callable.parallelTime;
+                System.out.println("duration: " + ret + "ms");
+                System.out.println("parallel duration: " + callable.parallelTime + "ms");
+                System.out.println("parallel %: " + (100/(double)ret)*callable.parallelTime);
+
+            }
+
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
@@ -225,7 +237,7 @@ public class Starter {
         return ret; // ERROR
     }
 
-    private static long doMultiThreadRandomWalk(int noOfSteps){
+    private static long doRandomWalk(int noOfSteps){
         // INIT
         ExecutorService executor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
         List<Future<Long>> list = new ArrayList<>();
@@ -256,6 +268,9 @@ public class Starter {
         }
 
         Utils.waitForExecutorToFinishAll(executor);
+        if(NUMBER_OF_THREADS>1){
+            parallelTimes_ms = parallelTimes_ms + 100;
+        }
         return elapsedTime;
     }
 

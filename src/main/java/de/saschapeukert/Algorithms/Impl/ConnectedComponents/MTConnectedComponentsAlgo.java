@@ -4,6 +4,7 @@ import com.carrotsearch.hppc.LongArrayList;
 import com.carrotsearch.hppc.LongHashSet;
 import com.carrotsearch.hppc.LongObjectHashMap;
 import com.carrotsearch.hppc.cursors.LongCursor;
+import com.google.common.base.Stopwatch;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring.BackwardColoringStepRunnable;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring.ColoringCallable;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.BFS;
@@ -62,6 +63,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         LongHashSet reachableIDs;
         if(myBFS) {
             reachableIDs = mybfs.work(n, Direction.BOTH, null);
+            parallelTime = parallelTime + mybfs.parallelTimer.elapsed(timeUnit);
         } else{
             reachableIDs = BFS.go(n,Direction.BOTH);
         }
@@ -128,6 +130,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     private void MSColoring(ExecutorService executor, LongHashSet Q){
         int tasks;
         int pos;
+        Stopwatch pTimer = Stopwatch.createUnstarted();
 
         int cBATCHSIZE = Starter.BATCHSIZE*15;
         while(Q.size()!=0) {
@@ -148,7 +151,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
                 pos = pos+ cBATCHSIZE; // new startPos = old EndPos
                 tasks++;
             }
-
+            pTimer.start();
             Q.clear();
             // Barrier synchronization
             for(int i=0;i<tasks;i++){
@@ -158,6 +161,9 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
                     e.printStackTrace();
                 }
             }
+            pTimer.stop();
+            parallelTime = parallelTime + pTimer.elapsed(timeUnit);
+            pTimer.reset();
             Iterator<LongCursor> it = Q.iterator();
             while(it.hasNext()){
                 Long v = it.next().value;
@@ -180,6 +186,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         }
 
         // start BackwardColoringStepCallables
+
         pos=0;
         tasks=0;
         List<Future<Set<Long>>> list = new ArrayList<>();
@@ -196,6 +203,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
             pos = pos+ cBATCHSIZE; // new startPos = old EndPos
             tasks++;
         }
+        pTimer.start();
         // BFS threads work, wait for finishing
         for(int i=0;i<tasks;i++){
             try {
@@ -204,12 +212,15 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
                 e.printStackTrace();
             }
         }
+        pTimer.stop();
+        parallelTime = parallelTime + pTimer.elapsed(timeUnit);
     }
 
     private void FWBW_Step(boolean myBFS){
         LongHashSet D;
         if(myBFS){
             D = mybfs.work(maxDegreeID, Direction.OUTGOING,null);
+            parallelTime = parallelTime + mybfs.parallelTimer.elapsed(timeUnit);
             //System.out.println(D.size());
             D.retainAll(mybfs.work(maxDegreeID, Direction.INCOMING, D)); // D = S from Paper from here on
 
