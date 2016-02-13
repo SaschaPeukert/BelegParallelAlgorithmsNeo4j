@@ -1,12 +1,12 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring;
 
-import com.carrotsearch.hppc.LongHashSet;
-import com.carrotsearch.hppc.cursors.LongCursor;
 import de.saschapeukert.Algorithms.Abst.WorkerCallableTemplate;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.MTConnectedComponentsAlgo;
 import org.neo4j.graphdb.Direction;
 
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 /**
  * This class represents a parallel Coloring to be used in Multistep Algorithm (parallel SCC)
@@ -15,7 +15,7 @@ import java.util.Iterator;
  */
 public class ColoringCallable extends WorkerCallableTemplate {
 
-    private final LongHashSet privateQueue;
+    private final Set<Long> privateQueue;
 
     @Override
     public void work() {
@@ -25,13 +25,13 @@ public class ColoringCallable extends WorkerCallableTemplate {
             privateQueue.clear();
             long parentID = refArray[currentPos];
 
-            LongHashSet listOfReachableNodes = expandNode(parentID,
+            Set<Long> listOfReachableNodes = expandNode(parentID,
                     MTConnectedComponentsAlgo.allNodes,false, Direction.OUTGOING);
             boolean changedAtLeastOneColor = false;
 
-            Iterator<LongCursor> it = listOfReachableNodes.iterator();
+            Iterator<Long> it = listOfReachableNodes.iterator();
             while(it.hasNext()){
-                Long u = it.next().value;
+                Long u = it.next();
                 if(colorIsGreaterThan(parentID,u)){
                     MTConnectedComponentsAlgo.mapOfColors.put(u, MTConnectedComponentsAlgo.mapOfColors.get(parentID));
                     changedAtLeastOneColor=true;
@@ -54,9 +54,9 @@ public class ColoringCallable extends WorkerCallableTemplate {
         }
     }
 
-    public ColoringCallable(int startPos, int endPos, long[] array){
+    public ColoringCallable(int startPos, int endPos, Long[] array){
         super(startPos,endPos,array);
-        privateQueue = new LongHashSet(100000);
+        privateQueue = new HashSet<>(100000);
     }
 
     private boolean colorIsGreaterThan(long a, long b){

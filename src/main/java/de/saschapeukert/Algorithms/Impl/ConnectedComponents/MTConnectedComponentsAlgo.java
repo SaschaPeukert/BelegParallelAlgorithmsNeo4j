@@ -1,9 +1,5 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents;
 
-import com.carrotsearch.hppc.LongArrayList;
-import com.carrotsearch.hppc.LongHashSet;
-import com.carrotsearch.hppc.LongObjectHashMap;
-import com.carrotsearch.hppc.cursors.LongCursor;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring.BackwardColoringStepRunnable;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring.ColoringCallable;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.BFS;
@@ -12,10 +8,7 @@ import de.saschapeukert.Starter;
 import de.saschapeukert.Utils;
 import org.neo4j.graphdb.Direction;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
@@ -34,7 +27,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     public static  long nCutoff=1000; // TODO test this
 
     public static final ConcurrentHashMap<Long, Long> mapOfColors = new ConcurrentHashMap<>();
-    public static final LongObjectHashMap<LongArrayList> mapColorIDs = new LongObjectHashMap<>();
+    public static final Map<Long,List<Long>> mapColorIDs = new HashMap<>();
     public static final ConcurrentHashMap<Long, Boolean> mapOfVisitedNodes = new ConcurrentHashMap<>();
 
     public MTConnectedComponentsAlgo(CCAlgorithmType type, TimeUnit tu){
@@ -59,13 +52,14 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
 
     @Override
     protected void searchForWeakly(long n){
-        LongHashSet reachableIDs;
+        Set<Long> reachableIDs;
         if(myBFS) {
             reachableIDs = mybfs.work(n, Direction.BOTH, null);
         } else{
             reachableIDs = BFS.go(n,Direction.BOTH);
         }
-        registerSCCandRemoveFromAllNodes(reachableIDs,componentID);
+        registerCC(reachableIDs,componentID);
+        removeFromAllNodes(reachableIDs);
     }
 
     /**
@@ -92,13 +86,13 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
             i++;
             if(i!=1){
                 mapOfColors.clear();
-                Iterator<LongCursor> it = allNodes.iterator();
+                Iterator<Long> it = allNodes.iterator();
                 while(it.hasNext()){
-                    Long lo = it.next().value;
+                    Long lo = it.next();
                     mapOfColors.put(lo,lo);
                 }
             }
-            LongHashSet Q = new LongHashSet(allNodes);
+            HashSet<Long> Q = new HashSet<>(allNodes);
             //Set<Long> Q = new HashSet<>(allNodes);
             MSColoring(executor, Q);
         }
@@ -124,7 +118,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         }
     }
 
-    private void MSColoring(ExecutorService executor, LongHashSet Q){
+    private void MSColoring(ExecutorService executor, Set<Long> Q){
         int tasks;
         int pos;
 
@@ -134,8 +128,8 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
             // wake up threads
             tasks=0;
             pos=0;
-            long[] queueArray = Q.toArray();//toArray(new long[Q.size()]);
-            List<Future<LongHashSet>> list = new ArrayList<>();
+            Long[] queueArray = Q.toArray(new Long[Q.size()]);
+            List<Future<HashSet<Long>>> list = new ArrayList<>();
             while(pos<Q.size()){
                 ColoringCallable callable;
                 if((pos+ sBATCHSIZE)>=Q.size()){
@@ -157,9 +151,9 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
                     e.printStackTrace();
                 }
             }
-            Iterator<LongCursor> it = Q.iterator();
+            Iterator<Long> it = Q.iterator();
             while(it.hasNext()){
-                Long v = it.next().value;
+                Long v = it.next();
                 mapOfVisitedNodes.put(v,false);
             }
         }
@@ -169,10 +163,10 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         for(Long id:mapOfColors.keySet()){
             long color = mapOfColors.get(id);
             if(mapColorIDs.containsKey(color)){
-                LongArrayList li = mapColorIDs.get(color);
+                List<Long> li = mapColorIDs.get(color);
                 li.add(id);
             } else{
-                LongArrayList l = new LongArrayList();
+                ArrayList<Long> l = new ArrayList<>();
                 l.add(id);
                 mapColorIDs.put(color,l);
             }
@@ -182,12 +176,11 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         pos=0;
         tasks=0;
         List<Future<Set<Long>>> list = new ArrayList<>();
-        long[] colorArray = mapColorIDs.keys().toArray();
-                //mapColorIDs.keySet().toArray(new Long[mapColorIDs.keySet().size()]);
-        while(pos<mapColorIDs.keys().size()){
+        Long[] colorArray = mapColorIDs.keySet().toArray(new Long[mapColorIDs.keySet().size()]);
+        while(pos<mapColorIDs.keySet().size()){
             BackwardColoringStepRunnable callable;
             if((pos+ sBATCHSIZE)>=Q.size()){
-                callable = new BackwardColoringStepRunnable(pos,mapColorIDs.keys().size(),colorArray);
+                callable = new BackwardColoringStepRunnable(pos,mapColorIDs.keySet().size(),colorArray);
             } else{
                 callable = new BackwardColoringStepRunnable(pos,pos+ sBATCHSIZE,colorArray);
             }
@@ -206,7 +199,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     }
 
     private void FWBW_Step(boolean myBFS){
-        LongHashSet D;
+        Set<Long> D;
         if(myBFS){
             D = mybfs.work(maxDegreeID, Direction.OUTGOING,null);
             //System.out.println(D.size());
@@ -217,10 +210,11 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
             D.retainAll(BFS.go(maxDegreeID, Direction.INCOMING, D)); // D = S from Paper from here on
         }
 
-        registerSCCandRemoveFromAllNodes(D,componentID);
-        Iterator<LongCursor> it =D.iterator();
+        registerCC(D,componentID);
+        removeFromAllNodes(D);
+        Iterator<Long> it =D.iterator();
         while(it.hasNext()){
-            Long o = it.next().value;
+            Long o = it.next();
             mapOfColors.remove(o);
         }
 

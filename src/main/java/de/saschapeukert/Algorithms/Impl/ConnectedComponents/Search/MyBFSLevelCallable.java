@@ -1,11 +1,10 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search;
 
-import com.carrotsearch.hppc.LongArrayList;
-import com.carrotsearch.hppc.cursors.LongCursor;
 import de.saschapeukert.Algorithms.Abst.WorkerCallableTemplate;
 import org.neo4j.graphdb.Direction;
 
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * This class is needed by MyBFS to explore a given part of the frontier in parallel.
@@ -16,7 +15,7 @@ public class MyBFSLevelCallable extends WorkerCallableTemplate {
 
     public Direction direction;
 
-    public MyBFSLevelCallable(int startPos, int endPos, long[] array, Direction direction){
+    public MyBFSLevelCallable(int startPos, int endPos, Long[] array, Direction direction){
         super(startPos,endPos,array);
         this.direction = direction;
     }
@@ -28,11 +27,11 @@ public class MyBFSLevelCallable extends WorkerCallableTemplate {
         while(currentPos<endPos){
             long parentID = refArray[currentPos];
             //Set<Long> q = expandNode(parentID, direction);
-            LongArrayList q = expandNodeAsList(parentID,direction);
+            List<Long> q = expandNodeAsList(parentID,direction);
 
-            Iterator<LongCursor> it = q.iterator();
+            Iterator<Long> it = q.iterator();
             while(it.hasNext()){
-                Long l = it.next().value;
+                Long l = it.next();
                 returnList.add(l);
             }
             // returnList.addAll(q); besser?

@@ -1,6 +1,5 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search;
 
-import com.carrotsearch.hppc.cursors.LongCursor;
 import de.saschapeukert.Database.DBUtils;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.kernel.api.ReadOperations;
@@ -35,9 +34,9 @@ public class DFS {
         }
         visitedIDs.add(n);
 
-        Iterator<LongCursor> it =db.getConnectedNodeIDs(ops, n, direction).iterator();
+        Iterator<Long> it =db.getConnectedNodeIDs(ops, n, direction).iterator();
         while(it.hasNext()){
-            Long l = it.next().value;
+            Long l = it.next();
             doDFS(l,direction);
         }
     }

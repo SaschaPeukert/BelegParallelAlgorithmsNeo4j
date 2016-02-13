@@ -1,7 +1,5 @@
 package de.saschapeukert.Database;
 
-import com.carrotsearch.hppc.LongArrayList;
-import com.carrotsearch.hppc.LongHashSet;
 import de.saschapeukert.Starter;
 import org.neo4j.collection.primitive.PrimitiveLongIterator;
 import org.neo4j.cursor.Cursor;
@@ -206,8 +204,8 @@ public class DBUtils {
      * @param dir
      * @return returns all connectedNodeIds, possibly even the original nodeID itself
      */
-    public LongHashSet getConnectedNodeIDs(ReadOperations ops, long nodeID, Direction dir){
-        LongHashSet it = new LongHashSet(1000);
+    public Set<Long> getConnectedNodeIDs(ReadOperations ops, long nodeID, Direction dir){
+        HashSet<Long> it = new HashSet<>(1000);
         try {
             RelationshipIterator itR = ops.nodeGetRelationships(nodeID, dir);
             while(itR.hasNext()){
@@ -226,8 +224,8 @@ public class DBUtils {
         return it;
     }
 
-    public LongArrayList getConnectedNodeIDsAsList(ReadOperations ops, long nodeID, Direction dir){
-        LongArrayList it = new LongArrayList(10000);
+    public List<Long> getConnectedNodeIDsAsList(ReadOperations ops, long nodeID, Direction dir){
+        ArrayList<Long> it = new ArrayList<>(10000);
         try {
             RelationshipIterator itR = ops.nodeGetRelationships(nodeID, dir);
             while(itR.hasNext()){

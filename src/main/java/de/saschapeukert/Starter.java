@@ -1,7 +1,5 @@
 package de.saschapeukert;
 
-import com.carrotsearch.hppc.LongObjectHashMap;
-import com.carrotsearch.hppc.cursors.LongCursor;
 import com.google.common.base.Stopwatch;
 import de.saschapeukert.Algorithms.Abst.MyAlgorithmBaseCallable;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.CCAlgorithmType;
@@ -41,8 +39,8 @@ public class Starter {
     private static String PAGECACHE;
     private static String ALGORITHM;
     private static String WRITE;
-    private static LongObjectHashMap<AtomicLong> resultCounter;
-    private static long[] keySetOfResultCounter;
+    private static Map<Long,AtomicLong> resultCounter;
+    private static Object[] keySetOfResultCounter;
     private static Histogram histogram;
 
     public static int BATCHSIZE;//  = 100000;
@@ -268,10 +266,10 @@ public class Starter {
         IntCountsHistogram histogram_out = new IntCountsHistogram(0);
         IntCountsHistogram histogram_sum = new IntCountsHistogram(0);
 
-        Iterator<LongCursor> it = resultCounter.keys().iterator();
+        Iterator<Long> it = resultCounter.keySet().iterator();
         Transaction tx =db.openTransaction();
         while(it.hasNext()){
-            Long l = it.next().value;
+            Long l = it.next();
             int in =db.getDegree(l, Direction.INCOMING);
             int out = db.getDegree(l, Direction.OUTGOING);
             incrementMapCounter(mapInDegreeCounter,in);
@@ -332,7 +330,7 @@ public class Starter {
     private static boolean writeResultsOut(){
         ExecutorService executor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
 
-        int maxIndex = resultCounter.keys().size();
+        int maxIndex = resultCounter.keySet().size();
         List<Future> futureList = new ArrayList<>();
         for(int i=0;i<maxIndex;i+=writeBATCHSIZE){
             NeoWriterRunnable neoWriterRunnable;
@@ -359,12 +357,12 @@ public class Starter {
 
     private static void prepaireResultMapAndCounter(){
         PrimitiveLongIterator it = DBUtils.getInstance("", "").getPrimitiveLongIteratorForAllNodes();
-        resultCounter = new LongObjectHashMap<>((int)DBUtils.getInstance("", "").highestNodeKey);
+        resultCounter = new HashMap<>((int)DBUtils.getInstance("", "").highestNodeKey);
 
         while(it.hasNext()){
             resultCounter.put(it.next(),new AtomicLong(0));
         }
-        keySetOfResultCounter = resultCounter.keys().toArray();  // should only be called once!
+        keySetOfResultCounter = resultCounter.keySet().toArray();  // should only be called once!
     }
 
 
@@ -385,8 +383,8 @@ public class Starter {
         resultCounter.put(id,value);
     }
 
-    public static Iterator<LongCursor> getIteratorforKeySetOfResultCounter(){
-        return resultCounter.keys().iterator();
+    public static Iterator<Long> getIteratorforKeySetOfResultCounter(){
+        return resultCounter.keySet().iterator();
     }
 
 }

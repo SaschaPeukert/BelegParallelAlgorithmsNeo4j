@@ -1,8 +1,5 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents;
 
-import com.carrotsearch.hppc.LongHashSet;
-import com.carrotsearch.hppc.LongLookupContainer;
-import com.carrotsearch.hppc.cursors.LongCursor;
 import de.saschapeukert.Algorithms.Abst.MyAlgorithmBaseCallable;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.BFS;
 import de.saschapeukert.Database.DBUtils;
@@ -29,7 +26,7 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseCallable {
     private Stack<Long> stack;
     private int maxdfs=0;
 
-    public static LongHashSet allNodes; // except the trivial CCs
+    public static HashSet<Long> allNodes; // except the trivial CCs
 
     public STConnectedComponentsAlgo(CCAlgorithmType type, TimeUnit timeUnit) {
         super(timeUnit);
@@ -59,11 +56,11 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseCallable {
 
     void strongly(){
 
-        Iterator<LongCursor> it = allNodes.iterator();
+        Iterator<Long> it = allNodes.iterator();
         while(it.hasNext()) {
 
             try {
-                Long n = it.next().value;
+                Long n = it.next();
                 tarjan(n);
 
             } catch (NoSuchElementException e) {
@@ -75,12 +72,12 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseCallable {
 
     void weakly(){
 
-        Iterator<LongCursor> it = allNodes.iterator();
+        Iterator<Long> it = allNodes.iterator();
         while(it.hasNext()){
             // Every node has to be marked as (part of) a component
 
             try {
-                Long n = it.next().value;
+                Long n = it.next();
                 searchForWeakly(n);
                 componentID++;
 
@@ -92,14 +89,15 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseCallable {
     }
 
     void searchForWeakly(long n){
-        LongHashSet reachableIDs = BFS.go(n, Direction.BOTH);
+        Set<Long> reachableIDs = BFS.go(n, Direction.BOTH);
 
-        registerSCCandRemoveFromAllNodes(reachableIDs,componentID);
+        registerCC(reachableIDs,componentID);
+        removeFromAllNodes(reachableIDs);
     }
 
     private void prepareAllNodes(){
 
-        allNodes = new LongHashSet();
+        allNodes = new HashSet<>();
         PrimitiveLongIterator it  =db.getPrimitiveLongIteratorForAllNodes();
         //ResourceIterator<Node> it = db.getIteratorForAllNodes();
         while(it.hasNext()){
@@ -145,9 +143,9 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseCallable {
         Map<Integer, List<Long>> myResults = new TreeMap<>();
 
         // to adapt to the "old" structure of componentsMap
-        Iterator<LongCursor> it = Starter.getIteratorforKeySetOfResultCounter();
+        Iterator<Long> it = Starter.getIteratorforKeySetOfResultCounter();
         while(it.hasNext()){
-            long n = it.next().value;
+            long n = it.next();
             if(!myResults.containsKey(Starter.getResultCounterforId(n).intValue())){
 
                 ArrayList<Long> newList = new ArrayList<>();
@@ -209,11 +207,11 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseCallable {
 
         allNodes.remove(currentNode);
 
-        Iterator<LongCursor> it = db.getConnectedNodeIDs(db.getReadOperations(), currentNode, Direction.OUTGOING).iterator();
+        Iterator<Long> it = db.getConnectedNodeIDs(db.getReadOperations(), currentNode, Direction.OUTGOING).iterator();
 
 
         while(it.hasNext()){
-            Long l = it.next().value;
+            Long l = it.next();
 
             TarjanInfo v_new = nodeDictionary.get(l);
 
@@ -245,16 +243,19 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseCallable {
         }
     }
 
-    public static void registerSCCandRemoveFromAllNodes(LongHashSet reachableIDs,long sccID){
-        Iterator<LongCursor> it =reachableIDs.iterator();
+    public static void registerCC(Set<Long> reachableIDs, long sccID){
+        Iterator<Long> it =reachableIDs.iterator();
         while(it.hasNext()){
-            Long l = it.next().value;
+            Long l = it.next();
             Starter.putIntoResultCounter(l, new AtomicLong((sccID)));
         }
-        removeFromAllNodes(reachableIDs);
+        //removeFromAllNodes(reachableIDs);
     }
 
-    private static synchronized void removeFromAllNodes(LongLookupContainer c){
+    //private static synchronized void removeFromAllNodes(LongLookupContainer c){
+    //    allNodes.removeAll(c);
+    //}
+    public static synchronized void removeFromAllNodes(Collection<Long> c){
         allNodes.removeAll(c);
     }
 }

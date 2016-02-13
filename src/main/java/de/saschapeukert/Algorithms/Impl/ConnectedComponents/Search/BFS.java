@@ -1,8 +1,5 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search;
 
-import com.carrotsearch.hppc.LongCollection;
-import com.carrotsearch.hppc.LongHashSet;
-import com.carrotsearch.hppc.cursors.LongCursor;
 import de.saschapeukert.Database.DBUtils;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.kernel.api.ReadOperations;
@@ -18,12 +15,12 @@ public class BFS {
 
     private static DBUtils db;
 
-    public static LongHashSet go(long nodeID, Direction direction){
+    public static Set<Long> go(long nodeID, Direction direction){
 
         db = DBUtils.getInstance("","");
         ReadOperations ops =db.getReadOperations();
 
-        LongHashSet visitedIDs = new LongHashSet();
+        HashSet<Long> visitedIDs = new HashSet<>();
         List<Long> frontierList= new LinkedList<>();
 
         frontierList.add(nodeID);
@@ -33,9 +30,9 @@ public class BFS {
         {
             Long n = frontierList.remove(0);
 
-            Iterator<LongCursor> it = db.getConnectedNodeIDs(ops, n, direction).iterator();
+            Iterator<Long> it = db.getConnectedNodeIDs(ops, n, direction).iterator();
             while(it.hasNext()){
-                Long child = it.next().value;
+                Long child = it.next();
                 if(visitedIDs.contains(child)){
                     continue;
                 }
@@ -53,12 +50,12 @@ public class BFS {
      * @param nodeIDSet
      * @return
      */
-    public static LongHashSet go(long nodeID, Direction direction, LongCollection nodeIDSet){
+    public static Set<Long> go(long nodeID, Direction direction, Collection<Long> nodeIDSet){
 
         db = DBUtils.getInstance("","");
         ReadOperations ops =db.getReadOperations();
 
-        LongHashSet visitedIDs = new LongHashSet();
+        HashSet<Long> visitedIDs = new HashSet<>();
         List<Long> frontierList= new LinkedList<>();
 
         frontierList.add(nodeID);
@@ -67,9 +64,9 @@ public class BFS {
         while(!frontierList.isEmpty())
         {
             Long n = frontierList.remove(0);
-            Iterator<LongCursor> it = db.getConnectedNodeIDs(ops, n, direction).iterator();
+            Iterator<Long> it = db.getConnectedNodeIDs(ops, n, direction).iterator();
             while(it.hasNext()){
-                Long child = it.next().value;
+                Long child = it.next();
                 if(visitedIDs.contains(child)){
                     continue;
                 }

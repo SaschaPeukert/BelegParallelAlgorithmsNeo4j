@@ -1,10 +1,9 @@
 package de.saschapeukert.Algorithms.Abst;
 
-import com.carrotsearch.hppc.LongArrayList;
-import com.carrotsearch.hppc.LongHashSet;
-import com.carrotsearch.hppc.LongLookupContainer;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.kernel.api.ReadOperations;
+
+import java.util.*;
 
 /**
  * This class is the basis of all Callables that need to perform work in parallel on distinct parts of ans array.
@@ -15,19 +14,19 @@ import org.neo4j.kernel.api.ReadOperations;
  */
 public abstract class WorkerCallableTemplate extends MyBaseCallable {
 
-    protected long[] refArray;
+    protected Long[] refArray;
     protected int startPos; //incl.
     protected int endPos; // not incl.
 
-    protected LongArrayList returnList; // Set vorher
+    protected List<Long> returnList; // Set vorher
     private ReadOperations ops;
 
-    protected WorkerCallableTemplate(int startPos, int endPos, long[] array) {
+    protected WorkerCallableTemplate(int startPos, int endPos, Long[] array) {
 
         this.refArray = array;
         this.startPos = startPos;
         this.endPos = endPos;
-        returnList = new LongArrayList(10000);
+        returnList = new ArrayList<>(10000);
     }
 
     public Object call() throws Exception {
@@ -38,8 +37,8 @@ public abstract class WorkerCallableTemplate extends MyBaseCallable {
         return returnList;
     }
 
-    protected LongHashSet expandNode(Long id, LongLookupContainer c, boolean ignoreIfCollectionsContainsItem, Direction dir){
-        LongHashSet resultSet = expandNode(id,dir);
+    protected Set<Long> expandNode(Long id, Collection<Long> c, boolean ignoreIfCollectionsContainsItem, Direction dir){
+        Set<Long> resultSet = expandNode(id,dir);
                 //new HashSet<>(db.getConnectedNodeIDs(ops, id, dir));
         if(ignoreIfCollectionsContainsItem){
             // nicht aufnehmen
@@ -51,8 +50,8 @@ public abstract class WorkerCallableTemplate extends MyBaseCallable {
         return resultSet;
     }
 
-    protected LongArrayList expandNodeAsList(Long id, LongLookupContainer c, boolean ignoreIfCollectionsContainsItem, Direction dir){
-        LongArrayList resultSet = expandNodeAsList(id,dir);
+    protected List<Long> expandNodeAsList(Long id, Collection<Long> c, boolean ignoreIfCollectionsContainsItem, Direction dir){
+        List<Long> resultSet = expandNodeAsList(id,dir);
         //new HashSet<>(db.getConnectedNodeIDs(ops, id, dir));
         if(ignoreIfCollectionsContainsItem){
             // nicht aufnehmen
@@ -64,12 +63,12 @@ public abstract class WorkerCallableTemplate extends MyBaseCallable {
         return resultSet;
     }
 
-    protected LongHashSet expandNode(Long id, Direction dir){
-        return new LongHashSet(db.getConnectedNodeIDs(ops, id, dir));
+    protected Set<Long> expandNode(Long id, Direction dir){
+        return new HashSet<>(db.getConnectedNodeIDs(ops, id, dir));
     }
 
-    protected LongArrayList expandNodeAsList(Long id, Direction dir){
-        return new LongArrayList(db.getConnectedNodeIDsAsList(ops, id, dir));
+    protected List<Long> expandNodeAsList(Long id, Direction dir){
+        return new ArrayList<>(db.getConnectedNodeIDsAsList(ops, id, dir));
     }
 
 }

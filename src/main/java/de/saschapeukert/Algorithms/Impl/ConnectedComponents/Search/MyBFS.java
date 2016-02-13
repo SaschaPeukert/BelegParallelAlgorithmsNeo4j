@@ -1,15 +1,10 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search;
 
-import com.carrotsearch.hppc.LongArrayList;
-import com.carrotsearch.hppc.LongHashSet;
-import com.carrotsearch.hppc.cursors.LongCursor;
 import de.saschapeukert.Starter;
 import de.saschapeukert.Utils;
 import org.neo4j.graphdb.Direction;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -22,12 +17,12 @@ import java.util.concurrent.Future;
  */
 public class MyBFS {
 
-    public LongHashSet frontierList;
-    public final LongHashSet visitedIDs = new LongHashSet(10000);//Sets.newConcurrentHashSet();
+    public HashSet<Long> frontierList;
+    public final HashSet<Long> visitedIDs = new HashSet<>(10000);//Sets.newConcurrentHashSet();
 
     private final int BATCHSIZE = Starter.BATCHSIZE;//= 175000; // chosen by a few tests
 
-    static LongHashSet nodeIDSet;
+    static HashSet<Long> nodeIDSet;
     private final ExecutorService executor;
 
     public MyBFS(){
@@ -35,17 +30,17 @@ public class MyBFS {
 
     }
 
-    public LongHashSet work(long nodeID, Direction direction, LongHashSet set){
+    public HashSet<Long> work(long nodeID, Direction direction, Set<Long> set){
 
         if(set!=null){
-            nodeIDSet = new LongHashSet(set);
+            nodeIDSet = new HashSet<>(set);
         } else{
             nodeIDSet = null;
         }
 
         visitedIDs.clear();
 
-        frontierList= new LongHashSet(100000);
+        frontierList= new HashSet<>(100000);
         frontierList.add(nodeID);
 
         while(!frontierList.isEmpty())
@@ -60,9 +55,8 @@ public class MyBFS {
     private void doParallelLevel(Direction direction){
         int pos=0;
         int tasks =0;
-        long[] frontierArray = frontierList.toArray();
-                //frontierList.toArray(new Long[frontierList.size()]);
-        List<Future<LongArrayList>> list = new ArrayList<>();
+        Long[] frontierArray = frontierList.toArray(new Long[frontierList.size()]);
+        List<Future<List<Long>>> list = new ArrayList<>();
         while(pos<frontierList.size()){
             MyBFSLevelCallable callable;
             if((pos+BATCHSIZE)>=frontierList.size()){
@@ -79,12 +73,12 @@ public class MyBFS {
         // threads finished, collecting results -> new frontier
         for(int i=0;i<tasks;i++) {
             try {
-                LongArrayList partOfList = list.get(i).get();
+                List<Long> partOfList = list.get(i).get();
                 //frontierList.removeAll(partOfList);
 
-                Iterator<LongCursor> it = partOfList.iterator();
+                Iterator<Long> it = partOfList.iterator();
                 while(it.hasNext()){
-                    Long lo = it.next().value;
+                    Long lo = it.next();
                     frontierList.add(lo);
                 }
                 //frontierList.addAll(partOfList);
