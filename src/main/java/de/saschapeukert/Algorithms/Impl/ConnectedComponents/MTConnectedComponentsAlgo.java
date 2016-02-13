@@ -58,8 +58,8 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         } else{
             reachableIDs = BFS.go(n,Direction.BOTH);
         }
-        registerCC(reachableIDs,componentID);
-        removeFromAllNodes(reachableIDs);
+        registerCCandRemoveFromAllNodes(reachableIDs,componentID);
+
     }
 
     /**
@@ -210,8 +210,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
             D.retainAll(BFS.go(maxDegreeID, Direction.INCOMING, D)); // D = S from Paper from here on
         }
 
-        registerCC(D,componentID);
-        removeFromAllNodes(D);
+        registerCCandRemoveFromAllNodes(D,componentID);
         Iterator<Long> it =D.iterator();
         while(it.hasNext()){
             Long o = it.next();
