@@ -1,5 +1,9 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents;
 
+import com.carrotsearch.hppc.LongArrayList;
+import com.carrotsearch.hppc.LongHashSet;
+import com.carrotsearch.hppc.LongObjectHashMap;
+import com.carrotsearch.hppc.cursors.LongCursor;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring.BackwardColoringStepRunnable;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring.ColoringCallable;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.BFS;
@@ -9,7 +13,7 @@ import de.saschapeukert.Utils;
 import org.neo4j.graphdb.Direction;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
@@ -30,7 +34,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     public static  long nCutoff=1000; // TODO test this
 
     public static final ConcurrentHashMap<Long, Long> mapOfColors = new ConcurrentHashMap<>();
-    public static final ConcurrentHashMap<Long, List<Long>> mapColorIDs = new ConcurrentHashMap<>();
+    public static final LongObjectHashMap<LongArrayList> mapColorIDs = new LongObjectHashMap<>();
     public static final ConcurrentHashMap<Long, Boolean> mapOfVisitedNodes = new ConcurrentHashMap<>();
 
     public MTConnectedComponentsAlgo(CCAlgorithmType type, TimeUnit tu){
@@ -55,7 +59,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
 
     @Override
     protected void searchForWeakly(long n){
-        Set<Long> reachableIDs;
+        LongHashSet reachableIDs;
         if(myBFS) {
             reachableIDs = mybfs.work(n, Direction.BOTH, null);
         } else{
@@ -78,6 +82,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         //System.out.println("Potentialy biggest component: " + componentID);
         componentID++;
 
+
         // PHASE 2
             // Start Threads
         ExecutorService executor = Executors.newFixedThreadPool(Starter.NUMBER_OF_THREADS);
@@ -87,11 +92,14 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
             i++;
             if(i!=1){
                 mapOfColors.clear();
-                for(Long lo:allNodes){
+                Iterator<LongCursor> it = allNodes.iterator();
+                while(it.hasNext()){
+                    Long lo = it.next().value;
                     mapOfColors.put(lo,lo);
                 }
             }
-            Set<Long> Q = new HashSet<>(allNodes);
+            LongHashSet Q = new LongHashSet(allNodes);
+            //Set<Long> Q = new HashSet<>(allNodes);
             MSColoring(executor, Q);
         }
 
@@ -116,7 +124,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         }
     }
 
-    private void MSColoring(ExecutorService executor, Set<Long> Q){
+    private void MSColoring(ExecutorService executor, LongHashSet Q){
         int tasks;
         int pos;
 
@@ -126,8 +134,8 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
             // wake up threads
             tasks=0;
             pos=0;
-            Long[] queueArray = Q.toArray(new Long[Q.size()]);
-            List<Future<Set<Long>>> list = new ArrayList<>();
+            long[] queueArray = Q.toArray();//toArray(new long[Q.size()]);
+            List<Future<LongHashSet>> list = new ArrayList<>();
             while(pos<Q.size()){
                 ColoringCallable callable;
                 if((pos+ sBATCHSIZE)>=Q.size()){
@@ -149,7 +157,9 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
                     e.printStackTrace();
                 }
             }
-            for(Long v:Q){
+            Iterator<LongCursor> it = Q.iterator();
+            while(it.hasNext()){
+                Long v = it.next().value;
                 mapOfVisitedNodes.put(v,false);
             }
         }
@@ -159,10 +169,10 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         for(Long id:mapOfColors.keySet()){
             long color = mapOfColors.get(id);
             if(mapColorIDs.containsKey(color)){
-                List<Long> li = mapColorIDs.get(color);
+                LongArrayList li = mapColorIDs.get(color);
                 li.add(id);
             } else{
-                List<Long> l = new ArrayList<>();
+                LongArrayList l = new LongArrayList();
                 l.add(id);
                 mapColorIDs.put(color,l);
             }
@@ -172,11 +182,12 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         pos=0;
         tasks=0;
         List<Future<Set<Long>>> list = new ArrayList<>();
-        Long[] colorArray = mapColorIDs.keySet().toArray(new Long[mapColorIDs.keySet().size()]);
-        while(pos<mapColorIDs.keySet().size()){
+        long[] colorArray = mapColorIDs.keys().toArray();
+                //mapColorIDs.keySet().toArray(new Long[mapColorIDs.keySet().size()]);
+        while(pos<mapColorIDs.keys().size()){
             BackwardColoringStepRunnable callable;
             if((pos+ sBATCHSIZE)>=Q.size()){
-                callable = new BackwardColoringStepRunnable(pos,mapColorIDs.keySet().size(),colorArray);
+                callable = new BackwardColoringStepRunnable(pos,mapColorIDs.keys().size(),colorArray);
             } else{
                 callable = new BackwardColoringStepRunnable(pos,pos+ sBATCHSIZE,colorArray);
             }
@@ -195,7 +206,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     }
 
     private void FWBW_Step(boolean myBFS){
-        Set<Long> D;
+        LongHashSet D;
         if(myBFS){
             D = mybfs.work(maxDegreeID, Direction.OUTGOING,null);
             //System.out.println(D.size());
@@ -207,10 +218,11 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         }
 
         registerSCCandRemoveFromAllNodes(D,componentID);
-        for(Object o:D){
+        Iterator<LongCursor> it =D.iterator();
+        while(it.hasNext()){
+            Long o = it.next().value;
             mapOfColors.remove(o);
         }
-
 
     }
 }

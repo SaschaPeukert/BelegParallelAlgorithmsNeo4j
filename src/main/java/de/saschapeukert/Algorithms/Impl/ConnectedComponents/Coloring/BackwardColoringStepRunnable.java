@@ -1,12 +1,11 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring;
 
+import com.carrotsearch.hppc.LongArrayList;
+import com.carrotsearch.hppc.LongHashSet;
 import de.saschapeukert.Algorithms.Abst.WorkerCallableTemplate;
-import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.BFS;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.MTConnectedComponentsAlgo;
+import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.BFS;
 import org.neo4j.graphdb.Direction;
-
-import java.util.List;
-import java.util.Set;
 
 /**
  * This class is used in Multistep Algorithm (parallel SCC).
@@ -25,8 +24,8 @@ public class BackwardColoringStepRunnable extends WorkerCallableTemplate {
         while(currentPos<endPos){
             long color = refArray[currentPos];
 
-            List<Long> idList = MTConnectedComponentsAlgo.mapColorIDs.get(color);
-            Set<Long> reachableIDs = BFS.go(color, Direction.INCOMING,idList); // new SCC
+            LongArrayList idList = MTConnectedComponentsAlgo.mapColorIDs.get(color);
+            LongHashSet reachableIDs = BFS.go(color, Direction.INCOMING, idList); // new SCC
 
             MTConnectedComponentsAlgo.registerSCCandRemoveFromAllNodes(reachableIDs, color);
 
@@ -37,7 +36,7 @@ public class BackwardColoringStepRunnable extends WorkerCallableTemplate {
         }
     }
 
-    public BackwardColoringStepRunnable(int startPos, int endPos, Long[] arrayOfColors ){
+    public BackwardColoringStepRunnable(int startPos, int endPos, long[] arrayOfColors ){
         super(startPos,endPos,arrayOfColors);
     }
 

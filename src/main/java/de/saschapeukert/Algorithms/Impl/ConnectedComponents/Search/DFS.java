@@ -1,10 +1,12 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search;
 
+import com.carrotsearch.hppc.cursors.LongCursor;
 import de.saschapeukert.Database.DBUtils;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.kernel.api.ReadOperations;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -33,7 +35,9 @@ public class DFS {
         }
         visitedIDs.add(n);
 
-        for (Long l : db.getConnectedNodeIDs(ops, n, direction)) {
+        Iterator<LongCursor> it =db.getConnectedNodeIDs(ops, n, direction).iterator();
+        while(it.hasNext()){
+            Long l = it.next().value;
             doDFS(l,direction);
         }
     }

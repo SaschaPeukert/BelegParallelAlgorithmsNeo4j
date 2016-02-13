@@ -1,11 +1,12 @@
 package de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring;
 
+import com.carrotsearch.hppc.LongHashSet;
+import com.carrotsearch.hppc.cursors.LongCursor;
 import de.saschapeukert.Algorithms.Abst.WorkerCallableTemplate;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.MTConnectedComponentsAlgo;
 import org.neo4j.graphdb.Direction;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Iterator;
 
 /**
  * This class represents a parallel Coloring to be used in Multistep Algorithm (parallel SCC)
@@ -14,7 +15,7 @@ import java.util.Set;
  */
 public class ColoringCallable extends WorkerCallableTemplate {
 
-    private final Set<Long> privateQueue;
+    private final LongHashSet privateQueue;
 
     @Override
     public void work() {
@@ -24,11 +25,13 @@ public class ColoringCallable extends WorkerCallableTemplate {
             privateQueue.clear();
             long parentID = refArray[currentPos];
 
-            Set<Long> listOfReachableNodes = expandNode(parentID,
+            LongHashSet listOfReachableNodes = expandNode(parentID,
                     MTConnectedComponentsAlgo.allNodes,false, Direction.OUTGOING);
             boolean changedAtLeastOneColor = false;
 
-            for(Long u:listOfReachableNodes){
+            Iterator<LongCursor> it = listOfReachableNodes.iterator();
+            while(it.hasNext()){
+                Long u = it.next().value;
                 if(colorIsGreaterThan(parentID,u)){
                     MTConnectedComponentsAlgo.mapOfColors.put(u, MTConnectedComponentsAlgo.mapOfColors.get(parentID));
                     changedAtLeastOneColor=true;
@@ -45,15 +48,15 @@ public class ColoringCallable extends WorkerCallableTemplate {
                     privateQueue.add(parentID);
                 }
             }
-            returnSet.addAll(privateQueue);
+            returnList.addAll(privateQueue);
 
             currentPos++;
         }
     }
 
-    public ColoringCallable(int startPos, int endPos, Long[] array){
+    public ColoringCallable(int startPos, int endPos, long[] array){
         super(startPos,endPos,array);
-        privateQueue = new HashSet<>(100000);
+        privateQueue = new LongHashSet(100000);
     }
 
     private boolean colorIsGreaterThan(long a, long b){
