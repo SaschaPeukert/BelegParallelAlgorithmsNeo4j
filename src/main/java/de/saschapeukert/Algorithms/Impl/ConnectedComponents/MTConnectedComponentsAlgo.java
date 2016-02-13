@@ -65,7 +65,8 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         } else{
             reachableIDs = BFS.go(n,Direction.BOTH);
         }
-        registerSCCandRemoveFromAllNodes(reachableIDs,componentID);
+        registerCC(reachableIDs,componentID);
+        removeFromAllNodes(reachableIDs);
     }
 
     /**
@@ -128,7 +129,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         int tasks;
         int pos;
 
-        int sBATCHSIZE = 10000;
+        int cBATCHSIZE = Starter.BATCHSIZE*15;
         while(Q.size()!=0) {
 
             // wake up threads
@@ -138,13 +139,13 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
             List<Future<LongHashSet>> list = new ArrayList<>();
             while(pos<Q.size()){
                 ColoringCallable callable;
-                if((pos+ sBATCHSIZE)>=Q.size()){
+                if((pos+ cBATCHSIZE)>=Q.size()){
                     callable = new ColoringCallable(pos,Q.size(),queueArray);
                 } else{
-                    callable = new ColoringCallable(pos,pos+ sBATCHSIZE,queueArray);
+                    callable = new ColoringCallable(pos,pos+ cBATCHSIZE,queueArray);
                 }
                 list.add(executor.submit(callable));
-                pos = pos+ sBATCHSIZE; // new startPos = old EndPos
+                pos = pos+ cBATCHSIZE; // new startPos = old EndPos
                 tasks++;
             }
 
@@ -186,13 +187,13 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
                 //mapColorIDs.keySet().toArray(new Long[mapColorIDs.keySet().size()]);
         while(pos<mapColorIDs.keys().size()){
             BackwardColoringStepRunnable callable;
-            if((pos+ sBATCHSIZE)>=Q.size()){
+            if((pos+ cBATCHSIZE)>=Q.size()){
                 callable = new BackwardColoringStepRunnable(pos,mapColorIDs.keys().size(),colorArray);
             } else{
-                callable = new BackwardColoringStepRunnable(pos,pos+ sBATCHSIZE,colorArray);
+                callable = new BackwardColoringStepRunnable(pos,pos+ cBATCHSIZE,colorArray);
             }
             list.add(executor.submit(callable));
-            pos = pos+ sBATCHSIZE; // new startPos = old EndPos
+            pos = pos+ cBATCHSIZE; // new startPos = old EndPos
             tasks++;
         }
         // BFS threads work, wait for finishing
@@ -217,7 +218,8 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
             D.retainAll(BFS.go(maxDegreeID, Direction.INCOMING, D)); // D = S from Paper from here on
         }
 
-        registerSCCandRemoveFromAllNodes(D,componentID);
+        registerCC(D,componentID);
+        removeFromAllNodes(D);
         Iterator<LongCursor> it =D.iterator();
         while(it.hasNext()){
             Long o = it.next().value;

@@ -20,20 +20,22 @@ public class BackwardColoringStepRunnable extends WorkerCallableTemplate {
     public void work() {
 
         int currentPos=startPos;
+        LongHashSet allProcessedIds = new LongHashSet();
 
         while(currentPos<endPos){
             long color = refArray[currentPos];
 
             LongArrayList idList = MTConnectedComponentsAlgo.mapColorIDs.get(color);
             LongHashSet reachableIDs = BFS.go(color, Direction.INCOMING, idList); // new SCC
-
-            MTConnectedComponentsAlgo.registerSCCandRemoveFromAllNodes(reachableIDs, color);
+            allProcessedIds.addAll(reachableIDs);
+            MTConnectedComponentsAlgo.registerCC(reachableIDs, color);
 
             for(Object o:reachableIDs){
                 MTConnectedComponentsAlgo.mapOfColors.remove(o);
             }
             currentPos++;
         }
+        MTConnectedComponentsAlgo.removeFromAllNodes(allProcessedIds);
     }
 
     public BackwardColoringStepRunnable(int startPos, int endPos, long[] arrayOfColors ){

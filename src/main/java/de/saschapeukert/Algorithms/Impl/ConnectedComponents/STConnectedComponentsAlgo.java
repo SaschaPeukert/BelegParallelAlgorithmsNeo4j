@@ -94,7 +94,8 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseCallable {
     void searchForWeakly(long n){
         LongHashSet reachableIDs = BFS.go(n, Direction.BOTH);
 
-        registerSCCandRemoveFromAllNodes(reachableIDs,componentID);
+        registerCC(reachableIDs,componentID);
+        removeFromAllNodes(reachableIDs);
     }
 
     private void prepareAllNodes(){
@@ -245,16 +246,16 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseCallable {
         }
     }
 
-    public static void registerSCCandRemoveFromAllNodes(LongHashSet reachableIDs,long sccID){
+    public static void registerCC(LongHashSet reachableIDs,long sccID){
         Iterator<LongCursor> it =reachableIDs.iterator();
         while(it.hasNext()){
             Long l = it.next().value;
             Starter.putIntoResultCounter(l, new AtomicLong((sccID)));
         }
-        removeFromAllNodes(reachableIDs);
+        //removeFromAllNodes(reachableIDs);
     }
 
-    private static synchronized void removeFromAllNodes(LongLookupContainer c){
+    public static synchronized void removeFromAllNodes(LongLookupContainer c){
         allNodes.removeAll(c);
     }
 }
