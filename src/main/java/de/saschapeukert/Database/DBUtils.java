@@ -21,8 +21,9 @@ import org.neo4j.kernel.api.properties.Property;
 import org.neo4j.kernel.impl.api.store.RelationshipIterator;
 import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
 import org.neo4j.kernel.impl.store.NeoStores;
+
 import java.io.File;
-import java.util.*;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -64,6 +65,7 @@ public class DBUtils {
 
     public DataWriteOperations getDataWriteOperations()
     {
+        //ThreadToStatementContextBridge ctx =((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(ThreadToStatementContextBridge.class); // TODO MOVE
         try {
             return ctx.get().dataWriteOperations();
         } catch (InvalidTransactionTypeKernelException e) {
@@ -123,6 +125,7 @@ public class DBUtils {
     }
 
     public boolean createPropertyAtNode(long nodeID, Object value, int PropertyID, DataWriteOperations ops){
+
         try {
             DefinedProperty prop;
             if(value instanceof Integer){
@@ -142,7 +145,9 @@ public class DBUtils {
                 System.out.println("I don't know this property! "+ value.getClass().getName() );
                 return false;
             }
+            //ops.acquireExclusive(ResourceTypes.NODE,nodeID);
             ops.nodeSetProperty(nodeID, prop);
+            //ops.releaseExclusive(ResourceTypes.NODE,nodeID);
 
         } catch (EntityNotFoundException | ConstraintValidationKernelException e) {
             e.printStackTrace(); // TODO REMOVE
@@ -191,7 +196,9 @@ public class DBUtils {
         try(Transaction tx = graphDb.beginTx()) {
             DataWriteOperations ops = ctx.get().dataWriteOperations();
 
-            return  ops.propertyKeyGetOrCreateForName(propertyName);
+            int id =ops.propertyKeyGetOrCreateForName(propertyName);
+            tx.success();
+            return  id;
 
         } catch (Exception e) {
             e.printStackTrace();  // TODO REMOVE

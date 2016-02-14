@@ -346,19 +346,19 @@ public class Starter {
 
     private static boolean writeResultsOut(){
         ExecutorService executor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
-
-        int maxIndex = resultCounter.keys().size();
+        Stopwatch timer = Stopwatch.createUnstarted();
+        int maxIndex = resultCounter.keys().size(); // something here?
         List<Future> futureList = new ArrayList<>();
         for(int i=0;i<maxIndex;i+=writeBATCHSIZE){
             NeoWriterRunnable neoWriterRunnable;
             if(i+writeBATCHSIZE>=maxIndex){
                 neoWriterRunnable = new NeoWriterRunnable(PROP_ID,i,maxIndex,DBUtils.getInstance("", ""));
             } else{
-                neoWriterRunnable = new NeoWriterRunnable(PROP_ID,i,i+BATCHSIZE,DBUtils.getInstance("", ""));
+                neoWriterRunnable = new NeoWriterRunnable(PROP_ID,i,i+writeBATCHSIZE,DBUtils.getInstance("", ""));
             }
             futureList.add(executor.submit(neoWriterRunnable));
         }
-
+        timer.start();
         for (Future future : futureList) {
             try {
                 future.get();
@@ -366,9 +366,10 @@ public class Starter {
                 e.printStackTrace();
             }
         }
-
+        timer.stop();
         boolean check = Utils.waitForExecutorToFinishAll(executor);
-        System.out.println("Done Writing. (" + futureList.size() + "T)");
+        System.out.println("Done Writing. (" + futureList.size() + "T) \n" + maxIndex + " Properties " +
+                "in " + timer.elapsed(TimeUnit.MILLISECONDS) + "ms");
         return check;
     }
 
