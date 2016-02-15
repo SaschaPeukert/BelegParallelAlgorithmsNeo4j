@@ -48,10 +48,12 @@ public class Starter {
     public static int BATCHSIZE;//  = 100000;
     private static int writeBATCHSIZE = 100000;
 
-    private static double parallelTimes_ms=0;
+    private static double parallelTimes_percent;
 
     public static void main(String[] args)  {
         readParameters(args);
+
+        parallelTimes_percent = 0;
 
         System.out.println("Start: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()));
         System.out.println("I will start the "+ ALGORITHM +" with: " + NUMBER_OF_THREADS +
@@ -107,7 +109,7 @@ public class Starter {
         }
         timeOfComparision.stop();
         System.out.println("\nCalculations done in: " + timeOfComparision.elapsed(TimeUnit.SECONDS) + "s (+ WarmUp time)");
-        System.out.println("ca. " + (parallelTimes_ms/NUMBER_OF_RUNS) + "% of it in parallel");
+        System.out.println("ca. " + (parallelTimes_percent /NUMBER_OF_RUNS) + "% of it in parallel");
         if(WRITE.equals("Write"))
             writeResultsOut();
 
@@ -220,11 +222,11 @@ public class Starter {
         try {
             ret = (long)(ex.submit(callable).get());
             if(NUMBER_OF_THREADS!=1){
-
-                parallelTimes_ms = parallelTimes_ms +(100/(double)ret)*callable.parallelTime;
+                double percent = ((100/(double)ret)*callable.parallelTime);
+                parallelTimes_percent = parallelTimes_percent +percent;
                 System.out.println("duration: " + ret + "ms");
                 System.out.println("parallel duration: " + callable.parallelTime + "ms");
-                System.out.println("parallel %: " + (100/(double)ret)*callable.parallelTime);
+                System.out.println("parallel %: " + percent);
 
             }
 
@@ -269,7 +271,7 @@ public class Starter {
 
         Utils.waitForExecutorToFinishAll(executor);
         if(NUMBER_OF_THREADS>1){
-            parallelTimes_ms = parallelTimes_ms + 100;
+            parallelTimes_percent = parallelTimes_percent + 100;
         }
         return elapsedTime;
     }

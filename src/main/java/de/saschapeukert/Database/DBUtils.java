@@ -214,7 +214,7 @@ public class DBUtils {
      * @return returns all connectedNodeIds, possibly even the original nodeID itself
      */
     public LongHashSet getConnectedNodeIDs(ReadOperations ops, long nodeID, Direction dir){
-        LongHashSet it = new LongHashSet(1000);
+        LongHashSet it = new LongHashSet();
         try {
             RelationshipIterator itR = ops.nodeGetRelationships(nodeID, dir);
             while(itR.hasNext()){
@@ -324,6 +324,7 @@ public class DBUtils {
                 .setConfig(GraphDatabaseSettings.keep_logical_logs, "false")  // to get rid of all those neostore.trasaction.db ... files
                 .setConfig(GraphDatabaseSettings.allow_store_upgrade, "true")
                 .newGraphDatabase();
+
         ctx = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency
                 (ThreadToStatementContextBridge.class);
         registerShutdownHook();

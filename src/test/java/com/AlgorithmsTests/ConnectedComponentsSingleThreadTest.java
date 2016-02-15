@@ -13,9 +13,9 @@ import java.util.Map;
  */
 public class ConnectedComponentsSingleThreadTest {
 
-    private static final String[] argsWCC = {"WCC", "1001000", "1", "1", "true", "WeaklyConnectedComponentTest",
+    private static final String[] argsWCC = {"WCC", "2000", "1", "1", "true", "WeaklyConnectedComponentTest",
             "1G", "testDB\\graph.db", "NoWrite"};
-    private static final String[] argsSCC = {"SCC", "1001000", "1", "1", "true", "StronglyConnectedComponentTest",
+    private static final String[] argsSCC = {"SCC", "2000", "1", "1", "true", "StronglyConnectedComponentTest",
             "1G", "testDB\\graph.db", "NoWrite"};
     // don't realy need to write here
 
