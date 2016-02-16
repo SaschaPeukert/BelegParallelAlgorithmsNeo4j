@@ -115,7 +115,7 @@ public class Starter {
 
         //java.awt.Toolkit.getDefaultToolkit().beep();
         System.out.println("End: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS\n").format(new Date()));
-
+        System.exit(0);
     }
 
     private static void readParameters(String[] args) {
