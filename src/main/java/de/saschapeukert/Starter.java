@@ -50,6 +50,8 @@ public class Starter {
 
     private static double parallelTimes_percent;
 
+    public static boolean unittest = false;
+
     public static void main(String[] args)  {
         readParameters(args);
 
@@ -115,7 +117,10 @@ public class Starter {
 
         //java.awt.Toolkit.getDefaultToolkit().beep();
         System.out.println("End: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS\n").format(new Date()));
-        System.exit(0);
+
+        if(!unittest) {
+            System.exit(0);
+        }
     }
 
     private static void readParameters(String[] args) {

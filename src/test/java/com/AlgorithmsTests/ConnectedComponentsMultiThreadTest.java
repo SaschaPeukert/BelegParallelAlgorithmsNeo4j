@@ -36,7 +36,9 @@ public class ConnectedComponentsMultiThreadTest {
     public static void oneTimeTearDown() {}
 
     @Before
-    public void setUp() {}
+    public void setUp() {
+        Starter.unittest = true;
+    }
 
     @Test
     public void WeaklyConnectedComponentsShallNotCrash() {

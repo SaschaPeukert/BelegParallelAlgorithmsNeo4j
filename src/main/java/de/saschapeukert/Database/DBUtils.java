@@ -266,7 +266,7 @@ public class DBUtils {
         try{
             Cursor<NodeItem> c =getReadOperations().nodeCursor(id);
             c.next();
-            c.get().id();
+            //c.get().id();
             c.close();
             //graphDb.getNodeById(id);
             return true;
@@ -279,7 +279,7 @@ public class DBUtils {
         try{
             Cursor<RelationshipItem> c = getReadOperations().relationshipCursor(id);
             c.next();
-            c.get().id();
+            //c.get().id();
             c.close();
             //graphDb.getRelationshipById(id);
             return true;

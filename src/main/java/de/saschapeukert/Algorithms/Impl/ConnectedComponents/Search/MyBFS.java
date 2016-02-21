@@ -55,6 +55,9 @@ public class MyBFS {
         while(!frontierList.isEmpty())
         {
             // parallel
+            /*if(frontierList.size()<=BATCHSIZE*2){
+                doSequenzialLevel(direction);
+            }*/
             doParallelLevel(direction);
         }
         return visitedIDs;
@@ -99,6 +102,26 @@ public class MyBFS {
             }
         }
         parallelTimer.stop();
+        frontierList.removeAll(visitedIDs);
+
+        if(MyBFS.nodeIDSet!=null){
+            // this is a backward sweep
+            frontierList.retainAll(nodeIDSet);
+        }
+    }
+
+    private void doSequenzialLevel(Direction direction){
+
+        visitedIDs.addAll(frontierList);
+        LongHashSet newFrontier = new LongHashSet(BATCHSIZE);
+        Iterator<LongCursor> it =frontierList.iterator();
+        while(it.hasNext()){
+            long n = it.next().value;
+            newFrontier.addAll(BFS.go(n,direction));
+        }
+        frontierList.clear();
+        frontierList.addAll(newFrontier);
+
         frontierList.removeAll(visitedIDs);
 
         if(MyBFS.nodeIDSet!=null){
