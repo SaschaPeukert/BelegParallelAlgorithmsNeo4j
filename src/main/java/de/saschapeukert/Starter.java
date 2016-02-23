@@ -51,6 +51,7 @@ public class Starter {
     private static double parallelTimes_percent;
 
     public static boolean unittest = false;
+    private static boolean mt1 = false;
 
     public static void main(String[] args)  {
         readParameters(args);
@@ -84,6 +85,10 @@ public class Starter {
             }
         }
         SkippingPagesWarmUp();
+
+        if(NUMBER_OF_THREADS==-1){
+            mt1=true;
+        }
 
         System.out.println("");
         Stopwatch timeOfComparision = Stopwatch.createStarted();
@@ -213,7 +218,7 @@ public class Starter {
                     type,TimeUnit.MILLISECONDS);
         } else{
             // Easter Egg?!
-            if(NUMBER_OF_THREADS==-1){
+            if(mt1){
                 NUMBER_OF_THREADS = 1;
                 callable = new MTConnectedComponentsAlgo(
                         type,TimeUnit.MILLISECONDS);
@@ -226,7 +231,7 @@ public class Starter {
         long ret = -10000;
         try {
             ret = (long)(ex.submit(callable).get());
-            if(NUMBER_OF_THREADS!=1){
+            if(mt1==false){
                 double percent = ((100/(double)ret)*callable.parallelTime);
                 parallelTimes_percent = parallelTimes_percent +percent;
                 System.out.println("duration: " + ret + "ms");
@@ -237,6 +242,10 @@ public class Starter {
 
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
+        }
+
+        if(mt1){
+            NUMBER_OF_THREADS=-1;
         }
 
         //System.out.println(callable.getResults());    //TODO REMOVE, JUST FOR DEBUG
