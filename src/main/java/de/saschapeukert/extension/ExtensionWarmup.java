@@ -1,8 +1,8 @@
 package de.saschapeukert.extension;
 
 import de.saschapeukert.Database.DBUtils;
+import de.saschapeukert.Starter;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Transaction;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -30,10 +30,8 @@ public class ExtensionWarmup
         DBUtils db = DBUtils.getInstance(database);
 
         refreshHighestIds(db);
-        //Starter.SkippingPagesWarmUp(true);
-        Transaction tx = db.openTransaction();
-        tx.success();
-
+        Starter.SkippingPagesWarmUp(true);
+        
         return  "Warmup done ";
         //return Response.status( Status.OK ).entity(
         //        ("Warmup done").getBytes( Charset.forName("UTF-8") ) ).build();
