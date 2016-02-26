@@ -260,7 +260,7 @@ public class DBUtils {
 
     public void closeTransactionWithSuccess(Transaction tx){
         tx.success();
-        //tx.close();
+            tx.close();
     }
 
     public boolean loadNode(long id){
