@@ -2,6 +2,7 @@ package de.saschapeukert;
 
 import com.carrotsearch.hppc.LongObjectHashMap;
 import com.carrotsearch.hppc.cursors.LongCursor;
+import com.carrotsearch.hppc.cursors.ObjectCursor;
 import com.google.common.base.Stopwatch;
 import de.saschapeukert.Algorithms.Abst.MyAlgorithmBaseCallable;
 import de.saschapeukert.Algorithms.Impl.ConnectedComponents.CCAlgorithmType;
@@ -64,6 +65,7 @@ public class Starter {
 
         // Open connection to DB
         DBUtils db = DBUtils.getInstance(DB_PATH, PAGECACHE);
+
         if(db.highestNodeKey==0){
             System.out.println("No Nodes/DB found at this Path:" + DB_PATH);
             System.out.println("Abort.");
@@ -84,7 +86,7 @@ public class Starter {
                 return;
             }
         }
-        SkippingPagesWarmUp();
+        SkippingPagesWarmUp(false);
 
         if(NUMBER_OF_THREADS==-1){
             mt1=true;
@@ -95,7 +97,7 @@ public class Starter {
 
         switch (ALGORITHM){
             case "RW":
-                calculateRandomWalk_new(NUMBER_OF_RUNS);
+                calculateRandomWalk_new(NUMBER_OF_RUNS,false);
                 break;
             case "WCC":
                 calculateConnectedComponents(
@@ -128,6 +130,62 @@ public class Starter {
         }
     }
 
+    public static long[] mainAsExtension(String[]args)  {
+
+        // common args
+        String algorithm = args[0];
+        String propertyName = args[1];
+        BATCHSIZE = Integer.valueOf(args[2]);
+        NUMBER_OF_THREADS = Integer.valueOf(args[3]);
+
+        if(args[4]!=""){
+            writeBATCHSIZE = Integer.valueOf(args[4]);
+            // otherwise default 100,000
+        }
+
+        long[] result = new long[2];
+        result[0] =0;
+        DBUtils db = DBUtils.getInstance(null);
+        Transaction t = db.openTransaction();
+        prepaireResultMapAndCounter();
+        db.closeTransactionWithSuccess(t);
+
+        PROP_ID = db.GetPropertyID(propertyName);
+            if(PROP_ID==-1){
+                // ERROR Handling
+                System.out.println("Something went wrong while looking up or creating the PropertyID. See Stacktrace for Answers.");
+                result[0] = -1;
+                return result;
+            }
+
+        /*if(NUMBER_OF_THREADS==-1){
+            mt1=true;
+        }*/
+
+        switch (algorithm){
+            case "RW":
+                NEWSPI = args[6].equals("true");
+                Integer number_of_steps = Integer.valueOf(args[5]);
+                result[0] = doRandomWalk(number_of_steps,true);
+                break;
+            case "WCC":
+                result[0] = doConnectedComponentsRun_Extension(CCAlgorithmType.WEAK);
+                break;
+            case "SCC":
+                result[0] = doConnectedComponentsRun_Extension(CCAlgorithmType.STRONG);
+                break;
+            //case "DegreeStats":
+            //    doGetDegreeStatistics(db);
+            //    break;
+            default:
+                //System.out.println("Error: Unknown Algorithm.");
+                result[0] = -2;
+                return result;
+        }
+        result[1] =writeResultsOut_Extension();
+        return result;
+    }
+
     private static void readParameters(String[] args) {
         // READING THE INPUTPARAMETER
         try {
@@ -149,23 +207,9 @@ public class Starter {
         }
     }
 
-    /**
-     * WarmUp
-     * @param secs
-     */
-    private static void WarmUp( int secs){
-        System.out.println("Starting WarmUp.");
-        Stopwatch timer = Stopwatch.createStarted();
-
-        while (timer.elapsed(TimeUnit.SECONDS) < secs) {
-                doRandomWalk(100);
-            }
-        timer.stop();
-        System.out.println("WarmUp finished after " + timer.elapsed(TimeUnit.SECONDS) + "s.");
-    }
-
-    private static void SkippingPagesWarmUp(){
-        System.out.println("Starting WarmUp.");
+    public static void SkippingPagesWarmUp(boolean extensionContext){
+        if(!extensionContext)
+            System.out.println("Starting WarmUp.");
         Stopwatch timer = Stopwatch.createStarted();
 
         int sizeOfDbPage_byte = 8000;
@@ -173,16 +217,19 @@ public class Starter {
         int sizeOfRelationshipRecord_byte = 34;
 
         DBUtils db=DBUtils.getInstance("","");
-        Transaction tx =db.openTransaction();
-        for(int i=0;i<=db.highestNodeKey;i=i+(sizeOfDbPage_byte/sizeOfNodeRecord_byte)){
-            db.loadNode(i);
+        try (Transaction tx =db.graphDb.beginTx()) {
+            for(int i=0;i<=db.highestNodeKey;i=i+(sizeOfDbPage_byte/sizeOfNodeRecord_byte)){
+                db.loadNode(i);
+            }
+            for(int i=0;i<=db.highestRelationshipKey;i=i+(sizeOfDbPage_byte/sizeOfRelationshipRecord_byte)){
+                db.loadRelationship(i);
+            }
+        tx.success();
         }
-        for(int i=0;i<=db.highestRelationshipKey;i=i+(sizeOfDbPage_byte/sizeOfRelationshipRecord_byte)){
-            db.loadRelationship(i);
-        }
-        db.closeTransactionWithSuccess(tx);
+
         timer.stop();
-        System.out.println("WarmUp finished after " + timer.elapsed(TimeUnit.SECONDS) + "s.");
+        if(!extensionContext)
+            System.out.println("WarmUp finished after " + timer.elapsed(TimeUnit.SECONDS) + "s.");
     }
 
     private static void calculateConnectedComponents(int runs, CCAlgorithmType type){
@@ -195,13 +242,24 @@ public class Starter {
         histogram.outputPercentileDistribution(System.out, 1.00);
     }
 
-    private static void calculateRandomWalk_new(int numberOfRunsPerStep){
+    private static void calculateRandomWalk_new(int numberOfRunsPerStep, boolean extensionContext){
+        float visitedNodes = 0;
         for(int i=0;i<numberOfRunsPerStep;i++){
             System.out.println("Now doing run " + (i + 1));
-            long run = doRandomWalk(OPERATIONS);
+            long run = doRandomWalk(OPERATIONS,extensionContext);
             histogram.recordValue(run);
         }
+
+        Iterator<ObjectCursor<AtomicLong>> col = resultCounter.values().iterator();
+        while(col.hasNext()){
+            if(col.next().value.get()>0){
+                visitedNodes++;
+            }
+        }
+        visitedNodes = (100*visitedNodes)/resultCounter.size();
+
         System.out.println("");
+        System.out.println("Percentage of visited Nodes: " + visitedNodes + "%");
         System.out.println("Times of RW with " + NUMBER_OF_THREADS +" Threads:");
         histogram.outputPercentileDistribution(System.out, 1.00);
     }
@@ -248,12 +306,44 @@ public class Starter {
             NUMBER_OF_THREADS=-1;
         }
 
-        //System.out.println(callable.getResults());    //TODO REMOVE, JUST FOR DEBUG
         Utils.waitForExecutorToFinishAll(ex);
         return ret; // ERROR
     }
 
-    private static long doRandomWalk(int noOfSteps){
+    /**
+     *
+     * @param type
+     * @return elapsed time as MILLISECONDS!
+     */
+    private static long doConnectedComponentsRun_Extension(CCAlgorithmType type){
+        STConnectedComponentsAlgo callable;
+        if(NUMBER_OF_THREADS>1) {
+            callable = new MTConnectedComponentsAlgo(
+                    type,TimeUnit.MILLISECONDS);
+        } else{
+            // Easter Egg?!
+            if(NUMBER_OF_THREADS==-1){
+                NUMBER_OF_THREADS = 1;
+                callable = new MTConnectedComponentsAlgo(
+                        type,TimeUnit.MILLISECONDS);
+            } else{
+                callable = new STConnectedComponentsAlgo(
+                        type,TimeUnit.MILLISECONDS);
+            }
+        }
+        ExecutorService ex = Executors.newFixedThreadPool(1);
+        long ret = -10000;
+        try {
+            ret = (long)(ex.submit(callable).get());
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+        Utils.waitForExecutorToFinishAll(ex);
+        return ret; // ERROR
+    }
+
+
+    private static long doRandomWalk(int noOfSteps, boolean extensionContext){
         // INIT
         ExecutorService executor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
         List<Future<Long>> list = new ArrayList<>();
@@ -262,10 +352,10 @@ public class Starter {
             MyAlgorithmBaseCallable rw;
             if(NEWSPI){
                 rw = new RandomWalkKernelApiAlgorithmCallable(
-                        noOfSteps/NUMBER_OF_THREADS,TimeUnit.MICROSECONDS);
+                        noOfSteps/NUMBER_OF_THREADS,TimeUnit.MILLISECONDS);
             } else{
                 rw = new RandomWalkCoreApiAlgorithmCallable(
-                        noOfSteps/NUMBER_OF_THREADS,TimeUnit.MICROSECONDS);
+                        noOfSteps/NUMBER_OF_THREADS,TimeUnit.MILLISECONDS);
             }
             list.add(executor.submit(rw));
         }
@@ -284,9 +374,12 @@ public class Starter {
         }
 
         Utils.waitForExecutorToFinishAll(executor);
-        if(NUMBER_OF_THREADS>1){
-            parallelTimes_percent = parallelTimes_percent + 100;
+        if(!extensionContext){
+            if(NUMBER_OF_THREADS>1){
+                parallelTimes_percent = parallelTimes_percent + 100;
+            }
         }
+
         return elapsedTime;
     }
 
@@ -385,8 +478,36 @@ public class Starter {
         timer.stop();
         boolean check = Utils.waitForExecutorToFinishAll(executor);
         System.out.println("Done Writing. (" + futureList.size() + "T) \n" + maxIndex + " Properties " +
-                "in " + timer.elapsed(TimeUnit.MILLISECONDS) + "ms");
+                    "in " + timer.elapsed(TimeUnit.MILLISECONDS) + "ms");
         return check;
+    }
+
+    private static long writeResultsOut_Extension(){
+        ExecutorService executor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
+        Stopwatch timer = Stopwatch.createUnstarted();
+        int maxIndex = resultCounter.keys().size(); // something here?
+        List<Future> futureList = new ArrayList<>();
+        for(int i=0;i<maxIndex;i+=writeBATCHSIZE){
+            NeoWriterRunnable neoWriterRunnable;
+            if(i+writeBATCHSIZE>=maxIndex){
+                neoWriterRunnable = new NeoWriterRunnable(PROP_ID,i,maxIndex,DBUtils.getInstance("", ""));
+            } else{
+                neoWriterRunnable = new NeoWriterRunnable(PROP_ID,i,i+writeBATCHSIZE,DBUtils.getInstance("", ""));
+            }
+            futureList.add(executor.submit(neoWriterRunnable));
+        }
+        timer.start();
+        for (Future future : futureList) {
+            try {
+                future.get();
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+        timer.stop();
+        Utils.waitForExecutorToFinishAll(executor);
+
+        return timer.elapsed(TimeUnit.MILLISECONDS);
     }
 
     private static void prepaireResultMapAndCounter(){

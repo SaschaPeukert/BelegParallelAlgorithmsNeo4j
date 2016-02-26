@@ -31,7 +31,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     private long maxdDegreeINOUT=-1;
     private long maxDegreeID=-1;
 
-    public static boolean myBFS=true;
+    public static boolean myBFS=false;
     public static  long nCutoff=1000; // TODO test this
 
     public static final ConcurrentHashMap<Long, Long> mapOfColors = new ConcurrentHashMap<>();

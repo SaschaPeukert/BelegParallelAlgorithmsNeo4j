@@ -21,6 +21,7 @@ import org.neo4j.kernel.api.properties.Property;
 import org.neo4j.kernel.impl.api.store.RelationshipIterator;
 import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
 import org.neo4j.kernel.impl.store.NeoStores;
+import org.neo4j.management.Neo4jManager;
 
 import java.io.File;
 import java.util.NoSuchElementException;
@@ -36,10 +37,10 @@ import java.util.concurrent.ThreadLocalRandom;
 public class DBUtils {
 
     private static NeoStores neoStore;
-    private static GraphDatabaseService graphDb;
-    private final ThreadToStatementContextBridge ctx;
-    public final long highestNodeKey;
-    public final long highestRelationshipKey;
+    public static GraphDatabaseService graphDb;
+    private  ThreadToStatementContextBridge ctx=null;
+    public  long highestNodeKey;
+    public  long highestRelationshipKey;
 
     private static DBUtils instance;
 
@@ -156,14 +157,14 @@ public class DBUtils {
         return true;
     }
 
-    private long getHighestNodeID(){
-
-        return getStoreAcess().getNodeStore().getHighId();
+    public void refreshHighestNodeID(){
+        highestNodeKey = Neo4jManager.get().getPrimitivesBean().getNumberOfNodeIdsInUse();
+        //getStoreAcess().getNodeStore().getHighId();
     }
 
-    private long getHighestRelationshipID(){
-
-        return getStoreAcess().getRelationshipStore().getHighId();
+    public void refreshHighestRelationshipID(){
+        highestRelationshipKey = Neo4jManager.get().getPrimitivesBean().getNumberOfRelationshipIdsInUse();
+        //getStoreAcess().getRelationshipStore().getHighId();
     }
 
     private long getNextPropertyID(){
@@ -259,7 +260,7 @@ public class DBUtils {
 
     public void closeTransactionWithSuccess(Transaction tx){
         tx.success();
-        tx.close();
+        //tx.close();
     }
 
     public boolean loadNode(long id){
@@ -330,8 +331,15 @@ public class DBUtils {
         ctx = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency
                 (ThreadToStatementContextBridge.class);
         registerShutdownHook();
-        highestNodeKey = getHighestNodeID();
-        highestRelationshipKey = getHighestRelationshipID();
+        refreshHighestNodeID();
+        refreshHighestRelationshipID();
+    }
+
+    private DBUtils(GraphDatabaseService graphDb){
+        ctx = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency
+                (ThreadToStatementContextBridge.class);
+        refreshHighestNodeID();
+        refreshHighestRelationshipID();
     }
 
     /**
@@ -343,6 +351,14 @@ public class DBUtils {
     public static DBUtils getInstance(String path, String pagecache) {
         if(instance==null){
              instance = new DBUtils(path, pagecache);
+        }
+        return instance;
+    }
+
+
+    public static DBUtils getInstance(GraphDatabaseService graphDb) {
+        if(instance==null){
+            instance = new DBUtils(graphDb);
         }
         return instance;
     }

@@ -37,7 +37,7 @@ public class RandomWalkTest {
     @Test
     public void RandomWalkShallNotCrash() {
         try{
-            Starter.main(args);
+            //Starter.main(args);
         } catch (Exception e){
             e.printStackTrace();
             Assert.fail("It crashed. Why?");
@@ -81,6 +81,7 @@ public class RandomWalkTest {
         }
         assertEquals(checkListTop3_7.size(),5);
         db.closeTransactionWithSuccess(tx);
+        tx.close();
     }
 }
 
