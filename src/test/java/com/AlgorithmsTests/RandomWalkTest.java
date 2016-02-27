@@ -1,6 +1,6 @@
 package com.AlgorithmsTests;
 
-import de.saschapeukert.Database.DBUtils;
+import de.saschapeukert.database.DBUtils;
 import de.saschapeukert.OutputTop20;
 import de.saschapeukert.Starter;
 import org.apache.commons.lang3.SystemUtils;

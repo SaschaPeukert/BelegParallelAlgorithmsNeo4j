@@ -1,6 +1,6 @@
 package de.saschapeukert;
 
-import de.saschapeukert.Database.DBUtils;
+import de.saschapeukert.database.DBUtils;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 

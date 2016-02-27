@@ -1,6 +1,6 @@
 package de.saschapeukert.extension;
 
-import de.saschapeukert.Database.DBUtils;
+import de.saschapeukert.database.DBUtils;
 import de.saschapeukert.Starter;
 import org.neo4j.graphdb.GraphDatabaseService;
 
@@ -15,13 +15,13 @@ import javax.ws.rs.core.Context;
  */
 
 @Path( "/algorithms" )
-public class ExtensionWarmup
+public class Extension
 {
     private DBUtils db;
 
-    public ExtensionWarmup(@Context GraphDatabaseService database )
+    public Extension(@Context GraphDatabaseService database )
     {
-        DBUtils db = DBUtils.getInstance(database);
+         db = DBUtils.getInstance(database);
     }
 
     @GET
@@ -39,7 +39,8 @@ public class ExtensionWarmup
     }
 
     @GET
-    @Path( "/randomWalk" )
+    @Path( "/randomWalk/{propertyName}/{batchsize}/{number_of_threads}/{writeBatchsize}/" +
+            "{number_of_steps}/{kernelAPI}" )
     public String randomWalk( @PathParam( "propertyName" ) String propertyName,
                               @PathParam( "batchsize" ) String batchsize,
                               @PathParam( "number_of_threads" ) String threads,
@@ -57,8 +58,8 @@ public class ExtensionWarmup
     }
 
     @GET
-    @Path( "/weaklyConnectedComponents" )
-    public String wcc( @PathParam( "propertyName" ) String propertyName,
+    @Path( "/weaklyConnectedComponents/{propertyName}/{batchsize}/{number_of_threads}/{writeBatchsize}")
+            public String wcc( @PathParam( "propertyName" ) String propertyName,
                               @PathParam( "batchsize" ) String batchsize,
                               @PathParam( "number_of_threads" ) String threads,
                               @PathParam( "writeBatchsize" ) String writeBatchsize)
@@ -73,7 +74,7 @@ public class ExtensionWarmup
     }
 
     @GET
-    @Path( "/stronglyConnectedComponents" )
+    @Path( "/stronglyConnectedComponents/{propertyName}/{batchsize}/{number_of_threads}/{writeBatchsize}" )
     public String scc( @PathParam( "propertyName" ) String propertyName,
                        @PathParam( "batchsize" ) String batchsize,
                        @PathParam( "number_of_threads" ) String threads,

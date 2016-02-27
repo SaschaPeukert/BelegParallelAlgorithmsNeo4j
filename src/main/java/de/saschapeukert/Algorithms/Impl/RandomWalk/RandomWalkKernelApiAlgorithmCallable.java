@@ -1,6 +1,6 @@
-package de.saschapeukert.Algorithms.Impl.RandomWalk;
+package de.saschapeukert.algorithms.impl.randomwalk;
 
-import de.saschapeukert.Algorithms.Abst.MyAlgorithmBaseCallable;
+import de.saschapeukert.algorithms.abst.MyAlgorithmBaseCallable;
 import de.saschapeukert.Starter;
 import org.neo4j.cursor.Cursor;
 import org.neo4j.graphdb.Direction;

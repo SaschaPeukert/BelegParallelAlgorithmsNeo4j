@@ -1,6 +1,6 @@
 package com.AlgorithmsTests;
 
-import de.saschapeukert.Algorithms.Impl.ConnectedComponents.STConnectedComponentsAlgo;
+import de.saschapeukert.algorithms.impl.connected.components.STConnectedComponentsAlgo;
 import de.saschapeukert.Starter;
 import org.apache.commons.lang3.SystemUtils;
 import org.junit.*;

@@ -1,4 +1,4 @@
-package de.saschapeukert.Algorithms.Impl.ConnectedComponents;
+package de.saschapeukert.algorithms.impl.connected.components;
 
 /**
  * Created by Sascha Peukert on 11.10.2015.

@@ -1,14 +1,14 @@
-package de.saschapeukert.Algorithms.Impl.ConnectedComponents;
+package de.saschapeukert.algorithms.impl.connected.components;
 
 import com.carrotsearch.hppc.LongArrayList;
 import com.carrotsearch.hppc.LongHashSet;
 import com.carrotsearch.hppc.LongObjectHashMap;
 import com.carrotsearch.hppc.cursors.LongCursor;
 import com.google.common.base.Stopwatch;
-import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring.BackwardColoringStepRunnable;
-import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Coloring.ColoringCallable;
-import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.BFS;
-import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.MyBFS;
+import de.saschapeukert.algorithms.impl.connected.components.coloring.BackwardColoringStepRunnable;
+import de.saschapeukert.algorithms.impl.connected.components.coloring.ColoringCallable;
+import de.saschapeukert.algorithms.impl.connected.components.search.BFS;
+import de.saschapeukert.algorithms.impl.connected.components.search.MyBFS;
 import de.saschapeukert.Starter;
 import de.saschapeukert.Utils;
 import org.neo4j.graphdb.Direction;
@@ -72,7 +72,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     }
 
     /**
-     *  Using the <b>Multistep Algorithm</b> described in the Paper  "BFS and Coloring-based Parallel Algorithms for
+     *  Using the <b>Multistep Algorithm</b> described in the Paper  "BFS and coloring-based Parallel algorithms for
      *  Strongly Connected Components and Related Problems":
      *  <br><br>
      *  http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=6877288
@@ -91,7 +91,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         ExecutorService executor = Executors.newFixedThreadPool(Starter.NUMBER_OF_THREADS);
         //System.out.println("Phase 2");
         int i=0;
-        while(nCutoff<allNodes.size()) { // Do MS-Coloring
+        while(nCutoff<allNodes.size()) { // Do MS-coloring
             i++;
             if(i!=1){
                 mapOfColors.clear();
@@ -170,7 +170,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
                 mapOfVisitedNodes.put(v,false);
             }
         }
-        // Coloring done
+        // coloring done
 
         // prepare mapColorIDs
         for(Long id:mapOfColors.keySet()){

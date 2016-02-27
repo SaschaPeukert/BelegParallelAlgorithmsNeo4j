@@ -1,11 +1,11 @@
-package de.saschapeukert.Algorithms.Abst;
+package de.saschapeukert.algorithms.abst;
 
 import com.google.common.base.Stopwatch;
 
 import java.util.concurrent.TimeUnit;
 
 /**
- * This class is the basis of all used Algorithms.
+ * This class is the basis of all used algorithms.
  * Additionaly it provides a stopwatch to measure runtimes.
  * <br>
  * Concrete classes that extend this need to implement work()!

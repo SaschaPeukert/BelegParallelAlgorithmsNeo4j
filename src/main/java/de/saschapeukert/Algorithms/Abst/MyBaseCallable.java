@@ -1,6 +1,6 @@
-package de.saschapeukert.Algorithms.Abst;
+package de.saschapeukert.algorithms.abst;
 
-import de.saschapeukert.Database.DBUtils;
+import de.saschapeukert.database.DBUtils;
 import org.neo4j.graphdb.Transaction;
 
 import java.util.concurrent.Callable;

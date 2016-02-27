@@ -1,4 +1,4 @@
-package de.saschapeukert.Datastructures;
+package de.saschapeukert.datastructures;
 
 /**
  * This class is just a helper for all the attributes need to perform tarjans algorithm (SCC).

@@ -1,12 +1,12 @@
-package de.saschapeukert.Algorithms.Impl.ConnectedComponents;
+package de.saschapeukert.algorithms.impl.connected.components;
 
 import com.carrotsearch.hppc.LongHashSet;
 import com.carrotsearch.hppc.LongLookupContainer;
 import com.carrotsearch.hppc.cursors.LongCursor;
-import de.saschapeukert.Algorithms.Abst.MyAlgorithmBaseCallable;
-import de.saschapeukert.Algorithms.Impl.ConnectedComponents.Search.BFS;
-import de.saschapeukert.Database.DBUtils;
-import de.saschapeukert.Datastructures.TarjanInfo;
+import de.saschapeukert.algorithms.abst.MyAlgorithmBaseCallable;
+import de.saschapeukert.algorithms.impl.connected.components.search.BFS;
+import de.saschapeukert.database.DBUtils;
+import de.saschapeukert.datastructures.TarjanInfo;
 import de.saschapeukert.Starter;
 import org.neo4j.collection.primitive.PrimitiveLongIterator;
 import org.neo4j.graphdb.Direction;

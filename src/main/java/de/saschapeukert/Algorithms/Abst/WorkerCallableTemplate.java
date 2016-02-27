@@ -1,4 +1,4 @@
-package de.saschapeukert.Algorithms.Abst;
+package de.saschapeukert.algorithms.abst;
 
 import com.carrotsearch.hppc.LongArrayList;
 import com.carrotsearch.hppc.LongHashSet;

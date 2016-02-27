@@ -1,4 +1,4 @@
-package de.saschapeukert.Database;
+package de.saschapeukert.database;
 
 import com.carrotsearch.hppc.LongArrayList;
 import com.carrotsearch.hppc.LongHashSet;
@@ -336,6 +336,7 @@ public class DBUtils {
     }
 
     private DBUtils(GraphDatabaseService graphDb){
+        this.graphDb = graphDb;
         ctx = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency
                 (ThreadToStatementContextBridge.class);
         refreshHighestNodeID();

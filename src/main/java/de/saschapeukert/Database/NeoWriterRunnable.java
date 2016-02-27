@@ -1,4 +1,4 @@
-package de.saschapeukert.Database;
+package de.saschapeukert.database;
 
 import de.saschapeukert.Starter;
 import org.neo4j.graphdb.Transaction;
