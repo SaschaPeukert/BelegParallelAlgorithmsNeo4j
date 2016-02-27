@@ -1,9 +1,13 @@
 package de.saschapeukert;
 
 import de.saschapeukert.database.DBUtils;
+import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
+import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,17 +38,23 @@ public class OutputTop20 {
                     " PropertyName PageCache(String)_in_G/M/K DB-Path");
             return;
         }
-        DBUtils db = DBUtils.getInstance(DB_PATH, PAGECACHE);
-        tx = db.openTransaction();
-        db.closeTransactionWithSuccess(tx);
+        GraphDatabaseService graphDb = new GraphDatabaseFactory()
+                .newEmbeddedDatabaseBuilder(new File(DB_PATH))
+                .setConfig(GraphDatabaseSettings.pagecache_memory, PAGECACHE)
+                .setConfig(GraphDatabaseSettings.keep_logical_logs, "false")  // to get rid of all those neostore.trasaction.db ... files
+                .setConfig(GraphDatabaseSettings.allow_store_upgrade, "true")
+                .newGraphDatabase();
 
-        System.out.println(printOutput(getTop20(PROP_NAME)));
+        DBUtils db = new DBUtils(graphDb);
+        db.registerShutdownHook();
+
+        System.out.println(printOutput(getTop20(PROP_NAME, db)));
     }
 
-    public static List<Object[]> getTop20(String propName){
+    public static List<Object[]> getTop20(String propName, DBUtils db){
         String query = "MATCH (n) WHERE n." + propName
                 + ">0 RETURN id(n),n." + propName + " ORDER BY n." + propName + " DESC LIMIT 20";
-        Result result = DBUtils.getInstance("","").executeQuery(query);
+        Result result = db.executeQuery(query);
         List<Object[]> resultList = new ArrayList<>();
 
         while (result.hasNext()) {

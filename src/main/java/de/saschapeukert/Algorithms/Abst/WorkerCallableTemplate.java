@@ -3,6 +3,7 @@ package de.saschapeukert.algorithms.abst;
 import com.carrotsearch.hppc.LongArrayList;
 import com.carrotsearch.hppc.LongHashSet;
 import com.carrotsearch.hppc.LongLookupContainer;
+import de.saschapeukert.database.DBUtils;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.kernel.api.ReadOperations;
 
@@ -22,8 +23,8 @@ public abstract class WorkerCallableTemplate extends MyBaseCallable {
     protected LongArrayList returnList; // Set vorher
     private ReadOperations ops;
 
-    protected WorkerCallableTemplate(int startPos, int endPos, long[] array) {
-
+    protected WorkerCallableTemplate(int startPos, int endPos, long[] array, DBUtils db){
+        super(db);
         this.refArray = array;
         this.startPos = startPos;
         this.endPos = endPos;

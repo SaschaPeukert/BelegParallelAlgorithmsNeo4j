@@ -11,6 +11,7 @@ import de.saschapeukert.algorithms.impl.connected.components.search.BFS;
 import de.saschapeukert.algorithms.impl.connected.components.search.MyBFS;
 import de.saschapeukert.Starter;
 import de.saschapeukert.Utils;
+import de.saschapeukert.database.DBUtils;
 import org.neo4j.graphdb.Direction;
 
 import java.util.ArrayList;
@@ -38,10 +39,10 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
     public static final LongObjectHashMap<LongArrayList> mapColorIDs = new LongObjectHashMap<>();
     public static final ConcurrentHashMap<Long, Boolean> mapOfVisitedNodes = new ConcurrentHashMap<>();
 
-    public MTConnectedComponentsAlgo(CCAlgorithmType type, TimeUnit tu){
-        super(type, tu);
+    public MTConnectedComponentsAlgo(CCAlgorithmType type, TimeUnit tu, DBUtils db){
+        super(type, tu, db);
         if(myBFS){
-            mybfs = new MyBFS();
+            mybfs = new MyBFS(db);
         }
     }
 
@@ -65,7 +66,7 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
             reachableIDs = mybfs.work(n, Direction.BOTH, null);
             parallelTime = parallelTime + mybfs.parallelTimer.elapsed(timeUnit);
         } else{
-            reachableIDs = BFS.go(n,Direction.BOTH);
+            reachableIDs = BFS.go(n,Direction.BOTH, db);
         }
         registerCC(reachableIDs,componentID);
         removeFromAllNodes(reachableIDs);
@@ -143,9 +144,9 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
             while(pos<Q.size()){
                 ColoringCallable callable;
                 if((pos+ cBATCHSIZE)>=Q.size()){
-                    callable = new ColoringCallable(pos,Q.size(),queueArray);
+                    callable = new ColoringCallable(pos,Q.size(),queueArray, db);
                 } else{
-                    callable = new ColoringCallable(pos,pos+ cBATCHSIZE,queueArray);
+                    callable = new ColoringCallable(pos,pos+ cBATCHSIZE,queueArray, db);
                 }
                 list.add(executor.submit(callable));
                 pos = pos+ cBATCHSIZE; // new startPos = old EndPos
@@ -195,9 +196,9 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
         while(pos<mapColorIDs.keys().size()){
             BackwardColoringStepRunnable callable;
             if((pos+ cBATCHSIZE)>=Q.size()){
-                callable = new BackwardColoringStepRunnable(pos,mapColorIDs.keys().size(),colorArray);
+                callable = new BackwardColoringStepRunnable(pos,mapColorIDs.keys().size(),colorArray, db);
             } else{
-                callable = new BackwardColoringStepRunnable(pos,pos+ cBATCHSIZE,colorArray);
+                callable = new BackwardColoringStepRunnable(pos,pos+ cBATCHSIZE,colorArray, db);
             }
             list.add(executor.submit(callable));
             pos = pos+ cBATCHSIZE; // new startPos = old EndPos
@@ -225,8 +226,8 @@ public class MTConnectedComponentsAlgo extends STConnectedComponentsAlgo {
             D.retainAll(mybfs.work(maxDegreeID, Direction.INCOMING, D)); // D = S from Paper from here on
 
         } else{
-            D = BFS.go(maxDegreeID, Direction.OUTGOING);
-            D.retainAll(BFS.go(maxDegreeID, Direction.INCOMING, D)); // D = S from Paper from here on
+            D = BFS.go(maxDegreeID, Direction.OUTGOING, db);
+            D.retainAll(BFS.go(maxDegreeID, Direction.INCOMING, D, db)); // D = S from Paper from here on
         }
 
         registerCC(D,componentID);

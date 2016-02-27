@@ -21,21 +21,17 @@ public class Extension
 
     public Extension(@Context GraphDatabaseService database )
     {
-         db = DBUtils.getInstance(database);
+         db = new DBUtils(database);
     }
 
     @GET
-    //@Produces( MediaType.TEXT_PLAIN )
     @Path( "/warmup" )
-    public String warmup(@Context GraphDatabaseService database)
+    public String warmup()
     {
-
         refreshHighestIds(db);
-        Starter.SkippingPagesWarmUp(true);
+        Starter.SkippingPagesWarmUp(true, db);
 
         return  "Warmup done ";
-        //return Response.status( Status.OK ).entity(
-        //        ("Warmup done").getBytes( Charset.forName("UTF-8") ) ).build();
     }
 
     @GET
@@ -51,7 +47,7 @@ public class Extension
 
         String[] argsRW = {"RW",propertyName,batchsize,threads,writeBatchsize,number_of_steps,kernelAPI};
         refreshHighestIds(db); // this is needed!
-        long[] times = Starter.mainAsExtension(argsRW);
+        long[] times = Starter.mainAsExtension(argsRW,db);
 
         return "Random Walk done in " + times[0] + "ms.\n +" +
                 "Writing done in "+ times[1] +"ms.";
@@ -67,7 +63,7 @@ public class Extension
 
         String[] argsWCC = {"WCC",propertyName,batchsize,threads,writeBatchsize};
         refreshHighestIds(db); // this is needed!
-        long[] times = Starter.mainAsExtension(argsWCC);
+        long[] times = Starter.mainAsExtension(argsWCC, db);
 
         return "Weakly Connected Components done in " + times[0] + "ms.\n +" +
                 "Writing done in "+ times[1] +"ms.";
@@ -83,7 +79,7 @@ public class Extension
 
         String[] argsSCC = {"SCC",propertyName,batchsize,threads,writeBatchsize};
         refreshHighestIds(db); // this is needed!
-        long[] times = Starter.mainAsExtension(argsSCC);
+        long[] times = Starter.mainAsExtension(argsSCC, db);
 
         return "Strongly Connected Components done in " + times[0] + "ms.\n +" +
                 "Writing done in "+ times[1] +"ms.";

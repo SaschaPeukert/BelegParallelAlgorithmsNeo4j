@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class STConnectedComponentsAlgo extends MyAlgorithmBaseCallable {
 
-    long componentID= DBUtils.getInstance("","").highestNodeKey+1;
+    long componentID= -1;
     final CCAlgorithmType myType;
 
     private Map<Long,TarjanInfo> nodeDictionary;
@@ -31,9 +31,11 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseCallable {
 
     public static LongHashSet allNodes; // except the trivial CCs
 
-    public STConnectedComponentsAlgo(CCAlgorithmType type, TimeUnit timeUnit) {
-        super(timeUnit);
+    public STConnectedComponentsAlgo(CCAlgorithmType type, TimeUnit timeUnit, DBUtils db) {
+        super(timeUnit, db);
         this.myType = type;
+
+        componentID= db.highestNodeKey+1;
 
         if(myType== CCAlgorithmType.STRONG) {
             // initialize nodeDictionary for tarjans algo
@@ -92,7 +94,7 @@ public class STConnectedComponentsAlgo extends MyAlgorithmBaseCallable {
     }
 
     void searchForWeakly(long n){
-        LongHashSet reachableIDs = BFS.go(n, Direction.BOTH);
+        LongHashSet reachableIDs = BFS.go(n, Direction.BOTH, db);
 
         registerCC(reachableIDs,componentID);
         removeFromAllNodes(reachableIDs);

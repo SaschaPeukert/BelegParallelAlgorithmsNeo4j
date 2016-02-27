@@ -42,8 +42,6 @@ public class DBUtils {
     public  long highestNodeKey;
     public  long highestRelationshipKey;
 
-    private static DBUtils instance;
-
     public Node getSomeRandomNode( ThreadLocalRandom random){
         long r;
         while(true) {
@@ -315,12 +313,13 @@ public class DBUtils {
         return getDegree(id,Direction.BOTH);
     }
 
+
     /**
      *  The constructor
      * @param path
      * @param pagecache
      */
-    private DBUtils(String path, String pagecache){
+    /*public DBUtils(String path, String pagecache){
         graphDb = new GraphDatabaseFactory()
                 .newEmbeddedDatabaseBuilder(new File(path))
                 .setConfig(GraphDatabaseSettings.pagecache_memory, pagecache)
@@ -333,9 +332,9 @@ public class DBUtils {
         registerShutdownHook();
         refreshHighestNodeID();
         refreshHighestRelationshipID();
-    }
+    }*/
 
-    private DBUtils(GraphDatabaseService graphDb){
+    public DBUtils(GraphDatabaseService graphDb){
         this.graphDb = graphDb;
         ctx = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency
                 (ThreadToStatementContextBridge.class);
@@ -343,12 +342,12 @@ public class DBUtils {
         refreshHighestRelationshipID();
     }
 
-    /**
+/*    *//**
      * This will get you an instance of DBUtils. Only the first call has to be with usefull parameters
      * @param path
      * @param pagecache
      * @return
-     */
+     *//*
     public static DBUtils getInstance(String path, String pagecache) {
         if(instance==null){
              instance = new DBUtils(path, pagecache);
@@ -362,9 +361,9 @@ public class DBUtils {
             instance = new DBUtils(graphDb);
         }
         return instance;
-    }
+    }*/
 
-    private void registerShutdownHook( )
+    public void registerShutdownHook( )
     {
         // Registers a shutdown hook for the Neo4j instance so that it
         // shuts down nicely when the VM exits (even if you "Ctrl-C" the
@@ -372,20 +371,24 @@ public class DBUtils {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                System.out.println("Shutting down neo4j.");
-                try {
-                    graphDb.shutdown();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    graphDb.shutdown();
-                } finally {
-                    System.out.println("Shutting down neo4j complete.");
-                }
+                shutdownDB();
             }
         });
     }
 
     public Result executeQuery(String query){
         return graphDb.execute(query);
+    }
+
+    public void shutdownDB(){
+        System.out.println("Shutting down neo4j.");
+        try {
+            graphDb.shutdown();
+        } catch (Exception e) {
+            e.printStackTrace();
+            graphDb.shutdown();
+        } finally {
+            System.out.println("Shutting down neo4j complete.");
+        }
     }
 }

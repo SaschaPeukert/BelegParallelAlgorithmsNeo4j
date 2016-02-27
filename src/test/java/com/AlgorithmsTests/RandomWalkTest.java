@@ -5,8 +5,12 @@ import de.saschapeukert.OutputTop20;
 import de.saschapeukert.Starter;
 import org.apache.commons.lang3.SystemUtils;
 import org.junit.*;
+import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
+import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,7 +41,7 @@ public class RandomWalkTest {
     @Test
     public void RandomWalkShallNotCrash() {
         try{
-            //Starter.main(args);
+            Starter.main(args);
         } catch (Exception e){
             e.printStackTrace();
             Assert.fail("It crashed. Why?");
@@ -49,9 +53,18 @@ public class RandomWalkTest {
 
         Starter.main(args);
 
-        DBUtils db = DBUtils.getInstance(args[7], args[6]);
+        GraphDatabaseService graphDb = new GraphDatabaseFactory()
+                .newEmbeddedDatabaseBuilder(new File(args[7]))
+                .setConfig(GraphDatabaseSettings.pagecache_memory,  args[6])
+                .setConfig(GraphDatabaseSettings.keep_logical_logs, "false")  // to get rid of all those neostore.trasaction.db ... files
+                .setConfig(GraphDatabaseSettings.allow_store_upgrade, "true")
+                .newGraphDatabase();
+
+        DBUtils db = new DBUtils(graphDb);
+        db.registerShutdownHook();
+
         Transaction tx = db.openTransaction();  // NOPE
-        List<Object[]> resultList= OutputTop20.getTop20(args[5]);
+        List<Object[]> resultList= OutputTop20.getTop20(args[5], db);
 
         assertEquals((resultList.get(0)[0]),14L);
         assertEquals((resultList.get(1)[0]),7L);

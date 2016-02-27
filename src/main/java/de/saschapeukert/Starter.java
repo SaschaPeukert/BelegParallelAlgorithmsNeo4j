@@ -16,8 +16,12 @@ import org.HdrHistogram.Histogram;
 import org.HdrHistogram.IntCountsHistogram;
 import org.neo4j.collection.primitive.PrimitiveLongIterator;
 import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
+import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.*;
@@ -64,7 +68,14 @@ public class Starter {
                " Thread(s).\n");
 
         // Open connection to DB
-        DBUtils db = DBUtils.getInstance(DB_PATH, PAGECACHE);
+        GraphDatabaseService graphDb = new GraphDatabaseFactory()
+                .newEmbeddedDatabaseBuilder(new File(DB_PATH))
+                .setConfig(GraphDatabaseSettings.pagecache_memory, PAGECACHE)
+                .setConfig(GraphDatabaseSettings.keep_logical_logs, "false")  // to get rid of all those neostore.trasaction.db ... files
+                .setConfig(GraphDatabaseSettings.allow_store_upgrade, "true")
+                .newGraphDatabase();
+        DBUtils db = new DBUtils(graphDb);
+        db.registerShutdownHook();  // important to do
 
         if(db.highestNodeKey==0){
             System.out.println("No Nodes/DB found at this Path:" + DB_PATH);
@@ -73,7 +84,7 @@ public class Starter {
         }
         histogram = new Histogram(3600000000000L, 3);
         Transaction t = db.openTransaction();
-            prepaireResultMapAndCounter();
+            prepaireResultMapAndCounter(db);
         db.closeTransactionWithSuccess(t);
         System.out.println("~ " + db.highestNodeKey + " Nodes");
         System.out.println("~ " + db.highestRelationshipKey + " Relationships");
@@ -86,7 +97,7 @@ public class Starter {
                 return;
             }
         }
-        SkippingPagesWarmUp(false);
+        SkippingPagesWarmUp(false, db);
 
         if(NUMBER_OF_THREADS==-1){
             mt1=true;
@@ -97,17 +108,17 @@ public class Starter {
 
         switch (ALGORITHM){
             case "RW":
-                calculateRandomWalk_new(NUMBER_OF_RUNS,false);
+                calculateRandomWalk_new(NUMBER_OF_RUNS,false, db);
                 break;
             case "WCC":
                 calculateConnectedComponents(
                          NUMBER_OF_RUNS,
-                        CCAlgorithmType.WEAK);
+                        CCAlgorithmType.WEAK, db);
                 break;
             case "SCC":
                 calculateConnectedComponents(
                         NUMBER_OF_RUNS,
-                        CCAlgorithmType.STRONG);
+                        CCAlgorithmType.STRONG, db);
                 break;
             case "DegreeStats":
                 doGetDegreeStatistics(db);
@@ -120,17 +131,19 @@ public class Starter {
         System.out.println("\nCalculations done in: " + timeOfComparision.elapsed(TimeUnit.SECONDS) + "s (+ WarmUp time)");
         System.out.println("ca. " + (parallelTimes_percent /NUMBER_OF_RUNS) + "% of it in parallel");
         if(WRITE.equals("Write"))
-            writeResultsOut();
+            writeResultsOut(db);
 
         //java.awt.Toolkit.getDefaultToolkit().beep();
         System.out.println("End: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS\n").format(new Date()));
 
         if(!unittest) {
             System.exit(0);
+        } else{
+            db.shutdownDB();
         }
     }
 
-    public static long[] mainAsExtension(String[]args)  {
+    public static long[] mainAsExtension(String[]args, DBUtils db)  {
 
         // common args
         String algorithm = args[0];
@@ -145,44 +158,38 @@ public class Starter {
 
         long[] result = new long[2];
         result[0] =0;
-        DBUtils db = DBUtils.getInstance(null);
+
         Transaction t = db.openTransaction();
-        prepaireResultMapAndCounter();
+        prepaireResultMapAndCounter(db);
         db.closeTransactionWithSuccess(t);
 
         PROP_ID = db.GetPropertyID(propertyName);
-            if(PROP_ID==-1){
+        if(PROP_ID==-1){
                 // ERROR Handling
                 System.out.println("Something went wrong while looking up or creating the PropertyID. See Stacktrace for Answers.");
                 result[0] = -1;
                 return result;
-            }
-
-        /*if(NUMBER_OF_THREADS==-1){
-            mt1=true;
-        }*/
+        }
 
         switch (algorithm){
             case "RW":
                 NEWSPI = args[6].equals("true");
                 Integer number_of_steps = Integer.valueOf(args[5]);
-                result[0] = doRandomWalk(number_of_steps,true);
+                result[0] = doRandomWalk(number_of_steps,true, db);
                 break;
             case "WCC":
-                result[0] = doConnectedComponentsRun_Extension(CCAlgorithmType.WEAK);
+                result[0] = doConnectedComponentsRun_Extension(CCAlgorithmType.WEAK, db);
                 break;
             case "SCC":
-                result[0] = doConnectedComponentsRun_Extension(CCAlgorithmType.STRONG);
+                result[0] = doConnectedComponentsRun_Extension(CCAlgorithmType.STRONG, db);
                 break;
-            //case "DegreeStats":
-            //    doGetDegreeStatistics(db);
-            //    break;
+
             default:
                 //System.out.println("Error: Unknown Algorithm.");
                 result[0] = -2;
                 return result;
         }
-        result[1] =writeResultsOut_Extension();
+        result[1] =writeResultsOut_Extension(db);
         return result;
     }
 
@@ -207,7 +214,7 @@ public class Starter {
         }
     }
 
-    public static void SkippingPagesWarmUp(boolean extensionContext){
+    public static void SkippingPagesWarmUp(boolean extensionContext, DBUtils db){
         if(!extensionContext)
             System.out.println("Starting WarmUp.");
         Stopwatch timer = Stopwatch.createStarted();
@@ -216,37 +223,35 @@ public class Starter {
         int sizeOfNodeRecord_byte=15;
         int sizeOfRelationshipRecord_byte = 34;
 
-        DBUtils db=DBUtils.getInstance("","");
-        try (Transaction tx =db.graphDb.beginTx()) {
-            for(int i=0;i<=db.highestNodeKey;i=i+(sizeOfDbPage_byte/sizeOfNodeRecord_byte)){
-                db.loadNode(i);
-            }
-            for(int i=0;i<=db.highestRelationshipKey;i=i+(sizeOfDbPage_byte/sizeOfRelationshipRecord_byte)){
-                db.loadRelationship(i);
-            }
-        tx.success();
+        Transaction tx = db.openTransaction();
+        for(int i=0;i<=db.highestNodeKey;i=i+(sizeOfDbPage_byte/sizeOfNodeRecord_byte)){
+            db.loadNode(i);
         }
+        for(int i=0;i<=db.highestRelationshipKey;i=i+(sizeOfDbPage_byte/sizeOfRelationshipRecord_byte)){
+            db.loadRelationship(i);
+        }
+        db.closeTransactionWithSuccess(tx);
 
         timer.stop();
         if(!extensionContext)
             System.out.println("WarmUp finished after " + timer.elapsed(TimeUnit.SECONDS) + "s.");
     }
 
-    private static void calculateConnectedComponents(int runs, CCAlgorithmType type){
+    private static void calculateConnectedComponents(int runs, CCAlgorithmType type, DBUtils db){
         for(int i=0;i<runs;i++){
             System.out.println("Now doing run " + (i + 1));
-            histogram.recordValue(doConnectedComponentsRun( type));
+            histogram.recordValue(doConnectedComponentsRun( type, db));
         }
         System.out.println("");
         System.out.println("Times of CC with " + NUMBER_OF_THREADS + " Threads:");
         histogram.outputPercentileDistribution(System.out, 1.00);
     }
 
-    private static void calculateRandomWalk_new(int numberOfRunsPerStep, boolean extensionContext){
+    private static void calculateRandomWalk_new(int numberOfRunsPerStep, boolean extensionContext, DBUtils db){
         float visitedNodes = 0;
         for(int i=0;i<numberOfRunsPerStep;i++){
             System.out.println("Now doing run " + (i + 1));
-            long run = doRandomWalk(OPERATIONS,extensionContext);
+            long run = doRandomWalk(OPERATIONS,extensionContext, db);
             histogram.recordValue(run);
         }
 
@@ -269,20 +274,20 @@ public class Starter {
      * @param type
      * @return elapsed time as MILLISECONDS!
      */
-    private static long doConnectedComponentsRun(CCAlgorithmType type){
+    private static long doConnectedComponentsRun(CCAlgorithmType type, DBUtils db){
         STConnectedComponentsAlgo callable;
         if(NUMBER_OF_THREADS>1) {
             callable = new MTConnectedComponentsAlgo(
-                    type,TimeUnit.MILLISECONDS);
+                    type,TimeUnit.MILLISECONDS, db);
         } else{
             // Easter Egg?!
             if(mt1){
                 NUMBER_OF_THREADS = 1;
                 callable = new MTConnectedComponentsAlgo(
-                        type,TimeUnit.MILLISECONDS);
+                        type,TimeUnit.MILLISECONDS, db);
             } else{
                 callable = new STConnectedComponentsAlgo(
-                        type,TimeUnit.MILLISECONDS);
+                        type,TimeUnit.MILLISECONDS, db);
             }
         }
         ExecutorService ex = Executors.newFixedThreadPool(1);
@@ -315,20 +320,20 @@ public class Starter {
      * @param type
      * @return elapsed time as MILLISECONDS!
      */
-    private static long doConnectedComponentsRun_Extension(CCAlgorithmType type){
+    private static long doConnectedComponentsRun_Extension(CCAlgorithmType type, DBUtils db){
         STConnectedComponentsAlgo callable;
         if(NUMBER_OF_THREADS>1) {
             callable = new MTConnectedComponentsAlgo(
-                    type,TimeUnit.MILLISECONDS);
+                    type,TimeUnit.MILLISECONDS, db);
         } else{
             // Easter Egg?!
             if(NUMBER_OF_THREADS==-1){
                 NUMBER_OF_THREADS = 1;
                 callable = new MTConnectedComponentsAlgo(
-                        type,TimeUnit.MILLISECONDS);
+                        type,TimeUnit.MILLISECONDS, db);
             } else{
                 callable = new STConnectedComponentsAlgo(
-                        type,TimeUnit.MILLISECONDS);
+                        type,TimeUnit.MILLISECONDS, db);
             }
         }
         ExecutorService ex = Executors.newFixedThreadPool(1);
@@ -343,7 +348,7 @@ public class Starter {
     }
 
 
-    private static long doRandomWalk(int noOfSteps, boolean extensionContext){
+    private static long doRandomWalk(int noOfSteps, boolean extensionContext, DBUtils db){
         // INIT
         ExecutorService executor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
         List<Future<Long>> list = new ArrayList<>();
@@ -352,10 +357,10 @@ public class Starter {
             MyAlgorithmBaseCallable rw;
             if(NEWSPI){
                 rw = new RandomWalkKernelApiAlgorithmCallable(
-                        noOfSteps/NUMBER_OF_THREADS,TimeUnit.MILLISECONDS);
+                        noOfSteps/NUMBER_OF_THREADS,TimeUnit.MILLISECONDS, db);
             } else{
                 rw = new RandomWalkCoreApiAlgorithmCallable(
-                        noOfSteps/NUMBER_OF_THREADS,TimeUnit.MILLISECONDS);
+                        noOfSteps/NUMBER_OF_THREADS,TimeUnit.MILLISECONDS, db);
             }
             list.add(executor.submit(rw));
         }
@@ -453,7 +458,7 @@ public class Starter {
         }
     }
 
-    private static boolean writeResultsOut(){
+    private static boolean writeResultsOut(DBUtils db){
         ExecutorService executor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
         Stopwatch timer = Stopwatch.createUnstarted();
         int maxIndex = resultCounter.keys().size(); // something here?
@@ -461,9 +466,9 @@ public class Starter {
         for(int i=0;i<maxIndex;i+=writeBATCHSIZE){
             NeoWriterRunnable neoWriterRunnable;
             if(i+writeBATCHSIZE>=maxIndex){
-                neoWriterRunnable = new NeoWriterRunnable(PROP_ID,i,maxIndex,DBUtils.getInstance("", ""));
+                neoWriterRunnable = new NeoWriterRunnable(PROP_ID,i,maxIndex,db);
             } else{
-                neoWriterRunnable = new NeoWriterRunnable(PROP_ID,i,i+writeBATCHSIZE,DBUtils.getInstance("", ""));
+                neoWriterRunnable = new NeoWriterRunnable(PROP_ID,i,i+writeBATCHSIZE,db);
             }
             futureList.add(executor.submit(neoWriterRunnable));
         }
@@ -482,7 +487,7 @@ public class Starter {
         return check;
     }
 
-    private static long writeResultsOut_Extension(){
+    private static long writeResultsOut_Extension(DBUtils db){
         ExecutorService executor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
         Stopwatch timer = Stopwatch.createUnstarted();
         int maxIndex = resultCounter.keys().size(); // something here?
@@ -490,9 +495,9 @@ public class Starter {
         for(int i=0;i<maxIndex;i+=writeBATCHSIZE){
             NeoWriterRunnable neoWriterRunnable;
             if(i+writeBATCHSIZE>=maxIndex){
-                neoWriterRunnable = new NeoWriterRunnable(PROP_ID,i,maxIndex,DBUtils.getInstance("", ""));
+                neoWriterRunnable = new NeoWriterRunnable(PROP_ID,i,maxIndex,db);
             } else{
-                neoWriterRunnable = new NeoWriterRunnable(PROP_ID,i,i+writeBATCHSIZE,DBUtils.getInstance("", ""));
+                neoWriterRunnable = new NeoWriterRunnable(PROP_ID,i,i+writeBATCHSIZE,db);
             }
             futureList.add(executor.submit(neoWriterRunnable));
         }
@@ -510,9 +515,9 @@ public class Starter {
         return timer.elapsed(TimeUnit.MILLISECONDS);
     }
 
-    private static void prepaireResultMapAndCounter(){
-        PrimitiveLongIterator it = DBUtils.getInstance("", "").getPrimitiveLongIteratorForAllNodes();
-        resultCounter = new LongObjectHashMap<>((int)DBUtils.getInstance("", "").highestNodeKey);
+    private static void prepaireResultMapAndCounter(DBUtils db){
+        PrimitiveLongIterator it = db.getPrimitiveLongIteratorForAllNodes();
+        resultCounter = new LongObjectHashMap<>((int)db.highestNodeKey);
 
         while(it.hasNext()){
             resultCounter.put(it.next(),new AtomicLong(0));

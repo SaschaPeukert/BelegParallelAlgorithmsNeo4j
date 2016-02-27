@@ -18,8 +18,8 @@ public abstract class MyBaseCallable implements Callable {
     protected Transaction tx;
     protected DBUtils db;
 
-    public MyBaseCallable(){
-        this.db = DBUtils.getInstance("","");
+    public MyBaseCallable(DBUtils db){
+        this.db = db;
     }
 
     public abstract void work();

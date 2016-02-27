@@ -1,6 +1,7 @@
 package de.saschapeukert.algorithms.abst;
 
 import com.google.common.base.Stopwatch;
+import de.saschapeukert.database.DBUtils;
 
 import java.util.concurrent.TimeUnit;
 
@@ -21,7 +22,8 @@ public abstract class MyAlgorithmBaseCallable extends MyBaseCallable {
     /*
         This will also initialize the timer but NOT start it!
      */
-    protected MyAlgorithmBaseCallable(TimeUnit timeUnit){
+    protected MyAlgorithmBaseCallable(TimeUnit timeUnit, DBUtils db){
+        super(db);
         this.timer = Stopwatch.createUnstarted();
         this.parallelTime = 0;
 

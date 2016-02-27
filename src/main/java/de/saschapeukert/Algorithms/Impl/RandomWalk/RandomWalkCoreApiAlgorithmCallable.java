@@ -2,6 +2,7 @@ package de.saschapeukert.algorithms.impl.randomwalk;
 
 import de.saschapeukert.algorithms.abst.MyAlgorithmBaseCallable;
 import de.saschapeukert.Starter;
+import de.saschapeukert.database.DBUtils;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
@@ -22,8 +23,8 @@ public class RandomWalkCoreApiAlgorithmCallable extends MyAlgorithmBaseCallable 
     private int NUMBER_OF_STEPS;
     private final ThreadLocalRandom random;
 
-    public RandomWalkCoreApiAlgorithmCallable(int NumberOfSteps, TimeUnit tu){
-        super(tu);
+    public RandomWalkCoreApiAlgorithmCallable(int NumberOfSteps, TimeUnit tu, DBUtils db){
+        super(tu, db);
 
         this._RandomNodeParameter = Starter.RANDOMWALKRANDOM;
         this.currentNode = null;
