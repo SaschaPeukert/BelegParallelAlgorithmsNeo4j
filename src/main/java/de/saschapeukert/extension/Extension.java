@@ -49,7 +49,7 @@ public class Extension
         refreshHighestIds(db); // this is needed!
         long[] times = Starter.mainAsExtension(argsRW,db);
 
-        return "Random Walk done in " + times[0] + "ms.\n +" +
+        return "Random Walk done in " + times[0] + "ms.\n" +
                 "Writing done in "+ times[1] +"ms.";
     }
 
@@ -65,7 +65,7 @@ public class Extension
         refreshHighestIds(db); // this is needed!
         long[] times = Starter.mainAsExtension(argsWCC, db);
 
-        return "Weakly Connected Components done in " + times[0] + "ms.\n +" +
+        return "Weakly Connected Components done in " + times[0] + "ms.\n" +
                 "Writing done in "+ times[1] +"ms.";
     }
 
@@ -81,7 +81,7 @@ public class Extension
         refreshHighestIds(db); // this is needed!
         long[] times = Starter.mainAsExtension(argsSCC, db);
 
-        return "Strongly Connected Components done in " + times[0] + "ms.\n +" +
+        return "Strongly Connected Components done in " + times[0] + "ms.\n" +
                 "Writing done in "+ times[1] +"ms.";
     }
 

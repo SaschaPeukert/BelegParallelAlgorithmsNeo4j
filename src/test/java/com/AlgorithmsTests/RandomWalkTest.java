@@ -94,7 +94,7 @@ public class RandomWalkTest {
         }
         assertEquals(checkListTop3_7.size(),5);
         db.closeTransactionWithSuccess(tx);
-        tx.close();
+        db.shutdownDB();
     }
 }
 
