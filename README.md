@@ -70,4 +70,6 @@ Start the Algorithms with GET-Requests with the following syntax.
 | | /PropertyName/Batchsize/Number_of_Threads/WriteBatchsize |
 | | |
 | | _Example_: http://server:7474/extension/algorithms/stronglyConnectedComponents |
-| | /StronglyComponentId/1000/4/1000 |        
+| | /StronglyComponentId/1000/4/1000 |      
+  
+The parameter Number_of_Threads can also have the value "auto". This will automatically select a number of threads matching the number of cores in your cpu

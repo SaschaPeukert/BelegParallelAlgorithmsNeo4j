@@ -3,7 +3,6 @@ package de.saschapeukert;
 import de.saschapeukert.database.DBUtils;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Result;
-import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 
@@ -24,7 +23,6 @@ public class OutputTop20 {
         String DB_PATH;
         String PAGECACHE;
         String PROP_NAME;
-        Transaction tx;
 
         // READING THE INPUTPARAMETER
         try {

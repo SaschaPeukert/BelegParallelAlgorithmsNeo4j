@@ -149,9 +149,15 @@ public class Starter {
         String algorithm = args[0];
         String propertyName = args[1];
         BATCHSIZE = Integer.valueOf(args[2]);
-        NUMBER_OF_THREADS = Integer.valueOf(args[3]);
 
-        if(args[4]!=""){
+        if(args[3].equals("auto")){
+            NUMBER_OF_THREADS = Runtime.getRuntime().availableProcessors();
+        } else{
+            NUMBER_OF_THREADS = Integer.valueOf(args[3]);
+        }
+
+
+        if(!args[4].equals("")){
             writeBATCHSIZE = Integer.valueOf(args[4]);
             // otherwise default 100,000
         }
