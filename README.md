@@ -1,8 +1,7 @@
 # BelegParallelAlgorithmsNeo4j
 
-This is the Repo for my student research project  "Parallel Graphalgorithms in Neo4j"
-
-This is work in progress, so things (mostly this readme/docs) tend do be outdated and will be changed.
+This is the Repository for my student research project  "Parallel Graphalgorithms in Neo4j" at TU Dresden. 
+The final PDF document (in German) can be found [here](http://public.sascha-peukert.de/Beleg.pdf)
 
 # Quick Start
 
