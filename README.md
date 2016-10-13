@@ -1,7 +1,7 @@
 # BelegParallelAlgorithmsNeo4j
 
-This is the Repository for my student research project  "Parallel Graphalgorithms in Neo4j" at TU Dresden. 
-The final PDF document (in German) can be found [here](http://public.sascha-peukert.de/Beleg.pdf)
+This is the repository for my student research project  "Parallel Graphalgorithms in Neo4j" at TU Dresden. 
+The final PDF document (in German) can be found [here](http://public.sascha-peukert.de/Beleg.pdf).
 
 # Quick Start
 
@@ -46,7 +46,7 @@ Start it with
 
 Please follow the steps from [Neo4j Unmanaged Extensions](http://neo4j.com/docs/stable/server-unmanaged-extensions.html) to get Neo4j to work with your jar.
 
-Start the Algorithms with GET-Requests with the following syntax.
+Start the algorithms with GET-Requests with the following syntax.
         
 | Algorithm | Syntax of GET-Request                                                                         | 
 |-----------|-----------------------------------------------------------------------------------------------|
@@ -71,4 +71,4 @@ Start the Algorithms with GET-Requests with the following syntax.
 | | _Example_: http://server:7474/extension/algorithms/stronglyConnectedComponents |
 | | /StronglyComponentId/1000/4/1000 |      
   
-The parameter Number_of_Threads can also have the value "auto". This will automatically select a number of threads matching the number of cores in your cpu
+The parameter Number_of_Threads can also have the value "auto". This will automatically select a number of threads matching the number of cores in your cpu.
